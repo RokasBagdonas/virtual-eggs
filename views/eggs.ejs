@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel="icon" href="/images/utility/icon-feather.svg" type="image/x-icon">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" href="/stylesheets/dissertation.css"/>
+
+    <script src="/three/build/three.js"></script>
+    <script src="/three/examples/js/controls/OrbitControls.js"></script>
+    <script src="/three/examples/js/loaders/GLTFLoader.js"></script>
+
+    <script src="/javascripts/dissertation/Egg.js" defer></script>
+    <script src="/javascripts/dissertation/EggUI.js" defer></script>
+    <script src="/javascripts/dissertation/Main.js" defer></script>
+
+
+</head>
+<body>
+
+<div class="grid-container">
+
+    <div class="grid-item-nav" id="nav">
+        <h1><%= title %></h1>
+        <h3>Nav bar</h3>
+    </div>
+
+
+
+    <div class="grid-item-panel" id="right-panel">
+        <h4>Options panel</h4>
+        <div>
+            <h5>Parameters</h5>
+            <input type="range" value="100" id="spots-slider">
+            <input type="button" value="new texture" id="options-submit">
+        </div>
+        <div>
+            <h5>Texture</h5>
+            <canvas width="256" height="256" id="egg-texture"></canvas>
+        </div>
+    </div>
+
+    <div class="grid-item-scene" id="scene-container">
+        <canvas id="scene-canvas"></canvas>
+        <!-- This div will hold our scene-->
+    </div>
+
+
+</div>
+
+
+</body>
+</html>
