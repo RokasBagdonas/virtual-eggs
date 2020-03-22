@@ -16,6 +16,7 @@ let EggTexture = (function() {
     const getSpotsCounter = () => {return spotsCounter};
     const getTexture = () => {return texture};
     const getParamSpots = () => {return paramSpots};
+    const getCanvasSize = () => {return CANVAS_SIZE};
 
     const setParamSpots = function(newSpots){
         if(newSpots <= MAX_SPOTS)
@@ -83,7 +84,8 @@ let EggTexture = (function() {
         setParamSpots: setParamSpots,
         getParamSpots: getParamSpots,
         resetTexture: resetTexture,
-        update: update
+        update: update,
+        getCanvasSize: getCanvasSize
     }
 })();
 

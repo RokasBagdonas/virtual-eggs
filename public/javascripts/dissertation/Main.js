@@ -30,7 +30,7 @@ function init() {
 
 function createCamera() {
     camera = new THREE.PerspectiveCamera( 35, container.clientWidth / container.clientHeight, 0.1, 1000 );
-    camera.position.set( 1, -1, 1); //to be centered near egg
+    camera.position.set( 0.5075552374771982, 0.011933679289453922, 0.34080907654190784); //to be centered near egg
 }
 
 function createControls() {
