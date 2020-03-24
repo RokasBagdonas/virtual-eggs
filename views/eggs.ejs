@@ -9,6 +9,7 @@
     <script src="/three/build/three.js"></script>
     <script src="/three/examples/js/controls/OrbitControls.js"></script>
     <script src="/three/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="/javascripts/dissertation/libs/kriging.js"></script>
 
     <script src="/javascripts/dissertation/Stats.js" defer></script>
     <script src="/javascripts/dissertation/Egg.js" defer></script>
@@ -40,8 +41,17 @@
             <canvas width="256" height="256" id="egg-texture"></canvas>
         </div>
         <div>
-            <h5>Stats points</h5>
-            <canvas width="256" height="256" id="stats-points"></canvas>
+            <h4>Stats</h4>
+            <div>
+                <h5>Stats points</h5>
+                <input type="button" value="generate points" id="points-button">
+                <canvas width="256" height="256" id="stats-points"></canvas>
+
+                <h5>Spatially correlated field</h5>
+                <input type="button" value="correlate points" id="correlate-button">
+                <canvas width="256" height="256" id="spatial-random-field"></canvas>
+            </div>
+
         </div>
     </div>
 

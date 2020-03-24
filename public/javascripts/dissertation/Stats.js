@@ -2,8 +2,8 @@
  * Plan: 
  * 1. Create an array of random points (Gaussian?)
  *  1.1 t - height value at (x,y). At a random location, set a random height value.
- * 2. Create semivariogram model using kriging.js
- * 3. Plot those points to visualise
+ * 2. Plot those points to visualise
+ * 3. Create semivariogram model using kriging.js
  * 4. For each pixel on a canvas, predict its colour.
  *  4.1. If prediction is lower than certain threshold, set it to 0.
  *  4.2. TODO: further improvement: make it to look like a layer beneath.
@@ -12,17 +12,22 @@
 const Stats = (function() {
 
 
-    let numPoints, width, height;
+    let numPoints = 100;
+    let width = 256;
+    let height = 256;
+    let data;
 
-    const init = function (num, w, h) {
+    const setParameters = function (num, w, h) {
         numPoints = num;
         width = w;
         height = h;
+        data = generateData();
     }
 
 
     /**
      * Generates random values (heights) at random locations in a 2D area.
+     * //1.
      * @param {int} numOfPoints
      * @param {number} w width in 2D area
      * @param {number} h height 2D area
@@ -39,11 +44,11 @@ const Stats = (function() {
     }
 
     /**
-     *
-     * @param {Object} data contains three 1-D arrays: x, y, t (value at (x,y)).
-     * @return {HTMLCanvasElement}
+     * //2.
+     * TODO: plot points as on a sphere (or do coordinate transformation relative to the model path) (AvianBioRes15)
      */
-    const plotPoints = function (data = generateData()){
+    const plotPoints = function (){
+        data = generateData();
         let ctx = document.getElementById("stats-points").getContext("2d");
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, width, height);
@@ -73,12 +78,49 @@ const Stats = (function() {
         return hex;
     };
 
+    //3.
+    const plotSpatiallyCorrelatedField = function(){
+        let ctx = document.getElementById("spatial-random-field").getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
 
+        let value = 0;
+        const step = 2;
+        const threshold = 60;
+        const radius = 1;
+        //TODO: research mean and covariance params
+        const mean = 0;
+        const convariance = 10;
+        const model = "gaussian"; //"gaussian", "exponential", "spherical"
+        const variogram = kriging.train(data.t, data.x, data.y, model, mean, convariance);
+        /**
+         * for each coordinate at (x,y), get a value from variogram
+         * if that value is greater than threshold, plot a filled circle with black value
+         * TODO: else, plot gradient value
+         */
+        ctx.fillStyle = "#000000";
+        for(let x = 0; x < width; x += step){
+            for(let y = 0; y < height; y += step){
+                //TODO: paint size transformation depending on the location on the egg.
+                value = kriging.predict(x, y, variogram);
+                if (value >= threshold){
+                    //TODO(?): improve drawing by setting up the points first and drawing after finishing the loop
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+
+
+    }
 
 
     return {
-        init: init,
+        setParameters: setParameters,
         generateData: generateData,
-        plotPoints: plotPoints
+        plotPoints: plotPoints,
+        plotSpatiallyCorrelatedField: plotSpatiallyCorrelatedField
     }
 })();
