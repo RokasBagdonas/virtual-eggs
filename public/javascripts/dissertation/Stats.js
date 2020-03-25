@@ -11,11 +11,14 @@
 
 const Stats = (function() {
 
-
     let numPoints = 100;
     let width = 256;
     let height = 256;
     let data;
+    let sigma2 = 0;
+    let alpha = 10;
+    const MAX_SIGMA2 = 10;
+    const MAX_ALPHA = 100;
 
     const setParameters = function (num, w, h) {
         numPoints = num;
@@ -24,6 +27,15 @@ const Stats = (function() {
         data = generateData();
     }
 
+    const setSigma2 = (newSigma2) => {sigma2 = newSigma2;}
+    const getSigma2 = () => {return sigma2;}
+
+    const setAlpha = (newAlpha) => {alpha = newAlpha;}
+    const getAlpha = () => {return alpha;}
+
+
+    const getSigma2Limit = () => {return MAX_SIGMA2;}
+    const getAlphaLimit = () => {return MAX_ALPHA;}
 
     /**
      * Generates random values (heights) at random locations in a 2D area.
@@ -53,7 +65,6 @@ const Stats = (function() {
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, width, height);
 
-        ctx.fillStyle = "#000000";
 
         let x, y, h;
         const radius = 3;
@@ -62,7 +73,7 @@ const Stats = (function() {
             y = data.y[i];
             h = data.t[i];
             ctx.beginPath();
-            // ctx.fillStyle = rgbToHex(h);
+            ctx.fillStyle = "#" + EggUI.colourPicker.colourAt(h);
             ctx.arc(x, y, radius, 0, Math.PI * 2);
             ctx.fill();
         }
@@ -89,38 +100,53 @@ const Stats = (function() {
         const threshold = 60;
         const radius = 1;
         //TODO: research mean and covariance params
-        const mean = 0;
-        const convariance = 10;
-        const model = "gaussian"; //"gaussian", "exponential", "spherical"
-        const variogram = kriging.train(data.t, data.x, data.y, model, mean, convariance);
+        // const sigma2 = 0; //sill?
+        // const alpha = 10;
+        const model = "spherical"; //"gaussian", "exponential", "spherical"
+        const variogram = kriging.train(data.t, data.x, data.y, model, sigma2, alpha);
         /**
          * for each coordinate at (x,y), get a value from variogram
          * if that value is greater than threshold, plot a filled circle with black value
          * TODO: else, plot gradient value
          */
-        ctx.fillStyle = "#000000";
+        // let colourPicker = new Rainbow(); colourPicker.setNumberRange(0,100); colourPicker.setSpectrum('black', 'red');
         for(let x = 0; x < width; x += step){
             for(let y = 0; y < height; y += step){
                 //TODO: paint size transformation depending on the location on the egg.
+                //TODO(?): improve drawing by setting up the points first and drawing after finishing the loop
                 value = kriging.predict(x, y, variogram);
-                if (value >= threshold){
-                    //TODO(?): improve drawing by setting up the points first and drawing after finishing the loop
-                    ctx.beginPath();
-                    ctx.arc(x, y, radius, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                ctx.beginPath();
+                ctx.fillStyle = "#" + EggUI.colourPicker.colourAt(value);
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
 
 
+    };
 
+    function toColor(num) {
+        num >>>= 0;
+        var b = num & 0xFF,
+            g = (num & 0xFF00) >>> 8,
+            r = (num & 0xFF0000) >>> 16,
+            // a = ( (num & 0xFF000000) >>> 24 ) / 255 ;
+            a = 1;
+        return "rgba(" + [r, g, b, a].join(",") + ")";
     }
 
 
     return {
-        setParameters: setParameters,
         generateData: generateData,
         plotPoints: plotPoints,
-        plotSpatiallyCorrelatedField: plotSpatiallyCorrelatedField
+        plotSpatiallyCorrelatedField: plotSpatiallyCorrelatedField,
+        setSigma2: setSigma2,
+        setAlpha: setAlpha,
+        getSigma2: getSigma2,
+        getAlpha: getAlpha,
+        getSigma2Limit: getSigma2Limit,
+        getAlphaLimit: getAlphaLimit
     }
 })();
+
+

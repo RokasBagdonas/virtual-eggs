@@ -10,6 +10,7 @@
     <script src="/three/examples/js/controls/OrbitControls.js"></script>
     <script src="/three/examples/js/loaders/GLTFLoader.js"></script>
     <script src="/javascripts/dissertation/libs/kriging.js"></script>
+    <script src="/rainbowvis/rainbowvis.js"></script>
 
     <script src="/javascripts/dissertation/Stats.js" defer></script>
     <script src="/javascripts/dissertation/Egg.js" defer></script>
@@ -48,7 +49,13 @@
                 <canvas width="256" height="256" id="stats-points"></canvas>
 
                 <h5>Spatially correlated field</h5>
-                <input type="button" value="correlate points" id="correlate-button">
+                <label for="sigma2-slider" id="sigma2-label">Sigma^2: </label> <br>
+                <input type="range" value="0" id="sigma2-slider" min="0" max="100"> <br>
+
+                <label for="alpha-slider" id="alpha-label">Alpha: </label> <br>
+                <input type="range" value="10" id="alpha-slider"> <br>
+
+                <input type="button" value="correlate points" id="correlate-button" min="0" max="100">
                 <canvas width="256" height="256" id="spatial-random-field"></canvas>
             </div>
 
