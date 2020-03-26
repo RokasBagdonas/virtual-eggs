@@ -13,8 +13,8 @@
     <script src="/rainbowvis/rainbowvis.js"></script>
 
     <script src="/javascripts/dissertation/Stats.js" defer></script>
-    <script src="/javascripts/dissertation/Egg.js" defer></script>
     <script src="/javascripts/dissertation/EggUI.js" defer></script>
+    <script src="/javascripts/dissertation/Egg.js" defer></script>
     <script src="/javascripts/dissertation/Main.js" defer></script>
 
 
@@ -45,17 +45,31 @@
             <h4>Stats</h4>
             <div>
                 <h5>Stats points</h5>
+
+                <label for="points-slider" id="points-label">Points: </label> <br>
+                <input type="range" id="points-slider" name="points">
+
                 <input type="button" value="generate points" id="points-button">
                 <canvas width="256" height="256" id="stats-points"></canvas>
 
                 <h5>Spatially correlated field</h5>
                 <label for="sigma2-slider" id="sigma2-label">Sigma^2: </label> <br>
-                <input type="range" value="0" id="sigma2-slider" min="0" max="100"> <br>
+                <input type="range" id="sigma2-slider" name="sigma^2"> <br>
 
                 <label for="alpha-slider" id="alpha-label">Alpha: </label> <br>
-                <input type="range" value="10" id="alpha-slider"> <br>
+                <input type="range" id="alpha-slider" name="alpha"> <br>
 
-                <input type="button" value="correlate points" id="correlate-button" min="0" max="100">
+                <select id="variogramModel-select">
+                    <option value="gaussian">gaussian</option>
+                    <option value="exponential">exponential</option>
+                    <option value="spherical">spherical</option>
+                </select>
+
+                <input type="button" value="set model" id="correlate-button" min="0" max="100"> <br>
+
+                <label for="interactive-checkbox">Interactive adjustment</label>
+                <input type="checkbox" id="interactive-checkbox" checked="true">
+
                 <canvas width="256" height="256" id="spatial-random-field"></canvas>
             </div>
 

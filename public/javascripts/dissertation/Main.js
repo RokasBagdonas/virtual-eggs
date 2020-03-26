@@ -18,8 +18,9 @@ function init() {
     createRenderer();
 
     loadEgg();
-    EggTexture.init();
     EggUI.init();
+    Stats.init();
+    EggTexture.init();
 
     renderer.setAnimationLoop( () => {
         update();
@@ -67,7 +68,7 @@ function createRenderer() {
 }
 
 function update() {
-    EggTexture.update();
+    // EggTexture.update();
 }
 
 function render() {

@@ -1,7 +1,8 @@
 let EggTexture = (function() {
 
-    let ctx = document.getElementById("egg-texture").getContext("2d");
-    let texture;
+    // let ctx = document.getElementById("egg-texture").getContext("2d");
+    let ctx;
+    let texture; //THREE.js CanvasTexture object
     const CANVAS_SIZE = 256;
     const MAX_SPOTS = 500;
     let paramSpots = 100;
@@ -33,10 +34,17 @@ let EggTexture = (function() {
         resetCounter();
     };
 
+    const updateTexture = () => {
+        texture.needsUpdate = true;
+    }
+
     const init = function(){
-        ctx.fillStyle = EGG_BASE_COLOUR;
-        ctx.fillRect( 0, 0, 256, 256 );
+        // ctx.fillStyle = EGG_BASE_COLOUR;
+        // ctx.fillRect( 0, 0, 256, 256 );
+        // let canvas = document.getElementById("spatial-random-field").getContext("2d");
+        ctx = Stats.plotSpatiallyCorrelatedField();
         texture = new THREE.CanvasTexture(ctx.canvas);
+        texture.needsUpdate = true;
     };
 
     const randInt = function(min, max) {
@@ -85,7 +93,8 @@ let EggTexture = (function() {
         getParamSpots: getParamSpots,
         resetTexture: resetTexture,
         update: update,
-        getCanvasSize: getCanvasSize
+        getCanvasSize: getCanvasSize,
+        updateTexture: updateTexture
     }
 })();
 
