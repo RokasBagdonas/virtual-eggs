@@ -22,7 +22,7 @@ const Stats = (function() {
     let variogram;
     let variogramModel = "exponential";
     const MAX_SIGMA2 = 2;
-    const MAX_ALPHA = 100;
+    const MAX_ALPHA = 10;
     const MAX_POINTS = 300;
     const MAX_RANGE = 100;
     const MAX_SILL = 2000;

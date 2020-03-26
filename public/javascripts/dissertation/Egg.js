@@ -4,34 +4,14 @@ let EggTexture = (function() {
     let ctx;
     let texture; //THREE.js CanvasTexture object
     const CANVAS_SIZE = 256;
-    const MAX_SPOTS = 500;
-    let paramSpots = 100;
-    let spotsCounter = 0;
-    const SPOT_COLOUR = "#1e2121";
     const EGG_BASE_COLOUR = "#6b6e69";
-    const SPOT_SIZE_MIN = 2;
-    const SPOT_SIZE_MAX = 8;
 
 
-    const getMAX_SPOTS = () => {return MAX_SPOTS};
-    const getSpotsCounter = () => {return spotsCounter};
     const getTexture = () => {return texture};
-    const getParamSpots = () => {return paramSpots};
-    const getCanvasSize = () => {return CANVAS_SIZE};
 
-    const setParamSpots = function(newSpots){
-        if(newSpots <= MAX_SPOTS)
-            paramSpots = newSpots;
-        else
-            console.log(`Too many spots - ${newSpots}, allowed: ${MAX_SPOTS}`);
-    };
-
-    const incrementSpots = () => {++spotsCounter};
-    const resetCounter = () => {spotsCounter = 0};
     const resetTexture = () => {
         ctx.fillStyle = EGG_BASE_COLOUR;
         ctx.fillRect( 0, 0, 256, 256 );
-        resetCounter();
     };
 
     const updateTexture = () => {
@@ -39,14 +19,12 @@ let EggTexture = (function() {
     }
 
     const init = function(){
-        // ctx.fillStyle = EGG_BASE_COLOUR;
-        // ctx.fillRect( 0, 0, 256, 256 );
-        // let canvas = document.getElementById("spatial-random-field").getContext("2d");
         ctx = Stats.plotSpatiallyCorrelatedField();
         texture = new THREE.CanvasTexture(ctx.canvas);
         texture.needsUpdate = true;
     };
 
+    //TODO: move to utilities
     const randInt = function(min, max) {
         if (max === undefined) {
             max = min;
@@ -67,33 +45,12 @@ let EggTexture = (function() {
         ctx.fill();
     };
 
-    const test = function() {
-        console.log("EggTexture module");
-    };
-
-    const update = function(){
-        if(EggTexture.getSpotsCounter() < EggTexture.getParamSpots()) {
-            drawRandomDot();
-            texture.needsUpdate = true;
-            incrementSpots();
-        }
-
-    };
-
 
     return {
         init: init,
-        test: test,
         getTexture: getTexture,
         drawRandomDot: drawRandomDot,
-        getMAX_SPOTS: getMAX_SPOTS,
-        getSpotsCounter: getSpotsCounter,
-        incrementSpots: incrementSpots,
-        setParamSpots: setParamSpots,
-        getParamSpots: getParamSpots,
         resetTexture: resetTexture,
-        update: update,
-        getCanvasSize: getCanvasSize,
         updateTexture: updateTexture
     }
 })();

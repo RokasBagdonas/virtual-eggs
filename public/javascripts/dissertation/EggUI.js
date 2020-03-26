@@ -19,23 +19,11 @@ let EggUI = (function(){
     let isInteractive = true;
 
     const init = function(){
-        setupSlider("spots-slider",
-            (event) => {
-                EggTexture.setParamSpots(parseInt(event.target.value, 10));
-            },
-            0,
-            EggTexture.getMAX_SPOTS(),
-            EggTexture.getMAX_SPOTS() / 2
-        );
-
-        setupSubmit();
         setupGeneratePoints();
         setupSpatiallyCorrelatedField();
         setupOther();
         setupColourPicker();
     };
-
-
 
     const setupSlider = function (elementId, eventCallback, min = 0, max = 200, value = 100) {
         let slider = document.getElementById(elementId);
@@ -45,20 +33,11 @@ let EggUI = (function(){
         slider.oninput = eventCallback;
     };
 
-    const setupSubmit = function(){
-        let submit = document.getElementById("options-submit");
-
-        submit.onclick = (event) => {
-            console.log("submit event");
-            EggTexture.resetTexture();
-
-        }
-    };
 
     const setupGeneratePoints = function(){
         let slider = document.getElementById("points-slider");
         let label = document.getElementById("points-label");
-        const initialPoints = Stats.getNumPointsLimit() / 2
+        const initialPoints = Stats.getNumPointsLimit() / 2;
         label.innerHTML = initialPoints;
 
         slider.max = Stats.getNumPointsLimit();
@@ -92,6 +71,7 @@ let EggUI = (function(){
             label.innerHTML = "Sigma^2 = " + event.target.value;
             if (isInteractive){
                 Stats.plotSpatiallyCorrelatedField();
+                EggTexture.updateTexture();
             }
         };
 
@@ -99,7 +79,8 @@ let EggUI = (function(){
         slider = document.getElementById("alpha-slider");
         let label2 = document.getElementById("alpha-label");
 
-        slider.min = -30;
+        slider.min = -2;
+        slider.step = "0.1";
         slider.max = Stats.getAlphaLimit();
         slider.value = Stats.getAlpha();
         label2.innerHTML = "Alpha = " + Stats.getAlpha();
@@ -109,10 +90,9 @@ let EggUI = (function(){
             label2.innerHTML = "Alpha = " + event.target.value;
             if (isInteractive)
                 Stats.plotSpatiallyCorrelatedField();
+                EggTexture.updateTexture();
         };
     };
-
-
 
     function setupOther() {
         let btn = document.getElementById("correlate-button");
@@ -120,6 +100,7 @@ let EggUI = (function(){
             const model = document.getElementById("variogramModel-select");
             Stats.setVariogramModel(model.value);
             Stats.plotSpatiallyCorrelatedField();
+            EggTexture.updateTexture();
         }
 
         let chx = document.getElementById("interactive-checkbox");
