@@ -29,7 +29,6 @@ canvas{
 
 .grid-item-nav {
     grid-column: span 2;
-
 }
 
 .grid-item-panel{
@@ -41,7 +40,7 @@ canvas{
     /*width: 100%;*/
     /*height: 100%;*/
     /*grid-column-start: span 1;*/
-    grid-row: 1;
+    grid-row: 2;
 }
 
 #scene-canvas {

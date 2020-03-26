@@ -11,14 +11,15 @@
 
 const Stats = (function() {
 
+    let ctx;
     let numPoints = 223;
     let width = 256;
     let height = 256;
     let data;
     let sigma2 = 1;
     let alpha = 2;
-    let range = 50;
-    let sill = 500;
+    let range = 5;
+    // let sill = 500;
     let variogram;
     let variogramModel = "exponential";
     const MAX_SIGMA2 = 2;
@@ -26,8 +27,6 @@ const Stats = (function() {
     const MAX_POINTS = 300;
     const MAX_RANGE = 100;
     const MAX_SILL = 2000;
-
-
 
     const setParameters = function (num, w, h) {
         numPoints = num;
@@ -61,9 +60,12 @@ const Stats = (function() {
     };
 
     const setRange = (newRange) => {
+        range = newRange;
         if (variogram != null)
-            range = newRange;
-    }
+            variogram.range = newRange;
+    };
+
+    const getRange = () => { return variogram.range;}
 
 
     const getSigma2Limit = () => {return MAX_SIGMA2;}
@@ -124,16 +126,49 @@ const Stats = (function() {
 
     //3.
     const plotSpatiallyCorrelatedField = function(){
-        let ctx = document.getElementById("spatial-random-field").getContext("2d");
+
+        variogram = kriging.train(data.t, data.x, data.y, variogramModel, sigma2, alpha);
+        plotVariogram();
+        // variogram.range = range;
+        // let ctx = document.getElementById("spatial-random-field").getContext("2d");
+        // ctx.fillStyle = "#ffffff";
+        // ctx.fillRect(0, 0, width, height);
+        // let value = 0;
+        // const step = 2;
+        // const radius = 1;
+        // const threshold = 80;
+        // console.log(`nugget: ${variogram.nugget.toFixed(3)}; range: ${variogram.range.toFixed(3)}; sill: ${variogram.sill.toFixed(3)}; A: ${variogram.A.toFixed(3)}; model: ${variogramModel}`);
+        //
+        // for(let x = 0; x < width; x += step){
+        //     for(let y = 0; y < height; y += step){
+        //         value = kriging.predict(x, y, variogram);
+        //         if (value >= threshold){
+        //             ctx.beginPath();
+        //             ctx.fillStyle = "#" + EggUI.colourPicker.colourAt(value);
+        //             ctx.arc(x, y, radius, 0, Math.PI * 2);
+        //             ctx.fill();
+        //         }
+        //
+        //     }
+        // }
+
+        return ctx;
+
+    };
+
+    /**
+     * Called when variogram params are changed but not the data.
+     * TODO: refactor plotSpatiallyCorrelatedField
+     */
+    const plotVariogram = function(){
+        variogram.range = range;
+        ctx = document.getElementById("spatial-random-field").getContext("2d");
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, width, height);
-
         let value = 0;
         const step = 2;
         const radius = 1;
         const threshold = 80;
-        variogram = kriging.train(data.t, data.x, data.y, variogramModel, sigma2, alpha);
-        // variogram.range = 10;
         console.log(`nugget: ${variogram.nugget.toFixed(3)}; range: ${variogram.range.toFixed(3)}; sill: ${variogram.sill.toFixed(3)}; A: ${variogram.A.toFixed(3)}; model: ${variogramModel}`);
 
         for(let x = 0; x < width; x += step){
@@ -147,11 +182,9 @@ const Stats = (function() {
                 }
 
             }
-        }
+        };
+    }
 
-        return ctx;
-
-    };
 
     return {
         init: init,
@@ -169,7 +202,9 @@ const Stats = (function() {
         getNumPointsLimit: getNumPointsLimit,
         getVariogramModel: getVariogramModel,
         setVariogramModel: setVariogramModel,
-        setRange: setRange
+        setRange: setRange,
+        getRange: getRange,
+        plotVariogram: plotVariogram
     }
 })();
 

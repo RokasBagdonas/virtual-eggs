@@ -1,6 +1,6 @@
 /**
  * Parameters:
- *  - canvas resolution (width =? height)
+ *  - canvas resolution (width ?== height)
  *  - num of points
  *  - mean
  *  - variance
@@ -23,14 +23,7 @@ let EggUI = (function(){
         setupSpatiallyCorrelatedField();
         setupOther();
         setupColourPicker();
-    };
-
-    const setupSlider = function (elementId, eventCallback, min = 0, max = 200, value = 100) {
-        let slider = document.getElementById(elementId);
-        slider.min = min;
-        slider.max = max;
-        slider.value = value;
-        slider.oninput = eventCallback;
+        setupRangeSlider();
     };
 
 
@@ -88,11 +81,33 @@ let EggUI = (function(){
         slider.oninput = (event) => {
             Stats.setAlpha(parseInt(event.target.value, 10));
             label2.innerHTML = "Alpha = " + event.target.value;
-            if (isInteractive)
+            if (isInteractive){
                 Stats.plotSpatiallyCorrelatedField();
                 EggTexture.updateTexture();
+            }
         };
     };
+
+    function setupRangeSlider(){
+        let slider = document.getElementById("range-slider");
+        let label = document.getElementById("range-label");
+        slider.min = 0;
+        slider.max = 20;
+        slider.step = "0.1";
+        slider.value = 2;
+        label.innerHTML = "Range = " + 2;
+
+        slider.oninput = (event) => {
+            Stats.setRange(parseFloat(event.target.value, 10));
+            label.innerHTML = "Range = " + event.target.value;
+            if (isInteractive){
+                Stats.plotVariogram();
+                EggTexture.updateTexture();
+            }
+        }
+    }
+
+
 
     function setupOther() {
         let btn = document.getElementById("correlate-button");
@@ -101,7 +116,7 @@ let EggUI = (function(){
             Stats.setVariogramModel(model.value);
             Stats.plotSpatiallyCorrelatedField();
             EggTexture.updateTexture();
-        }
+        };
 
         let chx = document.getElementById("interactive-checkbox");
         chx.onclick = (event) => {

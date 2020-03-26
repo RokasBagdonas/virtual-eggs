@@ -16,7 +16,7 @@ let EggTexture = (function() {
 
     const updateTexture = () => {
         texture.needsUpdate = true;
-    }
+    };
 
     const init = function(){
         ctx = Stats.plotSpatiallyCorrelatedField();
