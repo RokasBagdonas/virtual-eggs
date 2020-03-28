@@ -21,6 +21,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/three', express.static(__dirname + '/node_modules/three'));
 app.use('/rainbowvis', express.static(__dirname + '/node_modules/rainbowvis.js'));
+app.use('/numbers', express.static(__dirname + '/node_modules/numbers/lib/'));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);

@@ -59,14 +59,15 @@ const Stats = (function() {
         }
     };
 
-    const setRange = (newRange) => {
-        range = newRange;
-        if (variogram != null)
-            variogram.range = newRange;
-    };
-
     const getRange = () => { return variogram.range;}
-
+    const setRange = (newRange) => {
+        if (variogram != null){
+            range = newRange;
+            variogram.range = newRange;
+        }
+        else
+            console.log("setRange: variogram does not exist");
+    };
 
     const getSigma2Limit = () => {return MAX_SIGMA2;}
     const getAlphaLimit = () => {return MAX_ALPHA;}
@@ -129,31 +130,7 @@ const Stats = (function() {
 
         variogram = kriging.train(data.t, data.x, data.y, variogramModel, sigma2, alpha);
         plotVariogram();
-        // variogram.range = range;
-        // let ctx = document.getElementById("spatial-random-field").getContext("2d");
-        // ctx.fillStyle = "#ffffff";
-        // ctx.fillRect(0, 0, width, height);
-        // let value = 0;
-        // const step = 2;
-        // const radius = 1;
-        // const threshold = 80;
-        // console.log(`nugget: ${variogram.nugget.toFixed(3)}; range: ${variogram.range.toFixed(3)}; sill: ${variogram.sill.toFixed(3)}; A: ${variogram.A.toFixed(3)}; model: ${variogramModel}`);
-        //
-        // for(let x = 0; x < width; x += step){
-        //     for(let y = 0; y < height; y += step){
-        //         value = kriging.predict(x, y, variogram);
-        //         if (value >= threshold){
-        //             ctx.beginPath();
-        //             ctx.fillStyle = "#" + EggUI.colourPicker.colourAt(value);
-        //             ctx.arc(x, y, radius, 0, Math.PI * 2);
-        //             ctx.fill();
-        //         }
-        //
-        //     }
-        // }
-
         return ctx;
-
     };
 
     /**
@@ -180,10 +157,9 @@ const Stats = (function() {
                     ctx.arc(x, y, radius, 0, Math.PI * 2);
                     ctx.fill();
                 }
-
             }
         };
-    }
+    };
 
 
     return {
