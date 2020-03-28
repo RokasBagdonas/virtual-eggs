@@ -1,134 +1,122 @@
 /**
- * Parameters:
- *  - canvas resolution (width ?== height)
- *  - num of points
- *  - mean
- *  - variance
- *  - range
- *  - nugget
- *
- * @type {{init: init}}
- */
-let EggUI = (function(){
+* Parameters:
+*  - canvas resolution (width ?== height)
+*  - num of points
+*  - mean
+*  - variance
+*  - range
+*  - nugget
+*
+* @type {{init: init}}
+*/
+import * as Stats from './Stats.js'
+import {texture} from "./EggTexture.js";
 
-    let colourPicker = new Rainbow();
-    function setupColourPicker(params){
-        colourPicker.setNumberRange(0,100);
-        colourPicker.setSpectrum('black', 'red');
-    }
-    let isInteractive = true;
+let isInteractive = true; //for updating the texture while parameters are being changed live
 
-    const init = function(){
-        setupGeneratePoints();
-        setupSpatiallyCorrelatedField();
-        setupOther();
-        setupColourPicker();
-        setupRangeSlider();
+
+function setupGeneratePoints(){
+    let slider = document.getElementById("points-slider");
+    let label = document.getElementById("points-label");
+    const initialPoints = Stats.MAX_POINTS / 2;
+    label.innerHTML = "" + initialPoints;
+
+    slider.max = Stats.MAX_POINTS;
+    slider.value = initialPoints;
+
+    slider.oninput = (event) => {
+        const points = Math.round(parseInt(event.target.value, 10));
+        Stats.params.numPoints = points;
+        label.innerHTML = "" + points;
     };
 
+    let btn = document.getElementById("points-button");
+    btn.onclick = (event) =>{
+        Stats.plotPoints();
+    };
+}
 
-    const setupGeneratePoints = function(){
-        let slider = document.getElementById("points-slider");
-        let label = document.getElementById("points-label");
-        const initialPoints = Stats.getNumPointsLimit() / 2;
-        label.innerHTML = initialPoints;
+function setupSpatiallyCorrelatedField() {
+    //sigma2
+    let slider = document.getElementById("sigma2-slider");
+    let label = document.getElementById("sigma2-label");
 
-        slider.max = Stats.getNumPointsLimit();
-        slider.value = initialPoints;
+    slider.step = "0.1";
+    slider.max = Stats.MAX_SIGMA2;
+    slider.value = Stats.params.sigma2;
+    label.innerHTML = "Sigma^2 = " + Stats.params.sigma2;
 
-        slider.oninput = (event) => {
-            const points = Math.round(parseInt(event.target.value, 10));
-            Stats.setNumPoints(points);
-            label.innerHTML = points;
-        };
-
-        let btn = document.getElementById("points-button");
-        btn.onclick = (event) =>{
-            Stats.plotPoints();
-        };
+    slider.oninput = (event) => {
+        // console.log("sigma2 slider");
+        Stats.params.sigma2 = parseFloat(event.target.value, 10);
+        label.innerHTML = "Sigma^2 = " + event.target.value;
+        if (isInteractive){
+            Stats.plotNewVariogram();
+            texture.needsUpdate = true;
+        }
     };
 
-    const setupSpatiallyCorrelatedField = function () {
-        //sigma2
-        let slider = document.getElementById("sigma2-slider");
-        let label = document.getElementById("sigma2-label");
+    //alpha
+    slider = document.getElementById("alpha-slider");
+    let label2 = document.getElementById("alpha-label");
 
-        slider.step = "0.1";
-        slider.max = Stats.getSigma2Limit();
-        slider.value = Stats.getSigma2();
-        label.innerHTML = "Sigma^2 = " + Stats.getSigma2();
+    slider.min = -2;
+    slider.step = "0.1";
+    slider.max = Stats.MAX_ALPHA;
+    slider.value = Stats.params.alpha;
+    label2.innerHTML = "Alpha = " + Stats.params.alpha;
 
-        slider.oninput = (event) => {
-            // console.log("sigma2 slider");
-            Stats.setSigma2(parseFloat(event.target.value, 10));
-            label.innerHTML = "Sigma^2 = " + event.target.value;
-            if (isInteractive){
-                Stats.plotSpatiallyCorrelatedField();
-                EggTexture.updateTexture();
-            }
-        };
-
-        //alpha
-        slider = document.getElementById("alpha-slider");
-        let label2 = document.getElementById("alpha-label");
-
-        slider.min = -2;
-        slider.step = "0.1";
-        slider.max = Stats.getAlphaLimit();
-        slider.value = Stats.getAlpha();
-        label2.innerHTML = "Alpha = " + Stats.getAlpha();
-
-        slider.oninput = (event) => {
-            Stats.setAlpha(parseInt(event.target.value, 10));
-            label2.innerHTML = "Alpha = " + event.target.value;
-            if (isInteractive){
-                Stats.plotSpatiallyCorrelatedField();
-                EggTexture.updateTexture();
-            }
-        };
+    slider.oninput = (event) => {
+        Stats.params.alpha = parseInt(event.target.value, 10);
+        label2.innerHTML = "Alpha = " + event.target.value;
+        if (isInteractive){
+            Stats.plotNewVariogram();
+            texture.needsUpdate = true;
+        }
     };
+}
 
-    function setupRangeSlider(){
-        let slider = document.getElementById("range-slider");
-        let label = document.getElementById("range-label");
-        slider.min = 0;
-        slider.max = 20;
-        slider.step = "0.1";
-        slider.value = 2;
-        label.innerHTML = "Range = " + 2;
+function setupRangeSlider(){
+    let slider = document.getElementById("range-slider");
+    let label = document.getElementById("range-label");
+    slider.min = 0;
+    slider.max = 20;
+    slider.step = "0.1";
+    slider.value = 2;
+    label.innerHTML = "Range = " + 2;
 
-        slider.oninput = (event) => {
-            Stats.setRange(parseFloat(event.target.value, 10));
-            label.innerHTML = "Range = " + event.target.value;
-            if (isInteractive){
-                Stats.plotVariogram();
-                EggTexture.updateTexture();
-            }
+    slider.oninput = (event) => {
+        Stats.params.range = parseFloat(event.target.value, 10);
+        label.innerHTML = "Range = " + event.target.value;
+        if (isInteractive){
+            Stats.plotVariogram();
+            texture.updateTexture();
         }
     }
+}
 
 
 
-    function setupOther() {
-        let btn = document.getElementById("correlate-button");
-        btn.onclick = (event) =>{
-            const model = document.getElementById("variogramModel-select");
-            Stats.setVariogramModel(model.value);
-            Stats.plotSpatiallyCorrelatedField();
-            EggTexture.updateTexture();
-        };
+function setupOther() {
+    let btn = document.getElementById("correlate-button");
+    btn.onclick = (event) =>{
+        const model = document.getElementById("variogramModel-select");
+        Stats.setVariogramModel(model.value);
+        Stats.plotNewVariogram();
+        texture.updateTexture();
+    };
 
-        let chx = document.getElementById("interactive-checkbox");
-        chx.onclick = (event) => {
-            isInteractive = !isInteractive;
-        }
+    let chx = document.getElementById("interactive-checkbox");
+    chx.onclick = (event) => {
+        isInteractive = !isInteractive;
     }
+}
+
+export function initEggUI(){
+    setupGeneratePoints();
+    setupSpatiallyCorrelatedField();
+    setupOther();
+    setupRangeSlider();
+}
 
 
-
-    return {
-        init: init,
-        colourPicker: colourPicker
-    }
-
-})();

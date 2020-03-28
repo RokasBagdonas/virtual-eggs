@@ -1,3 +1,5 @@
+import * as EggTexture from './EggTexture.js'
+import {initEggUI} from './EggUI.js'
 // these need to be accessed inside more than one function so we'll declare them first
 let container;
 let camera;
@@ -17,10 +19,13 @@ function init() {
     createLights();
     createRenderer();
 
-    loadEgg();
-    EggUI.init();
-    Stats.init();
     EggTexture.init();
+    loadEgg();
+    initEggUI();
+    // EggUI.init();
+    // Stats.init();
+    // eggTextureInit();
+    // EggTexture.init();
 
     renderer.setAnimationLoop( () => {
         update();
@@ -85,4 +90,52 @@ function onWindowResize() {
 
 window.addEventListener( 'resize', onWindowResize );
 
+
+// function eggTextureInit(){
+//     Stats.plotNewVariogram();
+//     let texture = new THREE.CanvasTexture(Stats.ctxVariogram);
+//     texture.needsUpdate = true;
+// }
+
+
+function loadEgg() {
+
+    const loader = new THREE.GLTFLoader();
+
+    // A reusable function to set up the models. We're passing in a position parameter
+    // so that they can be individually placed around the scene
+    const onLoad = ( gltf, position ) => {
+
+        let model = gltf.scene.children[ 0 ];
+        const sc = 5;
+        model.scale.set(sc, sc, sc);
+        //TODO: change base material colours
+        model.material = new THREE.MeshStandardMaterial({map: EggTexture.texture, flatShading: false});
+        model.position.copy( position );
+
+        scene.add( model );
+        console.log(`model '${model.name}' loaded`);
+    };
+
+    // the loader will report the loading progress to this function
+    const onProgress = () => {console.log("loading model..")};
+
+    // the loader will send any error messages to this function, and we'll log
+    // them to to console
+    const onError = ( errorMessage ) => { console.log( errorMessage ); };
+
+    // load the first model. Each model is loaded asynchronously,
+    // so don't make any assumption about which one will finish loading first
+    //egg dimensions: 0.101 x 0.0582 x 0.0286 m
+
+    const eggPosition = new THREE.Vector3( 0, 0, 0 );
+    loader.load( '/models/guillemot-egg.glb', //URL
+        gltf => onLoad( gltf, eggPosition ), //onLoad callback
+        onProgress, //onProgress callback
+        onError ); //onError callback
+
+}
+
 init();
+
+
