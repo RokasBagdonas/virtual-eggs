@@ -9,16 +9,18 @@
 *  4.2. TODO: further improvement: make it to look like a layer beneath.
 */
 
+let numbers = require('numbers');
+
 //setup canvases---------------------------------
 let ctx = document.getElementById("stats-points"); //temporary variable
-export let width = ctx.width;
-export let height = ctx.height;
+let width = ctx.width;
+let height = ctx.height;
 
-export let ctxData = ctx.getContext("2d");
-export let ctxVariogram = document.getElementById("spatial-random-field").getContext("2d");
+let ctxData = ctx.getContext("2d");
+let ctxVariogram = document.getElementById("spatial-random-field").getContext("2d");
 
 //texture parameters-----------------------------
-export let params = {
+let params = {
     numPoints: 223,
     sigma2: 1,
     alpha: 2,
@@ -26,15 +28,15 @@ export let params = {
 };
 
 let variogram;
-export let data;
+let data;
 
-export let variogramModel = "exponential";
+let variogramModel = "exponential";
 
-export const MAX_SIGMA2 = 2;
-export const MAX_ALPHA = 10;
-export const MAX_POINTS = 300;
-export const MAX_RANGE = 100;
-export const MAX_SILL = 2000;
+const MAX_SIGMA2 = 2;
+const MAX_ALPHA = 10;
+const MAX_POINTS = 300;
+const MAX_RANGE = 100;
+const MAX_SILL = 2000;
 
 //utilities--------------------------------------
 let colourPicker = new Rainbow();
@@ -42,22 +44,22 @@ colourPicker.setNumberRange(0,100); //TODO: change to 0-1
 colourPicker.setSpectrum('black', 'red');
 
 
-export function setVariogramModel(newModel){
+const setVariogramModel= function (newModel){
     switch (newModel) {
         case 'gaussian': variogramModel = 'gaussian'; break;
         case 'exponential': variogramModel = 'exponential'; break;
         case 'spherical': variogramModel = 'spherical'; break;
     }
-}
+};
 
-export function setRange(newRange){
+const setRange = function (newRange){
     if (variogram != null){
-        range = newRange;
+        params.range = newRange;
         variogram.range = newRange;
     }
     else
         console.log("setRange: variogram does not exist");
-}
+};
 
 /**
  * Generates random values (heights) at random locations in a 2D area.
@@ -82,7 +84,7 @@ function generateData(numPoints = params.numPoints, w = width, h = height) {
  * //2.
  * TODO: plot points as on a sphere (or do coordinate transformation relative to the model path) (AvianBioRes15)
  */
-export function plotPoints(){
+const plotPoints = function(){
     ctxData.fillStyle = "#ffffff";
     ctxData.fillRect(0, 0, width, height);
 
@@ -97,10 +99,10 @@ export function plotPoints(){
         ctxData.arc(x, y, radius, 0, Math.PI * 2);
         ctxData.fill();
     }
-}
+};
 
 //3. Rename to replot
-export function plotNewVariogram(){
+const plotNewVariogram = function(){
     variogram = kriging.train(data.t, data.x, data.y, variogramModel, params.sigma2, params.alpha);
     plotVariogram();
 }
@@ -109,7 +111,7 @@ export function plotNewVariogram(){
  * Called when variogram params are changed but not the data.
  * TODO: refactor plotNewVariogram
  */
-export function plotVariogram(){
+const plotVariogram = function(){
     variogram.range = params.range;
     ctxVariogram.fillStyle = "#ffffff";
     ctxVariogram.fillRect(0, 0, width, height);
@@ -130,12 +132,37 @@ export function plotVariogram(){
             }
         }
     }
-}
+};
 
+const init = function(){
+    generateData();
+    plotPoints();
+    plotNewVariogram();
+}
 
 //======================================================================================================================
 //init phase
 console.log("init phase " + width + " " + height);
-generateData();
-plotPoints();
-plotNewVariogram();
+
+let Stats = {
+    width: width,
+    height: height,
+    ctxData: ctxData,
+    ctxVariogram: ctxVariogram,
+    params: params,
+    data: data,
+    variogramModel: variogramModel,
+    MAX_SIGMA2: MAX_SIGMA2,
+    MAX_ALPHA: MAX_ALPHA,
+    MAX_POINTS: MAX_POINTS,
+    MAX_RANGE: MAX_RANGE,
+    MAX_SILL: MAX_SILL,
+    setVariogramModel: setVariogramModel,
+    setRange: setRange,
+    plotPoints: plotPoints,
+    plotNewVariogram: plotNewVariogram,
+    plotVariogram: plotVariogram,
+    init: init
+};
+
+module.exports = Stats;

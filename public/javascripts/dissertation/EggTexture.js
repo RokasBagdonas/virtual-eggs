@@ -1,14 +1,24 @@
-import * as Stats from './Stats.js'
+let Stats = require('./Stats.js');
 
-export let texture; //THREE object
 
-export function init(){
+let texture; //THREE object
+const init = function(){
     texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas);
     texture.needsUpdate = true;
-}
+};
 
-export function updateTexture(){
+const updateTexture =  function(){
     Stats.plotVariogram();
     texture.needsUpdate = true;
-}
+};
+
+Stats.init();
+init();
+updateTexture();
+
+module.exports = {
+    texture: texture,
+    init: init,
+    updateTexture: updateTexture
+};
 

@@ -9,8 +9,8 @@
 *
 * @type {{init: init}}
 */
-import * as Stats from './Stats.js'
-import {texture} from "./EggTexture.js";
+// import * as Stats from './Stats.js'
+// import {texture} from "./EggTexture.js";
 
 let isInteractive = true; //for updating the texture while parameters are being changed live
 
