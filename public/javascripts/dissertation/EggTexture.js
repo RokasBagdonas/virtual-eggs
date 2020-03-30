@@ -1,9 +1,8 @@
 let Stats = require('./Stats.js');
 
-
-let texture; //THREE object
+let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
 const init = function(){
-    texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas);
+    // texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas);
     texture.needsUpdate = true;
 };
 
@@ -12,9 +11,11 @@ const updateTexture =  function(){
     texture.needsUpdate = true;
 };
 
-Stats.init();
-init();
-updateTexture();
+// Stats.init();
+// init();
+// updateTexture();
+
+
 
 module.exports = {
     texture: texture,

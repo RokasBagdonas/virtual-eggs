@@ -138,11 +138,11 @@ const init = function(){
     generateData();
     plotPoints();
     plotNewVariogram();
-}
+};
 
 //======================================================================================================================
 //init phase
-console.log("init phase " + width + " " + height);
+console.log("Stats: " + numbers.random.distribution.normal(4, 10, 3));
 
 let Stats = {
     width: width,

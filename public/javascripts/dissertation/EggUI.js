@@ -11,6 +11,8 @@
 */
 // import * as Stats from './Stats.js'
 // import {texture} from "./EggTexture.js";
+const Stats = require('./Stats.js');
+const texture = require('./EggTexture.js');
 
 let isInteractive = true; //for updating the texture while parameters are being changed live
 
@@ -96,7 +98,6 @@ function setupRangeSlider(){
 }
 
 
-
 function setupOther() {
     let btn = document.getElementById("correlate-button");
     btn.onclick = (event) =>{
@@ -112,11 +113,15 @@ function setupOther() {
     }
 }
 
-export function initEggUI(){
+const initEggUI = function(){
     setupGeneratePoints();
     setupSpatiallyCorrelatedField();
     setupOther();
     setupRangeSlider();
-}
+};
+
+module.exports = {
+    initEggUI: initEggUI
+};
 
 

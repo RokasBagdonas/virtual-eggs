@@ -1,5 +1,6 @@
-import * as EggTexture from './EggTexture.js'
-import {initEggUI} from './EggUI.js'
+const Stats = require('./Stats.js');
+const EggTexture = require('./EggTexture.js');
+const EggUI = require('./EggUI.js');
 // these need to be accessed inside more than one function so we'll declare them first
 let container;
 let camera;
@@ -19,13 +20,10 @@ function init() {
     createLights();
     createRenderer();
 
+    Stats.init();
     EggTexture.init();
     loadEgg();
-    initEggUI();
-    // EggUI.init();
-    // Stats.init();
-    // eggTextureInit();
-    // EggTexture.init();
+    EggUI.initEggUI();
 
     renderer.setAnimationLoop( () => {
         update();
