@@ -12,12 +12,7 @@
 let numbers = require('numbers');
 
 //setup canvases---------------------------------
-let ctx = document.getElementById("stats-points"); //temporary variable
-let width = ctx.width;
-let height = ctx.height;
-
-let ctxData = ctx.getContext("2d");
-let ctxVariogram = document.getElementById("spatial-random-field").getContext("2d");
+let width = 256, height = 256;
 
 //texture parameters-----------------------------
 let params = {
@@ -89,9 +84,9 @@ function generateData(numPoints = params.numPoints, w = width, h = height) {
  * //2.
  * TODO: plot points as on a sphere (or do coordinate transformation relative to the model path) (AvianBioRes15)
  */
-const plotPoints = function(){
-    ctxData.fillStyle = "#ffffff";
-    ctxData.fillRect(0, 0, width, height);
+const plotPoints = function(ctx){
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
 
     let x, y, h;
     const radius = 3;
@@ -99,29 +94,28 @@ const plotPoints = function(){
         x = data.x[i];
         y = data.y[i];
         h = data.t[i];
-        ctxData.beginPath();
-        ctxData.fillStyle = "#" + colourPicker.colourAt(h);
-        ctxData.arc(x, y, radius, 0, Math.PI * 2);
-        ctxData.fill();
+        ctx.beginPath();
+        ctx.fillStyle = "#" + colourPicker.colourAt(h);
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
     }
 };
 
-//3. Rename to replot
-const plotNewVariogram = function(){
-    variogram = kriging.train(data.t, data.x, data.y, variogramModel, params.sigma2, params.alpha);
-    plotVariogram();
-}
+
 
 /**
  * Called when variogram params are changed but not the data.
  * TODO: refactor plotNewVariogram
  */
-const plotVariogram = function(){
+const plotVariogram = function(ctx, newVariogram = false){
+    if (newVariogram)
+        variogram = kriging.train(data.t, data.x, data.y, variogramModel, params.sigma2, params.alpha);
+
     variogram.range = params.range;
     variogram.sill = params.sill;
     variogram.nugget = params.nugget;
-    ctxVariogram.fillStyle = "#ffffff";
-    ctxVariogram.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
     let value = 0;
     const step = params.coordinateStep;
     const threshold = 80;
@@ -132,19 +126,19 @@ const plotVariogram = function(){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
             // if (value >= threshold){
-                ctxVariogram.beginPath();
-                ctxVariogram.fillStyle = "#" + colourPicker.colourAt(value);
-                ctxVariogram.arc(x, y, params.drawRadius, 0, Math.PI * 2);
-                ctxVariogram.fill();
+            ctx.beginPath();
+            ctx.fillStyle = "#" + colourPicker.colourAt(value);
+            ctx.arc(x, y, params.drawRadius, 0, Math.PI * 2);
+            ctx.fill();
             // }
         }
     }
 };
 
-const init = function(){
+const init = function(w, h){
+    width = w;
+    height = h;
     generateData();
-    plotPoints();
-    plotNewVariogram();
 };
 
 //======================================================================================================================
@@ -154,8 +148,6 @@ console.log("Stats: " + numbers.random.distribution.normal(4, 10, 3));
 let Stats = {
     width: width,
     height: height,
-    ctxData: ctxData,
-    ctxVariogram: ctxVariogram,
     params: params,
     data: data,
     variogramModel: variogramModel,
@@ -168,9 +160,8 @@ let Stats = {
     setRange: setRange,
     generateData: generateData,
     plotPoints: plotPoints,
-    plotNewVariogram: plotNewVariogram,
     plotVariogram: plotVariogram,
-    init: init
+    init: init,
 };
 
 module.exports = Stats;

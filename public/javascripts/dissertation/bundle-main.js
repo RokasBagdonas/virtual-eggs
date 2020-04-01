@@ -3233,27 +3233,60 @@ statistic.covariance = function (set1, set2) {
 },{"./basic":3}],12:[function(require,module,exports){
 let Stats = require('./Stats.js');
 
-let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
+// let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
+let texture; //THREE object
+let ctxData, ctxTexture;
 const init = function(){
-    // texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas);
+    ctxData = document.getElementById("stats-points");
+    Stats.init(ctxData.width, ctxData.height);
+    Stats.plotPoints(ctxData.getContext("2d"));
+
+
+    let canvasTexture = document.getElementById("texture");
+    texture = new THREE.CanvasTexture(canvasTexture);
+
+    ctxTexture = canvasTexture.getContext("2d");
+    Stats.plotVariogram(ctxTexture, true);
+
+    /**
+     * Plan for generating texture
+     * 1. add base colour to ctx. Research interpolation
+     * 2. add base pigment colour using big range.
+     * 3. add low radius noisy dots
+     * 4. add main patterns
+     *   4.1 blobs
+     *   4.2 streaking
+     *   4.3 gaussian with trend
+     * 5. add noise bump map
+     *
+     * Need to improve Stats js so that we can different parameters for different patterns.
+     * 1. Save a copy of the base texture (1-3) so that it can be used to adjust main patterns.
+     * 2. determine areas where points get distorted. when plotting a point, check if it is in that area.
+     *  If so, scale default drawing radius down.
+     * 3. Refactor Stats to have variogram function with options.
+     * 4.
+     *
+     */
+
+    // texture = new THREE.CanvasTexture(ctxTexture.canvas);
     texture.needsUpdate = true;
+};
+
+const getTexture = function(){
+    return texture;
 };
 
 const updateTexture =  function(){
-    Stats.plotVariogram();
+    // Stats.plotVariogram(ctxTexture);
     texture.needsUpdate = true;
 };
-
-// Stats.init();
-// init();
-// updateTexture();
 
 
 
 module.exports = {
-    texture: texture,
     init: init,
-    updateTexture: updateTexture
+    updateTexture: updateTexture,
+    getTexture: getTexture
 };
 
 
@@ -3445,7 +3478,6 @@ function init() {
     createLights();
     createRenderer();
 
-    Stats.init();
     EggTexture.init();
     loadEgg();
     EggUI.initEggUI();
@@ -3533,7 +3565,7 @@ function loadEgg() {
         const sc = 5;
         model.scale.set(sc, sc, sc);
         //TODO: change base material colours
-        model.material = new THREE.MeshStandardMaterial({map: EggTexture.texture, flatShading: false});
+        model.material = new THREE.MeshStandardMaterial({map: EggTexture.getTexture(), flatShading: false});
         model.position.copy( position );
 
         scene.add( model );
@@ -3578,12 +3610,7 @@ init();
 let numbers = require('numbers');
 
 //setup canvases---------------------------------
-let ctx = document.getElementById("stats-points"); //temporary variable
-let width = ctx.width;
-let height = ctx.height;
-
-let ctxData = ctx.getContext("2d");
-let ctxVariogram = document.getElementById("spatial-random-field").getContext("2d");
+let width = 256, height = 256;
 
 //texture parameters-----------------------------
 let params = {
@@ -3655,9 +3682,9 @@ function generateData(numPoints = params.numPoints, w = width, h = height) {
  * //2.
  * TODO: plot points as on a sphere (or do coordinate transformation relative to the model path) (AvianBioRes15)
  */
-const plotPoints = function(){
-    ctxData.fillStyle = "#ffffff";
-    ctxData.fillRect(0, 0, width, height);
+const plotPoints = function(ctx){
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
 
     let x, y, h;
     const radius = 3;
@@ -3665,29 +3692,28 @@ const plotPoints = function(){
         x = data.x[i];
         y = data.y[i];
         h = data.t[i];
-        ctxData.beginPath();
-        ctxData.fillStyle = "#" + colourPicker.colourAt(h);
-        ctxData.arc(x, y, radius, 0, Math.PI * 2);
-        ctxData.fill();
+        ctx.beginPath();
+        ctx.fillStyle = "#" + colourPicker.colourAt(h);
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
     }
 };
 
-//3. Rename to replot
-const plotNewVariogram = function(){
-    variogram = kriging.train(data.t, data.x, data.y, variogramModel, params.sigma2, params.alpha);
-    plotVariogram();
-}
+
 
 /**
  * Called when variogram params are changed but not the data.
  * TODO: refactor plotNewVariogram
  */
-const plotVariogram = function(){
+const plotVariogram = function(ctx, newVariogram = false){
+    if (newVariogram)
+        variogram = kriging.train(data.t, data.x, data.y, variogramModel, params.sigma2, params.alpha);
+
     variogram.range = params.range;
     variogram.sill = params.sill;
     variogram.nugget = params.nugget;
-    ctxVariogram.fillStyle = "#ffffff";
-    ctxVariogram.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
     let value = 0;
     const step = params.coordinateStep;
     const threshold = 80;
@@ -3698,19 +3724,19 @@ const plotVariogram = function(){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
             // if (value >= threshold){
-                ctxVariogram.beginPath();
-                ctxVariogram.fillStyle = "#" + colourPicker.colourAt(value);
-                ctxVariogram.arc(x, y, params.drawRadius, 0, Math.PI * 2);
-                ctxVariogram.fill();
+            ctx.beginPath();
+            ctx.fillStyle = "#" + colourPicker.colourAt(value);
+            ctx.arc(x, y, params.drawRadius, 0, Math.PI * 2);
+            ctx.fill();
             // }
         }
     }
 };
 
-const init = function(){
+const init = function(w, h){
+    width = w;
+    height = h;
     generateData();
-    plotPoints();
-    plotNewVariogram();
 };
 
 //======================================================================================================================
@@ -3720,8 +3746,6 @@ console.log("Stats: " + numbers.random.distribution.normal(4, 10, 3));
 let Stats = {
     width: width,
     height: height,
-    ctxData: ctxData,
-    ctxVariogram: ctxVariogram,
     params: params,
     data: data,
     variogramModel: variogramModel,
@@ -3734,9 +3758,8 @@ let Stats = {
     setRange: setRange,
     generateData: generateData,
     plotPoints: plotPoints,
-    plotNewVariogram: plotNewVariogram,
     plotVariogram: plotVariogram,
-    init: init
+    init: init,
 };
 
 module.exports = Stats;

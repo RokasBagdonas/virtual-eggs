@@ -129,7 +129,7 @@ function setupOther() {
     btn.onclick = (event) =>{
         const model = document.getElementById("variogramModel-select");
         Stats.setVariogramModel(model.value);
-        Stats.plotNewVariogram();
+        Stats.plotVariogram();
         texture.updateTexture();
     };
 

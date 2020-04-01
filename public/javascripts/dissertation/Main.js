@@ -20,7 +20,6 @@ function init() {
     createLights();
     createRenderer();
 
-    Stats.init();
     EggTexture.init();
     loadEgg();
     EggUI.initEggUI();
@@ -108,7 +107,7 @@ function loadEgg() {
         const sc = 5;
         model.scale.set(sc, sc, sc);
         //TODO: change base material colours
-        model.material = new THREE.MeshStandardMaterial({map: EggTexture.texture, flatShading: false});
+        model.material = new THREE.MeshStandardMaterial({map: EggTexture.getTexture(), flatShading: false});
         model.position.copy( position );
 
         scene.add( model );
