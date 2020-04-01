@@ -21,16 +21,22 @@ let ctxVariogram = document.getElementById("spatial-random-field").getContext("2
 
 //texture parameters-----------------------------
 let params = {
-    numPoints: 223,
-    sigma2: 1,
+    mu: width /2,
+    variance: width / 2,
+    numPoints: 150,
+    sigma2: 0.8,
     alpha: 2,
-    range: 5
+    range: 5,
+    sill: 200,
+    nugget: 100,
+    coordinateStep: 1,
+    drawRadius: 1
 };
 
 let variogram;
 let data;
 
-let variogramModel = "exponential";
+let variogramModel = "gaussian";
 
 const MAX_SIGMA2 = 2;
 const MAX_ALPHA = 10;
@@ -41,7 +47,7 @@ const MAX_SILL = 2000;
 //utilities--------------------------------------
 let colourPicker = new Rainbow();
 colourPicker.setNumberRange(0,100); //TODO: change to 0-1
-colourPicker.setSpectrum('black', 'red');
+colourPicker.setSpectrum("#4bdbb0", "#373c3d");
 
 
 const setVariogramModel= function (newModel){
@@ -70,15 +76,14 @@ const setRange = function (newRange){
  * TODO: Gaussian data
  */
 function generateData(numPoints = params.numPoints, w = width, h = height) {
-    let t = [], x = [], y = [];
-
-    for (let i = 0; i < numPoints; i++) {
-        x[i] = Math.random() * w;
-        y[i] = Math.random() * h;
-        t[i] = Math.random() * 100;
-    }
+    const mu = width/2, sigma = mu / 4;
+    let coords = numbers.random.boxMullerTransform( mu, sigma);
+    let x = numbers.random.distribution.normal(numPoints, mu, sigma);
+    let y = numbers.random.distribution.normal(numPoints, mu, sigma);
+    let t = numbers.random.distribution.normal(numPoints, mu, sigma);
     data = {x,y,t};
 }
+
 
 /**
  * //2.
@@ -113,23 +118,25 @@ const plotNewVariogram = function(){
  */
 const plotVariogram = function(){
     variogram.range = params.range;
+    variogram.sill = params.sill;
+    variogram.nugget = params.nugget;
     ctxVariogram.fillStyle = "#ffffff";
     ctxVariogram.fillRect(0, 0, width, height);
     let value = 0;
-    const step = 2;
-    const radius = 1;
+    const step = params.coordinateStep;
     const threshold = 80;
-    console.log(`nugget: ${variogram.nugget.toFixed(3)}; range: ${variogram.range.toFixed(3)}; sill: ${variogram.sill.toFixed(3)}; A: ${variogram.A.toFixed(3)}; model: ${variogramModel}`);
+    console.log(`nugget: ${variogram.nugget.toFixed(3)}; range: ${variogram.range.toFixed(3)};
+     sill: ${variogram.sill.toFixed(3)}; A: ${variogram.A.toFixed(3)}; model: ${variogramModel}`);
 
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
-            if (value >= threshold){
+            // if (value >= threshold){
                 ctxVariogram.beginPath();
                 ctxVariogram.fillStyle = "#" + colourPicker.colourAt(value);
-                ctxVariogram.arc(x, y, radius, 0, Math.PI * 2);
+                ctxVariogram.arc(x, y, params.drawRadius, 0, Math.PI * 2);
                 ctxVariogram.fill();
-            }
+            // }
         }
     }
 };
@@ -159,6 +166,7 @@ let Stats = {
     MAX_SILL: MAX_SILL,
     setVariogramModel: setVariogramModel,
     setRange: setRange,
+    generateData: generateData,
     plotPoints: plotPoints,
     plotNewVariogram: plotNewVariogram,
     plotVariogram: plotVariogram,

@@ -48,6 +48,10 @@ canvas{
     height: 100%;
 }
 
+input[type=range]{
+    width: 100%;
+}
+
 
 /*.grid-item-nav{*/
 /*    width: 70%;*/
