@@ -34,6 +34,7 @@ function setupGeneratePoints(){
 
     let btn = document.getElementById("points-button");
     btn.onclick = (event) =>{
+        Stats.generateData();
         Stats.plotPoints();
     };
 }
@@ -97,6 +98,31 @@ function setupRangeSlider(){
     }
 }
 
+function setupSlider(elementId, labelId, min, max, step, value, paramName){
+    let slider = document.getElementById(elementId);
+    let label = document.getElementById(labelId);
+    slider.min = min;
+    slider.max = max;
+    slider.step = step;
+    slider.value = value;
+    let labelInnerHTML =  `${slider.name}= ${value}`;
+    label.innerHTML = labelInnerHTML;
+
+    slider.oninput = (event) => {
+        Stats.params[paramName] = parseFloat(event.target.value, 10);
+        label.innerHTML = slider.name + "= " + event.target.value;
+        if (isInteractive){
+            Stats.plotVariogram();
+            texture.updateTexture();
+        }
+    }
+
+
+}
+
+setupSlider("range-slider", "range-label",
+    0, 20, "0.1", 2,"range");
+
 
 function setupOther() {
     let btn = document.getElementById("correlate-button");
@@ -117,7 +143,17 @@ const initEggUI = function(){
     setupGeneratePoints();
     setupSpatiallyCorrelatedField();
     setupOther();
-    setupRangeSlider();
+    setupSlider("range-slider", "range-label",
+        0, 20, "0.1", 2,"range");
+    setupSlider("sill-slider", "sill-label",
+        -2000, 2000, "10", 200, "sill");
+    setupSlider("nugget-slider", "nugget-label",
+        0, 200, "7", 100, "nugget");
+    setupSlider("mu-slider", "mu-label",
+        0, Stats.width, 1, Stats.params.mu, "mu",
+        (event) => {
+            Stats.params.mu = parseInt(event.target.value, 10);
+        })
 };
 
 module.exports = {
