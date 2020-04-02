@@ -9,10 +9,9 @@
 *
 * @type {{init: init}}
 */
-// import * as Stats from './Stats.js'
-// import {texture} from "./EggTexture.js";
+
 const Stats = require('./Stats.js');
-const texture = require('./EggTexture.js');
+const EggTexture = require('./EggTexture.js');
 
 let isInteractive = true; //for updating the texture while parameters are being changed live
 
@@ -34,8 +33,7 @@ function setupGeneratePoints(){
 
     let btn = document.getElementById("points-button");
     btn.onclick = (event) =>{
-        Stats.generateData();
-        Stats.plotPoints();
+        EggTexture.plotDistribution();
     };
 }
 
@@ -54,8 +52,7 @@ function setupSpatiallyCorrelatedField() {
         Stats.params.sigma2 = parseFloat(event.target.value, 10);
         label.innerHTML = "Sigma^2 = " + event.target.value;
         if (isInteractive){
-            Stats.plotNewVariogram();
-            texture.needsUpdate = true;
+            EggTexture.plotVariogram();
         }
     };
 
@@ -73,32 +70,27 @@ function setupSpatiallyCorrelatedField() {
         Stats.params.alpha = parseInt(event.target.value, 10);
         label2.innerHTML = "Alpha = " + event.target.value;
         if (isInteractive){
-            Stats.plotNewVariogram();
-            texture.needsUpdate = true;
+            EggTexture.plotVariogram();
         }
     };
 }
 
-function setupRangeSlider(){
-    let slider = document.getElementById("range-slider");
-    let label = document.getElementById("range-label");
-    slider.min = 0;
-    slider.max = 20;
-    slider.step = "0.1";
-    slider.value = 2;
-    label.innerHTML = "Range = " + 2;
+function setupOther() {
+    let btn = document.getElementById("correlate-button");
+    btn.onclick = (event) => {
+        const model = document.getElementById("variogramModel-select");
+        Stats.setVariogramModel(model.value);
+        EggTexture.plotVariogram();
+    };
 
-    slider.oninput = (event) => {
-        Stats.params.range = parseFloat(event.target.value, 10);
-        label.innerHTML = "Range = " + event.target.value;
-        if (isInteractive){
-            Stats.plotVariogram();
-            texture.updateTexture();
-        }
+    let chx = document.getElementById("interactive-checkbox");
+    chx.onclick = (event) => {
+        isInteractive = !isInteractive;
     }
 }
 
-function setupSlider(elementId, labelId, min, max, step, value, paramName){
+//TODO: refactor
+function setupStatsSlider(elementId, labelId, min, max, step, value, paramName){
     let slider = document.getElementById(elementId);
     let label = document.getElementById(labelId);
     slider.min = min;
@@ -108,52 +100,60 @@ function setupSlider(elementId, labelId, min, max, step, value, paramName){
     let labelInnerHTML =  `${slider.name}= ${value}`;
     label.innerHTML = labelInnerHTML;
 
+}
+
+function setupVariogramSlider(elementId, labelId, min, max, step, value, paramName){
+    let slider = document.getElementById(elementId);
+    let label = document.getElementById(labelId);
+    slider.min = min;
+    slider.max = max;
+    slider.step = step;
+    slider.value = value;
+    let labelInnerHTML =  `${slider.name}= ${value}`;
+    label.innerHTML = labelInnerHTML;
     slider.oninput = (event) => {
         Stats.params[paramName] = parseFloat(event.target.value, 10);
         label.innerHTML = slider.name + "= " + event.target.value;
         if (isInteractive){
-            Stats.plotVariogram();
-            texture.updateTexture();
+            EggTexture.plotVariogram();
         }
     }
-
-
 }
 
-setupSlider("range-slider", "range-label",
-    0, 20, "0.1", 2,"range");
-
-
-function setupOther() {
-    let btn = document.getElementById("correlate-button");
-    btn.onclick = (event) =>{
-        const model = document.getElementById("variogramModel-select");
-        Stats.setVariogramModel(model.value);
-        Stats.plotVariogram();
-        texture.updateTexture();
-    };
-
-    let chx = document.getElementById("interactive-checkbox");
-    chx.onclick = (event) => {
-        isInteractive = !isInteractive;
+function setupDistributionSlider(elementId, labelId, min, max, step, value, paramName){
+    let slider = document.getElementById(elementId);
+    let label = document.getElementById(labelId);
+    slider.min = min;
+    slider.max = max;
+    slider.step = step;
+    slider.value = value;
+    let labelInnerHTML =  `${slider.name}= ${value}`;
+    label.innerHTML = labelInnerHTML;
+    slider.oninput = (event) => {
+        Stats.params[paramName] = parseFloat(event.target.value, 10);
+        label.innerHTML = slider.name + "= " + event.target.value;
+        EggTexture.plotDistribution();
     }
 }
+
+
 
 const initEggUI = function(){
     setupGeneratePoints();
     setupSpatiallyCorrelatedField();
     setupOther();
-    setupSlider("range-slider", "range-label",
-        0, 20, "0.1", 2,"range");
-    setupSlider("sill-slider", "sill-label",
-        -2000, 2000, "10", 200, "sill");
-    setupSlider("nugget-slider", "nugget-label",
-        0, 200, "7", 100, "nugget");
-    setupSlider("mu-slider", "mu-label",
-        0, Stats.width, 1, Stats.params.mu, "mu",
-        (event) => {
-            Stats.params.mu = parseInt(event.target.value, 10);
-        })
+    setupVariogramSlider("range-slider", "range-label",
+        Stats.MIN_RANGE, Stats.MAX_RANGE, "0.1", 2,"range");
+    setupVariogramSlider("sill-slider", "sill-label",
+        Stats.MIN_SILL, Stats.MAX_SILL, "10", 200, "sill");
+    setupVariogramSlider("nugget-slider", "nugget-label",
+        Stats.MIN_NUGGET, Stats.MAX_NUGGET, "7", 100, "nugget");
+    setupDistributionSlider("mu-slider", "mu-label",
+        0, Stats.width, 1, Stats.params.mu, "mu");
+    setupDistributionSlider("variance-slider", "variance-label",
+        Stats.MIN_VARIANCE, Stats.MAX_VARIANCE, 1, Stats.params.variance, "variance");
+    setupDistributionSlider("points-slider", "points-label",
+        0, Stats.MAX_POINTS, 1, Stats.params.numPoints, "numPoints");
 };
 
 module.exports = {

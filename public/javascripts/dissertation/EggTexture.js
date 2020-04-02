@@ -3,10 +3,30 @@ let Stats = require('./Stats.js');
 // let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
 let texture; //THREE object
 let ctxData, ctxTexture;
+let newVariogram = false;
+
+let colours1 = {
+    base: ["#57b9bf"],
+    baseOverlay: ["#c0d282 ","#cdea6c"],
+    noiseSpots: ["#21233b"],
+    main: ["#0c0d19"]
+};
+
+const getTexture = function(){
+    return texture;
+};
+
+const updateTexture =  function(){
+    // Stats.plotVariogram(ctxTexture);
+    texture.needsUpdate = true;
+};
+
+
 const init = function(){
     ctxData = document.getElementById("stats-points");
     Stats.init(ctxData.width, ctxData.height);
-    Stats.plotPoints(ctxData.getContext("2d"));
+    ctxData = ctxData.getContext("2d");
+    Stats.plotPoints(ctxData);
 
 
     let canvasTexture = document.getElementById("texture");
@@ -39,13 +59,24 @@ const init = function(){
     texture.needsUpdate = true;
 };
 
-const getTexture = function(){
-    return texture;
+const plotBaseColour = function(){
+
 };
 
-const updateTexture =  function(){
-    // Stats.plotVariogram(ctxTexture);
-    texture.needsUpdate = true;
+
+//TODO: rename to stage 4: plot blobs / streaking
+const plotVariogram = function(){
+    ctxTexture.fillStyle = "#ffffff";
+    ctxTexture.fillRect(0,0, Stats.width, Stats.height);
+    Stats.plotVariogram(ctxTexture, newVariogram);
+    newVariogram = false;
+    this.updateTexture();
+};
+
+const plotDistribution = function(){
+    Stats.generateData();
+    newVariogram = true;
+    Stats.plotPoints(ctxData);
 };
 
 
@@ -53,6 +84,8 @@ const updateTexture =  function(){
 module.exports = {
     init: init,
     updateTexture: updateTexture,
-    getTexture: getTexture
+    getTexture: getTexture,
+    plotDistribution: plotDistribution,
+    plotVariogram: plotVariogram
 };
 

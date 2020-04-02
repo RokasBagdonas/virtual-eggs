@@ -3236,10 +3236,30 @@ let Stats = require('./Stats.js');
 // let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
 let texture; //THREE object
 let ctxData, ctxTexture;
+let newVariogram = false;
+
+let colours1 = {
+    base: ["#57b9bf"],
+    baseOverlay: ["#c0d282 ","#cdea6c"],
+    noiseSpots: ["#21233b"],
+    main: ["#0c0d19"]
+};
+
+const getTexture = function(){
+    return texture;
+};
+
+const updateTexture =  function(){
+    // Stats.plotVariogram(ctxTexture);
+    texture.needsUpdate = true;
+};
+
+
 const init = function(){
     ctxData = document.getElementById("stats-points");
     Stats.init(ctxData.width, ctxData.height);
-    Stats.plotPoints(ctxData.getContext("2d"));
+    ctxData = ctxData.getContext("2d");
+    Stats.plotPoints(ctxData);
 
 
     let canvasTexture = document.getElementById("texture");
@@ -3272,21 +3292,34 @@ const init = function(){
     texture.needsUpdate = true;
 };
 
-const getTexture = function(){
-    return texture;
+const plotBaseColour = function(){
+
 };
 
-const updateTexture =  function(){
-    // Stats.plotVariogram(ctxTexture);
-    texture.needsUpdate = true;
+
+//TODO: rename to stage 4: plot blobs / streaking
+const plotVariogram = function(){
+    ctxTexture.fillStyle = "#ffffff";
+    ctxTexture.fillRect(0,0, Stats.width, Stats.height);
+    Stats.plotVariogram(ctxTexture, newVariogram);
+    newVariogram = false;
+    this.updateTexture();
 };
+
+const plotDistribution = function(){
+    Stats.generateData();
+    newVariogram = true;
+    Stats.plotPoints(ctxData);
+}
 
 
 
 module.exports = {
     init: init,
     updateTexture: updateTexture,
-    getTexture: getTexture
+    getTexture: getTexture,
+    plotDistribution: plotDistribution,
+    plotVariogram: plotVariogram
 };
 
 
@@ -3302,10 +3335,9 @@ module.exports = {
 *
 * @type {{init: init}}
 */
-// import * as Stats from './Stats.js'
-// import {texture} from "./EggTexture.js";
+
 const Stats = require('./Stats.js');
-const texture = require('./EggTexture.js');
+const EggTexture = require('./EggTexture.js');
 
 let isInteractive = true; //for updating the texture while parameters are being changed live
 
@@ -3327,8 +3359,7 @@ function setupGeneratePoints(){
 
     let btn = document.getElementById("points-button");
     btn.onclick = (event) =>{
-        Stats.generateData();
-        Stats.plotPoints();
+        EggTexture.plotDistribution();
     };
 }
 
@@ -3347,8 +3378,7 @@ function setupSpatiallyCorrelatedField() {
         Stats.params.sigma2 = parseFloat(event.target.value, 10);
         label.innerHTML = "Sigma^2 = " + event.target.value;
         if (isInteractive){
-            Stats.plotNewVariogram();
-            texture.needsUpdate = true;
+            EggTexture.plotVariogram();
         }
     };
 
@@ -3366,32 +3396,27 @@ function setupSpatiallyCorrelatedField() {
         Stats.params.alpha = parseInt(event.target.value, 10);
         label2.innerHTML = "Alpha = " + event.target.value;
         if (isInteractive){
-            Stats.plotNewVariogram();
-            texture.needsUpdate = true;
+            EggTexture.plotVariogram();
         }
     };
 }
 
-function setupRangeSlider(){
-    let slider = document.getElementById("range-slider");
-    let label = document.getElementById("range-label");
-    slider.min = 0;
-    slider.max = 20;
-    slider.step = "0.1";
-    slider.value = 2;
-    label.innerHTML = "Range = " + 2;
+function setupOther() {
+    let btn = document.getElementById("correlate-button");
+    btn.onclick = (event) => {
+        const model = document.getElementById("variogramModel-select");
+        Stats.setVariogramModel(model.value);
+        EggTexture.plotVariogram();
+    };
 
-    slider.oninput = (event) => {
-        Stats.params.range = parseFloat(event.target.value, 10);
-        label.innerHTML = "Range = " + event.target.value;
-        if (isInteractive){
-            Stats.plotVariogram();
-            texture.updateTexture();
-        }
+    let chx = document.getElementById("interactive-checkbox");
+    chx.onclick = (event) => {
+        isInteractive = !isInteractive;
     }
 }
 
-function setupSlider(elementId, labelId, min, max, step, value, paramName){
+//TODO: refactor
+function setupStatsSlider(elementId, labelId, min, max, step, value, paramName){
     let slider = document.getElementById(elementId);
     let label = document.getElementById(labelId);
     slider.min = min;
@@ -3401,52 +3426,60 @@ function setupSlider(elementId, labelId, min, max, step, value, paramName){
     let labelInnerHTML =  `${slider.name}= ${value}`;
     label.innerHTML = labelInnerHTML;
 
+}
+
+function setupVariogramSlider(elementId, labelId, min, max, step, value, paramName){
+    let slider = document.getElementById(elementId);
+    let label = document.getElementById(labelId);
+    slider.min = min;
+    slider.max = max;
+    slider.step = step;
+    slider.value = value;
+    let labelInnerHTML =  `${slider.name}= ${value}`;
+    label.innerHTML = labelInnerHTML;
     slider.oninput = (event) => {
         Stats.params[paramName] = parseFloat(event.target.value, 10);
         label.innerHTML = slider.name + "= " + event.target.value;
         if (isInteractive){
-            Stats.plotVariogram();
-            texture.updateTexture();
+            EggTexture.plotVariogram();
         }
     }
-
-
 }
 
-setupSlider("range-slider", "range-label",
-    0, 20, "0.1", 2,"range");
-
-
-function setupOther() {
-    let btn = document.getElementById("correlate-button");
-    btn.onclick = (event) =>{
-        const model = document.getElementById("variogramModel-select");
-        Stats.setVariogramModel(model.value);
-        Stats.plotNewVariogram();
-        texture.updateTexture();
-    };
-
-    let chx = document.getElementById("interactive-checkbox");
-    chx.onclick = (event) => {
-        isInteractive = !isInteractive;
+function setupDistributionSlider(elementId, labelId, min, max, step, value, paramName){
+    let slider = document.getElementById(elementId);
+    let label = document.getElementById(labelId);
+    slider.min = min;
+    slider.max = max;
+    slider.step = step;
+    slider.value = value;
+    let labelInnerHTML =  `${slider.name}= ${value}`;
+    label.innerHTML = labelInnerHTML;
+    slider.oninput = (event) => {
+        Stats.params[paramName] = parseFloat(event.target.value, 10);
+        label.innerHTML = slider.name + "= " + event.target.value;
+        EggTexture.plotDistribution();
     }
 }
+
+
 
 const initEggUI = function(){
     setupGeneratePoints();
     setupSpatiallyCorrelatedField();
     setupOther();
-    setupSlider("range-slider", "range-label",
-        0, 20, "0.1", 2,"range");
-    setupSlider("sill-slider", "sill-label",
-        -2000, 2000, "10", 200, "sill");
-    setupSlider("nugget-slider", "nugget-label",
-        0, 200, "7", 100, "nugget");
-    setupSlider("mu-slider", "mu-label",
-        0, Stats.width, 1, Stats.params.mu, "mu",
-        (event) => {
-            Stats.params.mu = parseInt(event.target.value, 10);
-        })
+    setupVariogramSlider("range-slider", "range-label",
+        Stats.MIN_RANGE, Stats.MAX_RANGE, "0.1", 2,"range");
+    setupVariogramSlider("sill-slider", "sill-label",
+        Stats.MIN_SILL, Stats.MAX_SILL, "10", 200, "sill");
+    setupVariogramSlider("nugget-slider", "nugget-label",
+        Stats.MIN_NUGGET, Stats.MAX_NUGGET, "7", 100, "nugget");
+    setupDistributionSlider("mu-slider", "mu-label",
+        0, Stats.width, 1, Stats.params.mu, "mu");
+    setupDistributionSlider("variance-slider", "variance-label",
+        Stats.MIN_VARIANCE, Stats.MAX_VARIANCE, 1, Stats.params.variance, "variance");
+    setupDistributionSlider("points-slider", "points-label",
+        0, Stats.MAX_POINTS, 1, Stats.params.numPoints, "numPoints");
 };
 
 module.exports = {
@@ -3631,11 +3664,24 @@ let data;
 
 let variogramModel = "gaussian";
 
+const MIN_MU = width / 10;
+const MAX_MU = width * 2;
+const MIN_VARIANCE = MIN_MU / 2;
+const MAX_VARIANCE = MAX_MU / 2;
+const MIN_HEIGHT = 0;
+const MAX_HEIGHT = 100;
+
 const MAX_SIGMA2 = 2;
 const MAX_ALPHA = 10;
 const MAX_POINTS = 300;
+const MIN_RANGE = 0;
 const MAX_RANGE = 100;
+const MIN_SILL = 0;
 const MAX_SILL = 2000;
+const MIN_NUGGET = 1;
+const MAX_NUGGET = 200;
+
+
 
 //utilities--------------------------------------
 let colourPicker = new Rainbow();
@@ -3669,11 +3715,11 @@ const setRange = function (newRange){
  * TODO: Gaussian data
  */
 function generateData(numPoints = params.numPoints, w = width, h = height) {
-    const mu = width/2, sigma = mu / 4;
-    let coords = numbers.random.boxMullerTransform( mu, sigma);
-    let x = numbers.random.distribution.normal(numPoints, mu, sigma);
-    let y = numbers.random.distribution.normal(numPoints, mu, sigma);
-    let t = numbers.random.distribution.normal(numPoints, mu, sigma);
+    const mu = params.mu;
+    const variance = params.variance;
+    let x = numbers.random.distribution.normal(numPoints, mu, variance);
+    let y = numbers.random.distribution.normal(numPoints, mu, variance);
+    let t = numbers.random.distribution.normal(numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
     data = {x,y,t};
 }
 
@@ -3703,29 +3749,35 @@ const plotPoints = function(ctx){
 
 /**
  * Called when variogram params are changed but not the data.
- * TODO: refactor plotNewVariogram
  */
-const plotVariogram = function(ctx, newVariogram = false){
+const plotVariogram = function(ctx, newVariogram = false, customParams = {}, colours = ["#bcb9c6", "#5e616a"]){
     if (newVariogram)
-        variogram = kriging.train(data.t, data.x, data.y, variogramModel, params.sigma2, params.alpha);
+        variogram = kriging.train(data.t, data.x, data.y, variogramModel,
+            (customParams.sigma2 || params.sigma2),(customParams.alpha || params.alpha));
 
-    variogram.range = params.range;
-    variogram.sill = params.sill;
-    variogram.nugget = params.nugget;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, width, height);
+    variogram.range = customParams.range || params.range;
+    variogram.sill = customParams.range || params.sill;
+    variogram.nugget = customParams.nugget || params.nugget;
     let value = 0;
-    const step = params.coordinateStep;
+    const step = customParams.coordinateStep || params.coordinateStep;
     const threshold = 80;
     console.log(`nugget: ${variogram.nugget.toFixed(3)}; range: ${variogram.range.toFixed(3)};
      sill: ${variogram.sill.toFixed(3)}; A: ${variogram.A.toFixed(3)}; model: ${variogramModel}`);
+
+    let colourStyle = new Rainbow();
+
+    colourStyle.setSpectrum(...colours);
+    const min = params.mu - params.variance *2;
+    const max = min + params.variance * 4;
+    colourStyle.setNumberRange(min, max);
+
 
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
             // if (value >= threshold){
             ctx.beginPath();
-            ctx.fillStyle = "#" + colourPicker.colourAt(value);
+            ctx.fillStyle = "#" + colourStyle.colourAt(value);
             ctx.arc(x, y, params.drawRadius, 0, Math.PI * 2);
             ctx.fill();
             // }
@@ -3739,27 +3791,37 @@ const init = function(w, h){
     generateData();
 };
 
+
 //======================================================================================================================
 //init phase
 console.log("Stats: " + numbers.random.distribution.normal(4, 10, 3));
 
 let Stats = {
-    width: width,
-    height: height,
-    params: params,
-    data: data,
-    variogramModel: variogramModel,
-    MAX_SIGMA2: MAX_SIGMA2,
-    MAX_ALPHA: MAX_ALPHA,
-    MAX_POINTS: MAX_POINTS,
-    MAX_RANGE: MAX_RANGE,
-    MAX_SILL: MAX_SILL,
     setVariogramModel: setVariogramModel,
     setRange: setRange,
     generateData: generateData,
     plotPoints: plotPoints,
     plotVariogram: plotVariogram,
     init: init,
+    width: width,
+    height: height,
+    params: params,
+    data: data,
+    variogramModel: variogramModel,
+    MIN_MU: MIN_MU,
+    MAX_MU: MAX_MU,
+    MIN_VARIANCE: MIN_VARIANCE,
+    MAX_VARIANCE: MAX_VARIANCE,
+    MAX_SIGMA2: MAX_SIGMA2,
+    MAX_ALPHA: MAX_ALPHA,
+    MAX_POINTS: MAX_POINTS,
+    MIN_RANGE: MIN_RANGE,
+    MAX_RANGE: MAX_RANGE,
+    MIN_SILL: MIN_SILL,
+    MAX_SILL: MAX_SILL,
+    MIN_NUGGET: MIN_NUGGET,
+    MAX_NUGGET: MAX_NUGGET
+
 };
 
 module.exports = Stats;

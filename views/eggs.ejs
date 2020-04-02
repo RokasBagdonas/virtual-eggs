@@ -35,20 +35,6 @@
         <div>
             <h4>Stats</h4>
             <div>
-                <h5>Stats points</h5>
-
-                <label for="mu-slider" id="mu-label">mu: </label> <br>
-                <input type="range" id="mu-slider" name="mu">
-
-                <label for="variance-slider" id="variance-label">variance: </label> <br>
-                <input type="range" id="variance-slider" name="variance">
-
-                <label for="points-slider" id="points-label">Points: </label> <br>
-                <input type="range" id="points-slider" name="points">
-
-                <input type="button" value="generate points" id="points-button">
-                <canvas width="256" height="256" id="stats-points"></canvas>
-
                 <h5>Spatially correlated field</h5>
                 <label for="sigma2-slider" id="sigma2-label">Sigma^2: </label> <br>
                 <input type="range" id="sigma2-slider" name="sigma^2"> <br>
@@ -76,8 +62,24 @@
 
                 <label for="interactive-checkbox">Interactive adjustment</label>
                 <input type="checkbox" id="interactive-checkbox" checked="true">
+                <canvas width="256" height="256" id="texture" style="position: relative; left: 0; top: 0; z-index: 0;"></canvas>
 
-                <canvas width="256" height="256" id="texture"></canvas>
+                <h5>Stats points</h5>
+
+                <label for="mu-slider" id="mu-label">mu: </label> <br>
+                <input type="range" id="mu-slider" name="mu">
+
+                <label for="variance-slider" id="variance-label">variance: </label> <br>
+                <input type="range" id="variance-slider" name="variance">
+
+                <label for="points-slider" id="points-label">Points: </label> <br>
+                <input type="range" id="points-slider" name="points">
+
+                <input type="button" value="generate points" id="points-button">
+                <canvas width="256" height="256" id="stats-points"></canvas>
+
+
+
             </div>
 
         </div>
