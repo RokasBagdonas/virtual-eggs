@@ -136,6 +136,16 @@ function setupDistributionSlider(elementId, labelId, min, max, step, value, para
     }
 }
 
+function setupDrawPattern(){
+    let btn = document.getElementById("rangePoints-button");
+    //Base overlay
+
+
+    btn.onclick = (event) => {
+        EggTexture.drawBaseOverlayPattern();
+    }
+}
+
 
 
 const initEggUI = function(){
@@ -154,6 +164,8 @@ const initEggUI = function(){
         Stats.MIN_VARIANCE, Stats.MAX_VARIANCE, 1, Stats.params.variance, "variance");
     setupDistributionSlider("points-slider", "points-label",
         0, Stats.MAX_POINTS, 1, Stats.params.numPoints, "numPoints");
+
+    setupDrawPattern();
 };
 
 module.exports = {

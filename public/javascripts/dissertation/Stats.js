@@ -25,7 +25,8 @@ let params = {
     sill: 200,
     nugget: 100,
     coordinateStep: 1,
-    drawRadius: 1
+    drawRadius: 1,
+    threshold: 80
 };
 
 let variogram;
@@ -55,7 +56,7 @@ const MAX_NUGGET = 200;
 //utilities--------------------------------------
 let colourPicker = new Rainbow();
 colourPicker.setNumberRange(0,100); //TODO: change to 0-1
-colourPicker.setSpectrum("#4bdbb0", "#373c3d");
+colourPicker.setSpectrum("#373c3d","#4bdbb0");
 
 
 const setVariogramModel= function (newModel){
@@ -78,17 +79,16 @@ const setRange = function (newRange){
 /**
  * Generates random values (heights) at random locations in a 2D area.
  * //1.
- * @param {int} numOfPoints
- * @param {number} w width in 2D area
- * @param {number} h height 2D area
+ * @param customParams {mu, variance, numPoints}
  * TODO: Gaussian data
  */
-function generateData(numPoints = params.numPoints, w = width, h = height) {
-    const mu = params.mu;
-    const variance = params.variance;
-    let x = numbers.random.distribution.normal(numPoints, mu, variance);
-    let y = numbers.random.distribution.normal(numPoints, mu, variance);
-    let t = numbers.random.distribution.normal(numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
+function generateData(customParams = {}) {
+    const mu = customParams.mu || params.mu;
+    const variance =  customParams.variance || params.variance;
+    const numPoints = customParams.numPoints || params.numPoints;
+    const x = numbers.random.distribution.normal(numPoints, mu, variance);
+    const y = numbers.random.distribution.normal(numPoints, mu, variance);
+    const t = numbers.random.distribution.normal(numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
     data = {x,y,t};
 }
 
@@ -119,7 +119,9 @@ const plotPoints = function(ctx){
 /**
  * Called when variogram params are changed but not the data.
  */
-const plotVariogram = function(ctx, newVariogram = false, customParams = {}, colours = ["#bcb9c6", "#5e616a"]){
+const plotVariogram = function(ctx, newVariogram = false, customParams = {}, colours = ["#5e616a","#bcb9c6"]){
+    //TODO: implement logic for EggTexture when to trigger newVariogram
+    variogramModel = customParams.variogramModel || variogramModel;
     if (newVariogram)
         variogram = kriging.train(data.t, data.x, data.y, variogramModel,
             (customParams.sigma2 || params.sigma2),(customParams.alpha || params.alpha));
@@ -129,7 +131,8 @@ const plotVariogram = function(ctx, newVariogram = false, customParams = {}, col
     variogram.nugget = customParams.nugget || params.nugget;
     let value = 0;
     const step = customParams.coordinateStep || params.coordinateStep;
-    const threshold = 80;
+    const threshold = customParams.threshold || params.threshold;
+    const alpha = customParams.alpha || 1;
     console.log(`nugget: ${variogram.nugget.toFixed(3)}; range: ${variogram.range.toFixed(3)};
      sill: ${variogram.sill.toFixed(3)}; A: ${variogram.A.toFixed(3)}; model: ${variogramModel}`);
 
@@ -140,16 +143,17 @@ const plotVariogram = function(ctx, newVariogram = false, customParams = {}, col
     const max = min + params.variance * 4;
     colourStyle.setNumberRange(min, max);
 
-
+    ctx.globalAlpha = alpha;
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
-            // if (value >= threshold){
+            if (value <= threshold){
             ctx.beginPath();
             ctx.fillStyle = "#" + colourStyle.colourAt(value);
             ctx.arc(x, y, params.drawRadius, 0, Math.PI * 2);
             ctx.fill();
-            // }
+            }
+            else{console.log(value)}
         }
     }
 };
