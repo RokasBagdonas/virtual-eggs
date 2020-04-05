@@ -27,7 +27,7 @@ function setupGeneratePoints(){
 
     slider.oninput = (event) => {
         const points = Math.round(parseInt(event.target.value, 10));
-        Stats.params.numPoints = points;
+        Stats.defaultParams.numPoints = points;
         label.innerHTML = "" + points;
     };
 
@@ -44,12 +44,12 @@ function setupSpatiallyCorrelatedField() {
 
     slider.step = "0.1";
     slider.max = Stats.MAX_SIGMA2;
-    slider.value = Stats.params.sigma2;
-    label.innerHTML = "Sigma^2 = " + Stats.params.sigma2;
+    slider.value = Stats.defaultParams.sigma2;
+    label.innerHTML = "Sigma^2 = " + Stats.defaultParams.sigma2;
 
     slider.oninput = (event) => {
         // console.log("sigma2 slider");
-        Stats.params.sigma2 = parseFloat(event.target.value, 10);
+        Stats.defaultParams.sigma2 = parseFloat(event.target.value, 10);
         label.innerHTML = "Sigma^2 = " + event.target.value;
         if (isInteractive){
             EggTexture.plotVariogram();
@@ -63,11 +63,11 @@ function setupSpatiallyCorrelatedField() {
     slider.min = -2;
     slider.step = "0.1";
     slider.max = Stats.MAX_ALPHA;
-    slider.value = Stats.params.alpha;
-    label2.innerHTML = "Alpha = " + Stats.params.alpha;
+    slider.value = Stats.defaultParams.alpha;
+    label2.innerHTML = "Alpha = " + Stats.defaultParams.alpha;
 
     slider.oninput = (event) => {
-        Stats.params.alpha = parseInt(event.target.value, 10);
+        Stats.defaultParams.alpha = parseInt(event.target.value, 10);
         label2.innerHTML = "Alpha = " + event.target.value;
         if (isInteractive){
             EggTexture.plotVariogram();
@@ -112,7 +112,7 @@ function setupVariogramSlider(elementId, labelId, min, max, step, value, paramNa
     let labelInnerHTML =  `${slider.name}= ${value}`;
     label.innerHTML = labelInnerHTML;
     slider.oninput = (event) => {
-        Stats.params[paramName] = parseFloat(event.target.value, 10);
+        Stats.defaultParams[paramName] = parseFloat(event.target.value, 10);
         label.innerHTML = slider.name + "= " + event.target.value;
         if (isInteractive){
             EggTexture.plotVariogram();
@@ -130,7 +130,7 @@ function setupDistributionSlider(elementId, labelId, min, max, step, value, para
     let labelInnerHTML =  `${slider.name}= ${value}`;
     label.innerHTML = labelInnerHTML;
     slider.oninput = (event) => {
-        Stats.params[paramName] = parseFloat(event.target.value, 10);
+        Stats.defaultParams[paramName] = parseFloat(event.target.value, 10);
         label.innerHTML = slider.name + "= " + event.target.value;
         EggTexture.plotDistribution();
     }
@@ -159,11 +159,11 @@ const initEggUI = function(){
     setupVariogramSlider("nugget-slider", "nugget-label",
         Stats.MIN_NUGGET, Stats.MAX_NUGGET, "7", 100, "nugget");
     setupDistributionSlider("mu-slider", "mu-label",
-        0, Stats.width, 1, Stats.params.mu, "mu");
+        0, Stats.width, 1, Stats.defaultParams.mu, "mu");
     setupDistributionSlider("variance-slider", "variance-label",
-        Stats.MIN_VARIANCE, Stats.MAX_VARIANCE, 1, Stats.params.variance, "variance");
+        Stats.MIN_VARIANCE, Stats.MAX_VARIANCE, 1, Stats.defaultParams.variance, "variance");
     setupDistributionSlider("points-slider", "points-label",
-        0, Stats.MAX_POINTS, 1, Stats.params.numPoints, "numPoints");
+        0, Stats.MAX_POINTS, 1, Stats.defaultParams.numPoints, "numPoints");
 
     setupDrawPattern();
 };

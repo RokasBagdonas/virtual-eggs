@@ -5,11 +5,11 @@ let numbers = require('numbers');
 let texture; //THREE object
 let ctxData, ctxTexture;
 let newVariogram = false;
-let w, h;
+let WIDTH, HEIGHT;
 let colours1 = {
     base: ["#6bbbbf", "#57b9bf"],
     baseOverlay: ["#c0d282","#cdea6c"],
-    noiseSpots: ["#21233b"],
+    noise: ["#21233b", "#333b39"],
     main: ["#0c0d19"]
 };
 
@@ -23,7 +23,7 @@ const updateTexture =  function(){
 
 const plotBaseColour = function(){
     ctxTexture.fillStyle = colours1.base[0];
-    ctxTexture.fillRect(0,0, w, h);
+    ctxTexture.fillRect(0,0, WIDTH, HEIGHT);
 };
 
 /**
@@ -32,58 +32,91 @@ const plotBaseColour = function(){
  * @param variogramParams :: {[rangeStart, rangeEnd], [sillStart, sillEnd], [nuggetStart, nuggetEnd], modelName}
  * @param colourParams :: [colourHexes]
  */
+
 const drawPattern = function(dataParams, variogramParams, colourSpectrum){
     //1. baseData
     //1.1 Get uniform random variable
+    //TODO: refactor with mapping function: for each pair, call random.sample
     const mu = numbers.random.sample(dataParams.mu[0], dataParams.mu[1], 1)[0];
     const variance = numbers.random.sample(dataParams.variance[0], dataParams.variance[1], 1)[0];
     const numPoints = numbers.random.sample(dataParams.numPoints[0], dataParams.numPoints[1], 1)[0];
     //1.2 generateData
-    const customParams = {mu: mu, variance: variance, numPoints: numPoints};
-    console.log("custom Params: " + customParams);
+    dataParams = {mu: mu, variance: variance, numPoints: numPoints};
+
     Stats.generateData({mu: mu, variance: variance, numPoints: numPoints});
     Stats.plotPoints(ctxData);
 
     //2. colours
     //2.1 define Rainbow object, setSpectrum
+    let colourScheme = new Rainbow();
+    colourScheme.setNumberRange(Stats.MIN_HEIGHT, Stats.MAX_HEIGHT);
+    colourScheme.setSpectrum(...colourSpectrum);
+
+
 
     //3. plotVariogram.
     // TODO: Modify to accept Rainbow object instead
     //3.1 get uniform random variables
+    variogramParams.newVariogram = variogramParams.newVariogram;
+    variogramParams.range = numbers.random.sample(variogramParams.range[0], variogramParams.range[1], 1)[0];
+    variogramParams.sill = numbers.random.sample(variogramParams.sill[0], variogramParams.sill[1], 1)[0];
+    variogramParams.nugget = numbers.random.sample(variogramParams.nugget[0], variogramParams.nugget[1], 1)[0];
+    variogramParams.alpha = variogramParams.alpha;
+    variogramParams.variogramModel = variogramParams.variogramModel;
+    variogramParams.newVariogram = variogramParams.newVariogram;
+    variogramParams.ctx = ctxTexture;
+    variogramParams.colourScheme = colourScheme;
+
 
     //3.2 draw Variogram
+    Stats.plotVariogram(variogramParams);
+    updateTexture();
+
 };
 
-const drawBaseOverlayPattern = function(){
+const drawBaseOverlayPattern1 = function(){
 
     const dataParams = {
-        mu: [30, 180],
+        mu: [WIDTH / 8, WIDTH / 1.42],
         variance: [35, 60],
         numPoints: [140, 160]
     };
-    const varianceParams = {
+    const variogramParams = {
         range: [40, 60],
-        sill: [150, 300],
+        sill: [200, 280],
         nugget: [100, 105],
-        alpha: 0.5,
-        variogramModel: "gaussian"
+        alpha: 0.05,
+        variogramModel: "gaussian",
+        newVariogram: true,
+        drawRadius: 2
     };
-    const colours = colours1.baseOverlay;
+    const colourSpectrum = colours1.baseOverlay;
 
-    drawPattern(dataParams, varianceParams, colours);
+    drawPattern(dataParams, variogramParams, colourSpectrum);
 
 
 };
 
+const drawGeneralNoise1 = function(){
+    const dataParams = {
+        mu: [110, 130],
+        variance: [120, 180],
+        numPoints: [160, 300]
+    };
+    const variogramParams = {
+        range: [5, 8],
+        sill: [38, 50],
+        nugget: [100, 102],
+        alpha: 0.7,
+        variogramModel: "gaussian",
+        newVariogram: true,
+        drawRadius: 0.7
+    };
+    const colourSpectrum = colours1.noise;
+    drawPattern(dataParams, variogramParams, colourSpectrum);
 
+};
 
-
-
-
-
-
-//TODO: legacy
-//TODO: rename to stage 4: plot blobs / streaking
 const plotVariogram = function(){
     plotBaseColour();
     Stats.plotVariogram(ctxTexture, newVariogram);
@@ -98,19 +131,22 @@ const plotDistribution = function(){
     Stats.plotPoints(ctxData);
 };
 
-const init = function(){
-    ctxData = document.getElementById("stats-points");
-    w = ctxData.width;
-    h = ctxData.height;
-    Stats.init(w, h);
-    ctxData = ctxData.getContext("2d");
-    Stats.plotPoints(ctxData);
 
+
+const init = function(){
+    let dataCanvas = document.getElementById("stats-points");
+    WIDTH = dataCanvas.width;
+    HEIGHT = dataCanvas.height;
+    ctxData = dataCanvas.getContext("2d");
     let canvasTexture = document.getElementById("texture");
+    ctxTexture = canvasTexture.getContext("2d");
     texture = new THREE.CanvasTexture(canvasTexture);
 
-    ctxTexture = canvasTexture.getContext("2d");
+    Stats.init(WIDTH, HEIGHT);
+
     plotBaseColour();
+    drawBaseOverlayPattern1();
+    drawGeneralNoise1();
     /**
      * range: 40-60
      *  1.1.2 sill: 150-300
@@ -131,10 +167,11 @@ module.exports = {
     init: init,
     updateTexture: updateTexture,
     getTexture: getTexture,
-    plotDistribution: plotDistribution,
     drawPattern: drawPattern,
-    plotVariogram: plotVariogram,
-    drawBaseOverlayPattern: drawBaseOverlayPattern
+    drawBaseOverlayPattern1: drawBaseOverlayPattern1,
+    plotDistribution: plotDistribution,
+    plotVariogram: plotVariogram
+
 };
 
 

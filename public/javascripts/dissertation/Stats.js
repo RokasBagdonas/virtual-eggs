@@ -15,7 +15,7 @@ let numbers = require('numbers');
 let width = 256, height = 256;
 
 //texture parameters-----------------------------
-let params = {
+let defaultParams = {
     mu: width /2,
     variance: width / 2,
     numPoints: 150,
@@ -83,12 +83,14 @@ const setRange = function (newRange){
  * TODO: Gaussian data
  */
 function generateData(customParams = {}) {
-    const mu = customParams.mu || params.mu;
-    const variance =  customParams.variance || params.variance;
-    const numPoints = customParams.numPoints || params.numPoints;
+    const mu = customParams.mu || defaultParams.mu;
+    const variance =  customParams.variance || defaultParams.variance;
+    const numPoints = customParams.numPoints || defaultParams.numPoints;
     const x = numbers.random.distribution.normal(numPoints, mu, variance);
     const y = numbers.random.distribution.normal(numPoints, mu, variance);
     const t = numbers.random.distribution.normal(numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
+    // console.log(`t MAX: ${t.find(e => e >= 99)}`);
+    // console.log(`t MIN: ${t.find(e => e <= 0)}`);
     data = {x,y,t};
 }
 
@@ -102,66 +104,72 @@ const plotPoints = function(ctx){
     ctx.fillRect(0, 0, width, height);
 
     let x, y, h;
-    const radius = 3;
-    for(let i = 0; i < params.numPoints; i++){
+    const radius = 2;
+    for(let i = 0; i < defaultParams.numPoints; i++){
         x = data.x[i];
         y = data.y[i];
         h = data.t[i];
         ctx.beginPath();
-        ctx.fillStyle = "#" + colourPicker.colourAt(h);
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fill();
+        if(!isNaN(h))
+        try{
+            ctx.fillStyle = "#" + colourPicker.colourAt(h);
+        }
+        catch(e){
+            console.error(`plotPoints: '${h}', '${i}', length: ${data.length} `);
+        }
+        finally{
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
     }
 };
 
 
-
 /**
- * Called when variogram params are changed but not the data.
+ *
+ * @param params {range, sill, nugget, alpha, variogramModel, newVariogram, colours}
  */
-const plotVariogram = function(ctx, newVariogram = false, customParams = {}, colours = ["#5e616a","#bcb9c6"]){
+const plotVariogram = function(params){
     //TODO: implement logic for EggTexture when to trigger newVariogram
-    variogramModel = customParams.variogramModel || variogramModel;
-    if (newVariogram)
+    variogramModel = params.variogramModel || variogramModel;
+    if (params.newVariogram)
         variogram = kriging.train(data.t, data.x, data.y, variogramModel,
-            (customParams.sigma2 || params.sigma2),(customParams.alpha || params.alpha));
+            (params.sigma2 || defaultParams.sigma2),(params.alpha || defaultParams.alpha));
 
-    variogram.range = customParams.range || params.range;
-    variogram.sill = customParams.range || params.sill;
-    variogram.nugget = customParams.nugget || params.nugget;
-    let value = 0;
-    const step = customParams.coordinateStep || params.coordinateStep;
-    const threshold = customParams.threshold || params.threshold;
-    const alpha = customParams.alpha || 1;
+    if(!(params.useAlpha || false)){
+        variogram.range = params.range || defaultParams.range;
+        variogram.sill = params.sill || defaultParams.sill;
+        variogram.nugget = params.nugget || defaultParams.nugget;
+    }
+
+    const step = params.coordinateStep || defaultParams.coordinateStep;
+    const threshold = params.threshold || defaultParams.threshold;
+    const alpha = params.alpha || 1;
+    const radius = params.drawRadius || defaultParams.drawRadius;
     console.log(`nugget: ${variogram.nugget.toFixed(3)}; range: ${variogram.range.toFixed(3)};
      sill: ${variogram.sill.toFixed(3)}; A: ${variogram.A.toFixed(3)}; model: ${variogramModel}`);
 
-    let colourStyle = new Rainbow();
+    let value = 0; //initialise kriging prediciton value
 
-    colourStyle.setSpectrum(...colours);
-    const min = params.mu - params.variance *2;
-    const max = min + params.variance * 4;
-    colourStyle.setNumberRange(min, max);
-
-    ctx.globalAlpha = alpha;
+    params.ctx.globalAlpha = alpha;
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
             if (value <= threshold){
-            ctx.beginPath();
-            ctx.fillStyle = "#" + colourStyle.colourAt(value);
-            ctx.arc(x, y, params.drawRadius, 0, Math.PI * 2);
-            ctx.fill();
+                params.ctx.beginPath();
+                params.ctx.fillStyle = "#" + params.colourScheme.colourAt(value);
+                params.ctx.arc(x, y, radius, 0, Math.PI * 2);
+                params.ctx.fill();
             }
-            else{console.log(value)}
+            // else{console.log(value)}
         }
     }
 };
 
 const init = function(w, h){
-    width = w;
-    height = h;
-    generateData();
+    width = w || width;
+    height = h || height;
 };
 
 
@@ -178,7 +186,7 @@ let Stats = {
     init: init,
     width: width,
     height: height,
-    params: params,
+    defaultParams: defaultParams,
     data: data,
     variogramModel: variogramModel,
     MIN_MU: MIN_MU,
@@ -193,7 +201,9 @@ let Stats = {
     MIN_SILL: MIN_SILL,
     MAX_SILL: MAX_SILL,
     MIN_NUGGET: MIN_NUGGET,
-    MAX_NUGGET: MAX_NUGGET
+    MAX_NUGGET: MAX_NUGGET,
+    MIN_HEIGHT: MIN_HEIGHT,
+    MAX_HEIGHT: MAX_HEIGHT
 
 };
 

@@ -43,7 +43,7 @@ function createControls() {
 function createLights() {
 
     const ambientLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 5 );
-    const mainLight = new THREE.DirectionalLight( 0xffffff, 5 );
+    const mainLight = new THREE.DirectionalLight( 0xffffff, 1 );
     mainLight.position.set( 18, 18, 18 );
 
     scene.add( ambientLight, mainLight );

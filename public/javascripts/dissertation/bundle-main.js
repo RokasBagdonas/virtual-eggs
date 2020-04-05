@@ -3238,11 +3238,11 @@ let numbers = require('numbers');
 let texture; //THREE object
 let ctxData, ctxTexture;
 let newVariogram = false;
-let w, h;
+let WIDTH, HEIGHT;
 let colours1 = {
     base: ["#6bbbbf", "#57b9bf"],
     baseOverlay: ["#c0d282","#cdea6c"],
-    noiseSpots: ["#21233b"],
+    noise: ["#21233b", "#333b39"],
     main: ["#0c0d19"]
 };
 
@@ -3256,8 +3256,190 @@ const updateTexture =  function(){
 
 const plotBaseColour = function(){
     ctxTexture.fillStyle = colours1.base[0];
-    ctxTexture.fillRect(0,0, w, h);
+    ctxTexture.fillRect(0,0, WIDTH, HEIGHT);
 };
+
+/**
+ *
+ * @param dataParams :: {[muStart, muEnd], [varianceStart, varianceEnd], [numPointsStart, numPointsEnd]}
+ * @param variogramParams :: {[rangeStart, rangeEnd], [sillStart, sillEnd], [nuggetStart, nuggetEnd], modelName}
+ * @param colourParams :: [colourHexes]
+ */
+
+const drawPattern = function(dataParams, variogramParams, colourSpectrum){
+    //1. baseData
+    //1.1 Get uniform random variable
+    //TODO: refactor with mapping function: for each pair, call random.sample
+    const mu = numbers.random.sample(dataParams.mu[0], dataParams.mu[1], 1)[0];
+    const variance = numbers.random.sample(dataParams.variance[0], dataParams.variance[1], 1)[0];
+    const numPoints = numbers.random.sample(dataParams.numPoints[0], dataParams.numPoints[1], 1)[0];
+    //1.2 generateData
+    dataParams = {mu: mu, variance: variance, numPoints: numPoints};
+
+    Stats.generateData({mu: mu, variance: variance, numPoints: numPoints});
+    Stats.plotPoints(ctxData);
+
+    //2. colours
+    //2.1 define Rainbow object, setSpectrum
+    let colourScheme = new Rainbow();
+    colourScheme.setNumberRange(Stats.MIN_HEIGHT, Stats.MAX_HEIGHT);
+    colourScheme.setSpectrum(...colourSpectrum);
+
+
+
+    //3. plotVariogram.
+    // TODO: Modify to accept Rainbow object instead
+    //3.1 get uniform random variables
+    variogramParams.newVariogram = variogramParams.newVariogram;
+    variogramParams.range = numbers.random.sample(variogramParams.range[0], variogramParams.range[1], 1)[0];
+    variogramParams.sill = numbers.random.sample(variogramParams.sill[0], variogramParams.sill[1], 1)[0];
+    variogramParams.nugget = numbers.random.sample(variogramParams.nugget[0], variogramParams.nugget[1], 1)[0];
+    variogramParams.alpha = variogramParams.alpha;
+    variogramParams.variogramModel = variogramParams.variogramModel;
+    variogramParams.newVariogram = variogramParams.newVariogram;
+    variogramParams.ctx = ctxTexture;
+    variogramParams.colourScheme = colourScheme;
+
+
+    //3.2 draw Variogram
+    Stats.plotVariogram(variogramParams);
+    updateTexture();
+
+};
+
+const drawBaseOverlayPattern1 = function(){
+
+    const dataParams = {
+        mu: [WIDTH / 8, WIDTH / 1.42],
+        variance: [35, 60],
+        numPoints: [140, 160]
+    };
+    const variogramParams = {
+        range: [40, 60],
+        sill: [200, 280],
+        nugget: [100, 105],
+        alpha: 0.05,
+        variogramModel: "gaussian",
+        newVariogram: true,
+        drawRadius: 2
+    };
+    const colourSpectrum = colours1.baseOverlay;
+
+    drawPattern(dataParams, variogramParams, colourSpectrum);
+
+
+};
+
+const drawGeneralNoise1 = function(){
+    const dataParams = {
+        mu: [110, 130],
+        variance: [120, 180],
+        numPoints: [160, 300]
+    };
+    const variogramParams = {
+        range: [5, 8],
+        sill: [38, 50],
+        nugget: [100, 102],
+        alpha: 0.7,
+        variogramModel: "gaussian",
+        newVariogram: true,
+        drawRadius: 0.7
+    };
+    const colourSpectrum = colours1.noise;
+    drawPattern(dataParams, variogramParams, colourSpectrum);
+
+};
+
+const plotVariogram = function(){
+    plotBaseColour();
+    Stats.plotVariogram(ctxTexture, newVariogram);
+    newVariogram = false;
+    this.updateTexture();
+};
+
+//TODO: legacy
+const plotDistribution = function(){
+    Stats.generateData();
+    newVariogram = true;
+    Stats.plotPoints(ctxData);
+};
+
+
+
+const init = function(){
+    let dataCanvas = document.getElementById("stats-points");
+    WIDTH = dataCanvas.width;
+    HEIGHT = dataCanvas.height;
+    ctxData = dataCanvas.getContext("2d");
+    let canvasTexture = document.getElementById("texture");
+    ctxTexture = canvasTexture.getContext("2d");
+    texture = new THREE.CanvasTexture(canvasTexture);
+
+    Stats.init(WIDTH, HEIGHT);
+
+    plotBaseColour();
+    drawBaseOverlayPattern1();
+    drawGeneralNoise1();
+    /**
+     * range: 40-60
+     *  1.1.2 sill: 150-300
+     *  1.1.3 mu: 30-180
+     *  1.1.4 variance: 40-90
+     */
+
+    // plotBaseOverlayColour();
+    // Stats.plotVariogram(ctxTexture, true);
+
+
+    // texture = new THREE.CanvasTexture(ctxTexture.canvas);
+    texture.needsUpdate = true;
+};
+
+
+module.exports = {
+    init: init,
+    updateTexture: updateTexture,
+    getTexture: getTexture,
+    drawPattern: drawPattern,
+    drawBaseOverlayPattern1: drawBaseOverlayPattern1,
+    plotDistribution: plotDistribution,
+    plotVariogram: plotVariogram
+
+};
+
+
+/**
+ * Plan for generating texture
+ * 1. add base colour to ctx. Research interpolation
+ * 2. add base pigment colour using big range.
+ * 3. add low radius noisy dots
+ * 4. add main patterns
+ *   4.1 blobs
+ *   4.2 streaking
+ *   4.3 gaussian with trend
+ * 5. add noise bump map
+ *
+ * Need to improve Stats js so that we can different parameters for different patterns.
+ * 1. Save a copy of the base texture (1-3) so that it can be used to adjust main patterns.
+ * 2. determine areas where points get distorted. when plotting a point, check if it is in that area.
+ *  If so, scale default drawing radius down.
+ * 3. Refactor Stats to have variogram function with options.
+ * 4.
+ *
+ */
+
+/**
+ * 1. On each call, create random params in range
+ * 1.1. Determine uniform variations of range, sill mu and variance
+ *  1.1.1 range: 40-60
+ *  1.1.2 sill: 150-300
+ *  1.1.3 mu: 30-180
+ *  1.1.4 variance: 40-90
+ * 2. Colour variation:
+ *  2.1. define two hex values for two colours for rainbow.setSpectrum
+ *  2.2.
+ *
+ */
 
 /**
  * For each layer, there is a pattern that we follow.
@@ -3289,148 +3471,6 @@ const plotBaseColour = function(){
  * 2. Calls generateData() and plotVariogram() with those variables.
  */
 
-/**
- *
- * @param dataParams :: {[muStart, muEnd], [varianceStart, varianceEnd], [numPointsStart, numPointsEnd]}
- * @param variogramParams :: {[rangeStart, rangeEnd], [sillStart, sillEnd], [nuggetStart, nuggetEnd], modelName}
- * @param colourParams :: [colourHexes]
- */
-const drawPattern = function(dataParams, variogramParams, colourSpectrum){
-    //1. baseData
-    //1.1 Get uniform random variable
-    const mu = numbers.random.sample(dataParams.mu[0], dataParams.mu[1], 1)[0];
-    const variance = numbers.random.sample(dataParams.variance[0], dataParams.variance[1], 1)[0];
-    const numPoints = numbers.random.sample(dataParams.numPoints[0], dataParams.numPoints[1], 1)[0];
-    //1.2 generateData
-    const customParams = {mu: mu, variance: variance, numPoints: numPoints};
-    console.log(customParams);
-    Stats.generateData({mu: mu, variance: variance, numPoints: numPoints});
-    Stats.plotPoints(ctxData);
-
-    //2. colours
-    //2.1 define Rainbow object, setSpectrum
-
-    //3. plotVariogram.
-    // TODO: Modify to accept Rainbow object instead
-    //3.1 get uniform random variables
-
-    //3.2 plotVariogram()
-};
-
-const drawBaseOverlayPattern = function(){
-
-    const dataParams = {
-        mu: [30, 180],
-        variance: [35, 60],
-        numPoints: [140, 160]
-    };
-    const varianceParams = {
-        range: [40, 60],
-        sill: [150, 300],
-        nugget: [100, 105],
-        alpha: 0.5,
-        variogramModel: "gaussian"
-    };
-    const colours = colours1.baseOverlay;
-
-    drawPattern(dataParams, varianceParams, colours);
-
-
-};
-
-
-
-/**
- * 1. On each call, create random params in range
- * 1.1. Determine uniform variations of range, sill mu and variance
- *  1.1.1 range: 40-60
- *  1.1.2 sill: 150-300
- *  1.1.3 mu: 30-180
- *  1.1.4 variance: 40-90
- * 2. Colour variation:
- *  2.1. define two hex values for two colours for rainbow.setSpectrum
- *  2.2.
- *
- */
-
-
-
-
-//TODO: legacy
-//TODO: rename to stage 4: plot blobs / streaking
-const plotVariogram = function(){
-    plotBaseColour();
-    Stats.plotVariogram(ctxTexture, newVariogram);
-    newVariogram = false;
-    this.updateTexture();
-};
-
-//TODO: legacy
-const plotDistribution = function(){
-    Stats.generateData();
-    newVariogram = true;
-    Stats.plotPoints(ctxData);
-};
-
-const init = function(){
-    ctxData = document.getElementById("stats-points");
-    w = ctxData.width;
-    h = ctxData.height;
-    Stats.init(w, h);
-    ctxData = ctxData.getContext("2d");
-    Stats.plotPoints(ctxData);
-
-    let canvasTexture = document.getElementById("texture");
-    texture = new THREE.CanvasTexture(canvasTexture);
-
-    ctxTexture = canvasTexture.getContext("2d");
-    plotBaseColour();
-    /**
-     * range: 40-60
-     *  1.1.2 sill: 150-300
-     *  1.1.3 mu: 30-180
-     *  1.1.4 variance: 40-90
-     */
-
-    // plotBaseOverlayColour();
-    // Stats.plotVariogram(ctxTexture, true);
-
-    /**
-     * Plan for generating texture
-     * 1. add base colour to ctx. Research interpolation
-     * 2. add base pigment colour using big range.
-     * 3. add low radius noisy dots
-     * 4. add main patterns
-     *   4.1 blobs
-     *   4.2 streaking
-     *   4.3 gaussian with trend
-     * 5. add noise bump map
-     *
-     * Need to improve Stats js so that we can different parameters for different patterns.
-     * 1. Save a copy of the base texture (1-3) so that it can be used to adjust main patterns.
-     * 2. determine areas where points get distorted. when plotting a point, check if it is in that area.
-     *  If so, scale default drawing radius down.
-     * 3. Refactor Stats to have variogram function with options.
-     * 4.
-     *
-     */
-
-    // texture = new THREE.CanvasTexture(ctxTexture.canvas);
-    texture.needsUpdate = true;
-};
-
-
-module.exports = {
-    init: init,
-    updateTexture: updateTexture,
-    getTexture: getTexture,
-    plotDistribution: plotDistribution,
-    drawPattern: drawPattern,
-    plotVariogram: plotVariogram,
-    drawBaseOverlayPattern: drawBaseOverlayPattern
-};
-
-
 },{"./Stats.js":15,"numbers":1}],13:[function(require,module,exports){
 /**
 * Parameters:
@@ -3461,7 +3501,7 @@ function setupGeneratePoints(){
 
     slider.oninput = (event) => {
         const points = Math.round(parseInt(event.target.value, 10));
-        Stats.params.numPoints = points;
+        Stats.defaultParams.numPoints = points;
         label.innerHTML = "" + points;
     };
 
@@ -3478,12 +3518,12 @@ function setupSpatiallyCorrelatedField() {
 
     slider.step = "0.1";
     slider.max = Stats.MAX_SIGMA2;
-    slider.value = Stats.params.sigma2;
-    label.innerHTML = "Sigma^2 = " + Stats.params.sigma2;
+    slider.value = Stats.defaultParams.sigma2;
+    label.innerHTML = "Sigma^2 = " + Stats.defaultParams.sigma2;
 
     slider.oninput = (event) => {
         // console.log("sigma2 slider");
-        Stats.params.sigma2 = parseFloat(event.target.value, 10);
+        Stats.defaultParams.sigma2 = parseFloat(event.target.value, 10);
         label.innerHTML = "Sigma^2 = " + event.target.value;
         if (isInteractive){
             EggTexture.plotVariogram();
@@ -3497,11 +3537,11 @@ function setupSpatiallyCorrelatedField() {
     slider.min = -2;
     slider.step = "0.1";
     slider.max = Stats.MAX_ALPHA;
-    slider.value = Stats.params.alpha;
-    label2.innerHTML = "Alpha = " + Stats.params.alpha;
+    slider.value = Stats.defaultParams.alpha;
+    label2.innerHTML = "Alpha = " + Stats.defaultParams.alpha;
 
     slider.oninput = (event) => {
-        Stats.params.alpha = parseInt(event.target.value, 10);
+        Stats.defaultParams.alpha = parseInt(event.target.value, 10);
         label2.innerHTML = "Alpha = " + event.target.value;
         if (isInteractive){
             EggTexture.plotVariogram();
@@ -3546,7 +3586,7 @@ function setupVariogramSlider(elementId, labelId, min, max, step, value, paramNa
     let labelInnerHTML =  `${slider.name}= ${value}`;
     label.innerHTML = labelInnerHTML;
     slider.oninput = (event) => {
-        Stats.params[paramName] = parseFloat(event.target.value, 10);
+        Stats.defaultParams[paramName] = parseFloat(event.target.value, 10);
         label.innerHTML = slider.name + "= " + event.target.value;
         if (isInteractive){
             EggTexture.plotVariogram();
@@ -3564,7 +3604,7 @@ function setupDistributionSlider(elementId, labelId, min, max, step, value, para
     let labelInnerHTML =  `${slider.name}= ${value}`;
     label.innerHTML = labelInnerHTML;
     slider.oninput = (event) => {
-        Stats.params[paramName] = parseFloat(event.target.value, 10);
+        Stats.defaultParams[paramName] = parseFloat(event.target.value, 10);
         label.innerHTML = slider.name + "= " + event.target.value;
         EggTexture.plotDistribution();
     }
@@ -3593,11 +3633,11 @@ const initEggUI = function(){
     setupVariogramSlider("nugget-slider", "nugget-label",
         Stats.MIN_NUGGET, Stats.MAX_NUGGET, "7", 100, "nugget");
     setupDistributionSlider("mu-slider", "mu-label",
-        0, Stats.width, 1, Stats.params.mu, "mu");
+        0, Stats.width, 1, Stats.defaultParams.mu, "mu");
     setupDistributionSlider("variance-slider", "variance-label",
-        Stats.MIN_VARIANCE, Stats.MAX_VARIANCE, 1, Stats.params.variance, "variance");
+        Stats.MIN_VARIANCE, Stats.MAX_VARIANCE, 1, Stats.defaultParams.variance, "variance");
     setupDistributionSlider("points-slider", "points-label",
-        0, Stats.MAX_POINTS, 1, Stats.params.numPoints, "numPoints");
+        0, Stats.MAX_POINTS, 1, Stats.defaultParams.numPoints, "numPoints");
 
     setupDrawPattern();
 };
@@ -3654,7 +3694,7 @@ function createControls() {
 function createLights() {
 
     const ambientLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 5 );
-    const mainLight = new THREE.DirectionalLight( 0xffffff, 5 );
+    const mainLight = new THREE.DirectionalLight( 0xffffff, 1 );
     mainLight.position.set( 18, 18, 18 );
 
     scene.add( ambientLight, mainLight );
@@ -3766,7 +3806,7 @@ let numbers = require('numbers');
 let width = 256, height = 256;
 
 //texture parameters-----------------------------
-let params = {
+let defaultParams = {
     mu: width /2,
     variance: width / 2,
     numPoints: 150,
@@ -3834,12 +3874,14 @@ const setRange = function (newRange){
  * TODO: Gaussian data
  */
 function generateData(customParams = {}) {
-    const mu = customParams.mu || params.mu;
-    const variance =  customParams.variance || params.variance;
-    const numPoints = customParams.numPoints || params.numPoints;
+    const mu = customParams.mu || defaultParams.mu;
+    const variance =  customParams.variance || defaultParams.variance;
+    const numPoints = customParams.numPoints || defaultParams.numPoints;
     const x = numbers.random.distribution.normal(numPoints, mu, variance);
     const y = numbers.random.distribution.normal(numPoints, mu, variance);
     const t = numbers.random.distribution.normal(numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
+    // console.log(`t MAX: ${t.find(e => e >= 99)}`);
+    // console.log(`t MIN: ${t.find(e => e <= 0)}`);
     data = {x,y,t};
 }
 
@@ -3853,66 +3895,72 @@ const plotPoints = function(ctx){
     ctx.fillRect(0, 0, width, height);
 
     let x, y, h;
-    const radius = 3;
-    for(let i = 0; i < params.numPoints; i++){
+    const radius = 2;
+    for(let i = 0; i < defaultParams.numPoints; i++){
         x = data.x[i];
         y = data.y[i];
         h = data.t[i];
         ctx.beginPath();
-        ctx.fillStyle = "#" + colourPicker.colourAt(h);
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fill();
+        if(!isNaN(h))
+        try{
+            ctx.fillStyle = "#" + colourPicker.colourAt(h);
+        }
+        catch(e){
+            console.error(`plotPoints: '${h}', '${i}', length: ${data.length} `);
+        }
+        finally{
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
     }
 };
 
 
-
 /**
- * Called when variogram params are changed but not the data.
+ *
+ * @param params {range, sill, nugget, alpha, variogramModel, newVariogram, colours}
  */
-const plotVariogram = function(ctx, newVariogram = false, customParams = {}, colours = ["#5e616a","#bcb9c6"]){
+const plotVariogram = function(params){
     //TODO: implement logic for EggTexture when to trigger newVariogram
-    variogramModel = customParams.variogramModel || variogramModel;
-    if (newVariogram)
+    variogramModel = params.variogramModel || variogramModel;
+    if (params.newVariogram)
         variogram = kriging.train(data.t, data.x, data.y, variogramModel,
-            (customParams.sigma2 || params.sigma2),(customParams.alpha || params.alpha));
+            (params.sigma2 || defaultParams.sigma2),(params.alpha || defaultParams.alpha));
 
-    variogram.range = customParams.range || params.range;
-    variogram.sill = customParams.range || params.sill;
-    variogram.nugget = customParams.nugget || params.nugget;
-    let value = 0;
-    const step = customParams.coordinateStep || params.coordinateStep;
-    const threshold = customParams.threshold || params.threshold;
-    const alpha = customParams.alpha || 1;
+    if(!(params.useAlpha || false)){
+        variogram.range = params.range || defaultParams.range;
+        variogram.sill = params.sill || defaultParams.sill;
+        variogram.nugget = params.nugget || defaultParams.nugget;
+    }
+
+    const step = params.coordinateStep || defaultParams.coordinateStep;
+    const threshold = params.threshold || defaultParams.threshold;
+    const alpha = params.alpha || 1;
+    const radius = params.drawRadius || defaultParams.drawRadius;
     console.log(`nugget: ${variogram.nugget.toFixed(3)}; range: ${variogram.range.toFixed(3)};
      sill: ${variogram.sill.toFixed(3)}; A: ${variogram.A.toFixed(3)}; model: ${variogramModel}`);
 
-    let colourStyle = new Rainbow();
+    let value = 0; //initialise kriging prediciton value
 
-    colourStyle.setSpectrum(...colours);
-    const min = params.mu - params.variance *2;
-    const max = min + params.variance * 4;
-    colourStyle.setNumberRange(min, max);
-
-    ctx.globalAlpha = alpha;
+    params.ctx.globalAlpha = alpha;
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
             if (value <= threshold){
-            ctx.beginPath();
-            ctx.fillStyle = "#" + colourStyle.colourAt(value);
-            ctx.arc(x, y, params.drawRadius, 0, Math.PI * 2);
-            ctx.fill();
+                params.ctx.beginPath();
+                params.ctx.fillStyle = "#" + params.colourScheme.colourAt(value);
+                params.ctx.arc(x, y, radius, 0, Math.PI * 2);
+                params.ctx.fill();
             }
-            else{console.log(value)}
+            // else{console.log(value)}
         }
     }
 };
 
 const init = function(w, h){
-    width = w;
-    height = h;
-    generateData();
+    width = w || width;
+    height = h || height;
 };
 
 
@@ -3929,7 +3977,7 @@ let Stats = {
     init: init,
     width: width,
     height: height,
-    params: params,
+    defaultParams: defaultParams,
     data: data,
     variogramModel: variogramModel,
     MIN_MU: MIN_MU,
@@ -3944,7 +3992,9 @@ let Stats = {
     MIN_SILL: MIN_SILL,
     MAX_SILL: MAX_SILL,
     MIN_NUGGET: MIN_NUGGET,
-    MAX_NUGGET: MAX_NUGGET
+    MAX_NUGGET: MAX_NUGGET,
+    MIN_HEIGHT: MIN_HEIGHT,
+    MAX_HEIGHT: MAX_HEIGHT
 
 };
 
