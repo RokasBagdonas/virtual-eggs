@@ -7,13 +7,20 @@ let texture; //THREE object
 let ctxData, ctxTexture;
 let newVariogram = false;
 let WIDTH, HEIGHT;
-let colours1 = {
+let colours0 = {
     base: ["#6bbbbf", "#57b9bf"],
     baseOverlay: ["#c0d282","#cdea6c"],
     noise: ["#21233b", "#333b39"],
     main: ["#0c0d19"],
     highContrast: ["#340a09","#ea3c00"]
 };
+
+let colours1 = {
+    base: ["#fcefdf"],
+    baseOverlay: ["#9a8f7e","#a29279"],
+    noise: ["#926a60", "#b96c50"],
+    main: ["#786e6f", "#8d675c"]
+}
 
 const getTexture = function(){
     return texture;
@@ -104,21 +111,96 @@ const drawGeneralNoise1 = function(){
     const dataParams = {
         mu: [110, 130],
         variance: [120, 180],
-        numPoints: [160, 300]
+        numPoints: [200, 300]
     };
     const variogramParams = {
-        range: [5, 8],
+        range: [2, 5],
         sill: [38, 50],
         nugget: [100, 102],
         alpha: 0.7,
         variogramModel: "gaussian",
         newVariogram: true,
-        drawRadius: 0.6
+        drawRadius: 0.6,
+        threshold: 100
     };
     const colourSpectrum = colours1.noise;
     drawPattern(dataParams, variogramParams, colourSpectrum);
 
 };
+
+//big blobs
+const drawMainPattern1 = function(){
+    const dataParams = {
+        mu: [WIDTH / 8, WIDTH / 1.42],
+        variance: [35, 40],
+        numPoints: [140, 180]
+    };
+    const variogramParams = {
+        range: [50, 90],
+        sill: [250, 330],
+        nugget: [80, 90],
+        alpha: 1,
+        variogramModel: "gaussian",
+        newVariogram: true,
+        drawRadius: 3,
+        threshold: 90
+    };
+    const colourSpectrum = colours1.main;
+
+    drawPattern(dataParams, variogramParams, colourSpectrum);
+};
+
+
+const init = function(){
+    let dataCanvas = document.getElementById("stats-points");
+    WIDTH = dataCanvas.width;
+    HEIGHT = dataCanvas.height;
+    ctxData = dataCanvas.getContext("2d");
+    let canvasTexture = document.getElementById("texture");
+    ctxTexture = canvasTexture.getContext("2d");
+    texture = new THREE.CanvasTexture(canvasTexture);
+
+    Stats.init(WIDTH, HEIGHT);
+
+    plotBaseColour();
+    drawBaseOverlayPattern1();
+    drawGeneralNoise1();
+    drawMainPattern1();
+    drawGeneralNoise1();
+    drawGeneralNoise1();
+
+    // experim  etalDraw();
+    // plotSimple();
+    /**
+     * range: 40-60
+     *  1.1.2 sill: 150-300
+     *  1.1.3 mu: 30-180
+     *  1.1.4 variance: 40-90
+     */
+
+    // plotBaseOverlayColour();
+    // Stats.plotVariogram(ctxTexture, true);
+
+
+    // texture = new THREE.CanvasTexture(ctxTexture.canvas);
+    texture.needsUpdate = true;
+};
+
+const plotVariogram = function(){
+    plotBaseColour();
+    const params = {newVariogram: newVariogram, useAlpha: true};
+    Stats.plotVariogram(ctxTexture, params);
+    newVariogram = false;
+    this.updateTexture();
+};
+
+//TODO: legacy
+const plotDistribution = function(){
+    Stats.generateData();
+    newVariogram = true;
+    Stats.plotPoints(ctxData);
+};
+
 
 const experimetalDraw = function(){
     const dataParams = {
@@ -172,57 +254,9 @@ const plotSimple = function(){
 
     // console.log(xy);
 
-  Stats.setData(data3);
-  Stats.plotPoints(ctxData, data3);
-  Stats.plotVariogram(ctxTexture, variogramParams);
-};
-
-const plotVariogram = function(){
-    plotBaseColour();
-    const params = {newVariogram: newVariogram, useAlpha: true};
-    Stats.plotVariogram(ctxTexture, params);
-    newVariogram = false;
-    this.updateTexture();
-};
-
-//TODO: legacy
-const plotDistribution = function(){
-    Stats.generateData();
-    newVariogram = true;
-    Stats.plotPoints(ctxData);
-};
-
-
-
-const init = function(){
-    let dataCanvas = document.getElementById("stats-points");
-    WIDTH = dataCanvas.width;
-    HEIGHT = dataCanvas.height;
-    ctxData = dataCanvas.getContext("2d");
-    let canvasTexture = document.getElementById("texture");
-    ctxTexture = canvasTexture.getContext("2d");
-    texture = new THREE.CanvasTexture(canvasTexture);
-
-    Stats.init(WIDTH, HEIGHT);
-
-    plotBaseColour();
-    drawBaseOverlayPattern1();
-    // drawGeneralNoise1();
-    // experimetalDraw();
-    // plotSimple();
-    /**
-     * range: 40-60
-     *  1.1.2 sill: 150-300
-     *  1.1.3 mu: 30-180
-     *  1.1.4 variance: 40-90
-     */
-
-    // plotBaseOverlayColour();
-    // Stats.plotVariogram(ctxTexture, true);
-
-
-    // texture = new THREE.CanvasTexture(ctxTexture.canvas);
-    texture.needsUpdate = true;
+    Stats.setData(data3);
+    Stats.plotPoints(ctxData, data3);
+    Stats.plotVariogram(ctxTexture, variogramParams);
 };
 
 

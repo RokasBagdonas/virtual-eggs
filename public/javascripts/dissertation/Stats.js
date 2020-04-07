@@ -152,7 +152,7 @@ const plotVariogram = function(ctx, params){
     const step = params.coordinateStep || defaultParams.coordinateStep;
     const threshold = params.threshold || defaultParams.threshold;
     const alpha = params.alpha || 1;
-    const radius = params.drawRadius || defaultParams.drawRadius;
+    let radius = params.drawRadius || defaultParams.drawRadius;
     console.log(`nugget: ${variogram.nugget.toFixed(3)}; range: ${variogram.range.toFixed(3)};
      sill: ${variogram.sill.toFixed(3)}; A: ${variogram.A.toFixed(3)}; model: ${variogramModel}`);
 
@@ -164,6 +164,9 @@ const plotVariogram = function(ctx, params){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
             if (value <= threshold){
+                // if((x > 100 && x < 140) && (y > 100 && y < 140)){
+                //     radius = 0.1;
+                // }
                 ctx.beginPath();
                 ctx.fillStyle = "#" + colourScheme.colourAt(value);
                 ctx.arc(x, y, radius, 0, Math.PI * 2);
