@@ -3311,8 +3311,7 @@ const drawPattern = function(dataParams, variogramParams, colourSpectrum){
 const drawBaseOverlayPattern1 = function(){
 
     const dataParams = {
-        // mu: [WIDTH / 8, WIDTH / 1.42],
-        mu: [30, 190],
+        mu: [WIDTH / 8, WIDTH / 1.42],
         variance: [35, 60],
         numPoints: [140, 160]
     };
@@ -3323,8 +3322,7 @@ const drawBaseOverlayPattern1 = function(){
         alpha: 0.05,
         variogramModel: "gaussian",
         newVariogram: true,
-        drawRadius: 2,
-        threshold: 80
+        drawRadius: 2
     };
     const colourSpectrum = colours1.baseOverlay;
 
@@ -3389,31 +3387,32 @@ const plotSimple = function(){
         y: [128, 134, 145, 150, 155, 159],
         t: [90, 92, 80, 91, 90, 93]
     };
-
-    const data3 = {
-        x: [128, 128, 128, 128, 128, 108, 148],
-        y: [78, 108, 128, 148, 178, 128, 128],
-        t: [40, 85, 100, 85, 45, 90, 90]
-    };
-
-    // let degrees = 30;
-    // console.log(data2.x);
-    // console.log(Maths.pairData(data2.x, data2.y));
-    // // console.log(Maths.rotate(degrees, v));
-    // console.log(numbers.matrix.rotate([[1],[1]], degrees, 'clockwise'));
-
-
+    // let xy = data2.x.map((e, i) => [[e, 0], [0, data2.y[i]]]);
     // console.log(xy);
 
-  Stats.setData(data3);
-  Stats.plotPoints(ctxData, data3);
+    const degrees = 45;
+
+    let xyMatrix = Maths.twoVectorsTo2dMatrix(data2.x, data2.y);
+    let xy = data2.x.map((e,i) => [e,data2.y[i]]);
+    let r = xy.map(e => numbers.matrix.rotate(e, 30, 'clockwise'));
+    console.log(r);
+    // console.log(Maths.rotateArray(30, xyMatrix));
+
+    // const rotate = [[Math.cos(degrees), -Math.sin(degrees)],
+    //                 [Math.cos(degrees), Math.sin(degrees)]];
+    // console.log(rotate);
+    // xy = xy.map(e => numbers.matrix.multiply(e, rotate));
+    // xy.map(e => console.log(e));
+    // console.log(xy);
+
+  Stats.setData(data2);
+  Stats.plotPoints(ctxData, data2);
   Stats.plotVariogram(ctxTexture, variogramParams);
 };
 
 const plotVariogram = function(){
     plotBaseColour();
-    const params = {newVariogram: newVariogram, useAlpha: true};
-    Stats.plotVariogram(ctxTexture, params);
+    Stats.plotVariogram(ctxTexture, newVariogram);
     newVariogram = false;
     this.updateTexture();
 };
@@ -3439,10 +3438,10 @@ const init = function(){
     Stats.init(WIDTH, HEIGHT);
 
     plotBaseColour();
-    drawBaseOverlayPattern1();
+    // drawBaseOverlayPattern1();
     // drawGeneralNoise1();
     // experimetalDraw();
-    // plotSimple();
+    plotSimple();
     /**
      * range: 40-60
      *  1.1.2 sill: 150-300
@@ -3859,25 +3858,52 @@ init();
 let numbers = require('numbers');
 
 /**
- * Zips two 1-D arrays into a matrix of 2D vectors [[[x1], [y1]] ... [[xn],[yn]]]
- * @param X
- * @param Y
+ *
+ * @param xVector Array
+ * @param yVector Array
+ * @returns {2D Array N x N size}
  */
-const pairData = function(X, Y){
-    if(X.length !== Y.length){
-        console.error("mismatch in X and Y lengths");
-        return;
+const twoVectorsTo2dMatrix = function(xVector, yVector) {
+    if( xVector.length !== yVector.length){
+        console.error("data2dToMatrix: vector lengths do not match");
     }
-    return X.map((e,i) => [[e], [Y[i]]]);
+    return xVector.map((e, i) => [[e,0], [0, yVector[i]]]);
 };
 
-const degreesToRadian = function(angle){
-    return angle * (180 / Math.PI);
+/**
+ *
+ * @param degrees 0-360
+ * @param xyCoord 2D diagonal matrix [[x, 0],[0, y]]
+ */
+const rotate = function(degrees, xy){
+    if(xy.length !== 2 || xy[0].length !== 2 || xy[1].length !== 2){
+        console.error("must supply array of format [[x, 0],[0, y]]");
+        return;
+    }
+    const rotate = [
+        [Math.cos(degrees), -Math.sin(degrees)],
+        [Math.sin(degrees), Math.cos(degrees)]
+    ];
+
+    return numbers.matrix.multiply(xy, rotate);
+
+};
+
+/**
+ *
+ * @param degrees 0-360
+ * @param xyArray Array of pairs of coordinates in a diagonal format [ [[x,0], [0,y]] ]
+ * @returns xyArray rotated array
+ */
+const rotateArray = function(degrees, xyArray){
+    return xyArray.map((degrees, xy) => rotate(degrees, xy));
 };
 
 module.exports = {
-    pairData: pairData
-};
+    twoVectorsTo2dMatrix: twoVectorsTo2dMatrix,
+    rotate: rotate,
+    rotateArray: rotateArray
+}
 },{"numbers":1}],16:[function(require,module,exports){
 /**
 * Plan:
@@ -4011,7 +4037,7 @@ const plotPoints = function(ctx){
 
 
 /**
- * @param ctx canvas as 2D context to be drawn on.
+ *
  * @param params {range, sill, nugget, alpha, variogramModel, newVariogram, colours}
  */
 const plotVariogram = function(ctx, params){
@@ -4044,12 +4070,12 @@ const plotVariogram = function(ctx, params){
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
-            if (value <= threshold){
+            // if (value <= threshold){
                 ctx.beginPath();
                 ctx.fillStyle = "#" + colourScheme.colourAt(value);
                 ctx.arc(x, y, radius, 0, Math.PI * 2);
                 ctx.fill();
-            }
+            // }
             // else{console.log(value)}
         }
     }

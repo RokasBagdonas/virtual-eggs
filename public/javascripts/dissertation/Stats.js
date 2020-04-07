@@ -23,10 +23,10 @@ let defaultParams = {
     alpha: 2,
     range: 5,
     sill: 200,
-    nugget: 100,
+    nugget: 20,
     coordinateStep: 1,
     drawRadius: 1,
-    threshold: 80
+    threshold: 1000
 };
 
 let variogram;
@@ -94,6 +94,10 @@ function generateData(customParams = {}) {
     data = {x,y,t};
 }
 
+const setData = function(newData){
+    data = newData;
+}
+
 
 /**
  * //2.
@@ -102,7 +106,6 @@ function generateData(customParams = {}) {
 const plotPoints = function(ctx){
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, width, height);
-
     let x, y, h;
     const radius = 2;
     for(let i = 0; i < defaultParams.numPoints; i++){
@@ -127,11 +130,14 @@ const plotPoints = function(ctx){
 
 
 /**
- *
+ * @param ctx canvas as 2D context to be drawn on.
  * @param params {range, sill, nugget, alpha, variogramModel, newVariogram, colours}
  */
-const plotVariogram = function(params){
-    //TODO: implement logic for EggTexture when to trigger newVariogram
+const plotVariogram = function(ctx, params){
+    if(ctx === undefined){
+        console.error("plotVariogram: canvas is not provided");
+        return;
+    }
     variogramModel = params.variogramModel || variogramModel;
     if (params.newVariogram)
         variogram = kriging.train(data.t, data.x, data.y, variogramModel,
@@ -152,15 +158,16 @@ const plotVariogram = function(params){
 
     let value = 0; //initialise kriging prediciton value
 
-    params.ctx.globalAlpha = alpha;
+    ctx.globalAlpha = alpha;
+    const colourScheme = params.colourScheme || colourPicker;
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
             if (value <= threshold){
-                params.ctx.beginPath();
-                params.ctx.fillStyle = "#" + params.colourScheme.colourAt(value);
-                params.ctx.arc(x, y, radius, 0, Math.PI * 2);
-                params.ctx.fill();
+                ctx.beginPath();
+                ctx.fillStyle = "#" + colourScheme.colourAt(value);
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
             }
             // else{console.log(value)}
         }
@@ -184,6 +191,7 @@ let Stats = {
     plotPoints: plotPoints,
     plotVariogram: plotVariogram,
     init: init,
+    setData: setData,
     width: width,
     height: height,
     defaultParams: defaultParams,

@@ -60,8 +60,8 @@ function setupSpatiallyCorrelatedField() {
     slider = document.getElementById("alpha-slider");
     let label2 = document.getElementById("alpha-label");
 
-    slider.min = -2;
-    slider.step = "0.1";
+    slider.min = 0;
+    slider.step = "0.01";
     slider.max = Stats.MAX_ALPHA;
     slider.value = Stats.defaultParams.alpha;
     label2.innerHTML = "Alpha = " + Stats.defaultParams.alpha;
@@ -155,9 +155,9 @@ const initEggUI = function(){
     setupVariogramSlider("range-slider", "range-label",
         Stats.MIN_RANGE, Stats.MAX_RANGE, "0.1", 2,"range");
     setupVariogramSlider("sill-slider", "sill-label",
-        Stats.MIN_SILL, Stats.MAX_SILL, "10", 200, "sill");
+        Stats.MIN_SILL, Stats.MAX_SILL, "1", 200, "sill");
     setupVariogramSlider("nugget-slider", "nugget-label",
-        Stats.MIN_NUGGET, Stats.MAX_NUGGET, "7", 100, "nugget");
+        Stats.MIN_NUGGET, Stats.MAX_NUGGET, "1", 100, "nugget");
     setupDistributionSlider("mu-slider", "mu-label",
         0, Stats.width, 1, Stats.defaultParams.mu, "mu");
     setupDistributionSlider("variance-slider", "variance-label",
@@ -167,6 +167,10 @@ const initEggUI = function(){
 
     setupDrawPattern();
 };
+
+function setupVariogramUI(){
+
+}
 
 module.exports = {
     initEggUI: initEggUI

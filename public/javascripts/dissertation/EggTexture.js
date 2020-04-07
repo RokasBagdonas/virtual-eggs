@@ -1,4 +1,5 @@
 let Stats = require('./Stats.js');
+let Maths = require('./Maths.js');
 let numbers = require('numbers');
 
 // let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
@@ -10,7 +11,8 @@ let colours1 = {
     base: ["#6bbbbf", "#57b9bf"],
     baseOverlay: ["#c0d282","#cdea6c"],
     noise: ["#21233b", "#333b39"],
-    main: ["#0c0d19"]
+    main: ["#0c0d19"],
+    highContrast: ["#340a09","#ea3c00"]
 };
 
 const getTexture = function(){
@@ -64,12 +66,11 @@ const drawPattern = function(dataParams, variogramParams, colourSpectrum){
     variogramParams.alpha = variogramParams.alpha;
     variogramParams.variogramModel = variogramParams.variogramModel;
     variogramParams.newVariogram = variogramParams.newVariogram;
-    variogramParams.ctx = ctxTexture;
     variogramParams.colourScheme = colourScheme;
 
 
     //3.2 draw Variogram
-    Stats.plotVariogram(variogramParams);
+    Stats.plotVariogram(ctxTexture, variogramParams);
     updateTexture();
 
 };
@@ -77,7 +78,8 @@ const drawPattern = function(dataParams, variogramParams, colourSpectrum){
 const drawBaseOverlayPattern1 = function(){
 
     const dataParams = {
-        mu: [WIDTH / 8, WIDTH / 1.42],
+        // mu: [WIDTH / 8, WIDTH / 1.42],
+        mu: [30, 190],
         variance: [35, 60],
         numPoints: [140, 160]
     };
@@ -88,7 +90,8 @@ const drawBaseOverlayPattern1 = function(){
         alpha: 0.05,
         variogramModel: "gaussian",
         newVariogram: true,
-        drawRadius: 2
+        drawRadius: 2,
+        threshold: 80
     };
     const colourSpectrum = colours1.baseOverlay;
 
@@ -110,16 +113,74 @@ const drawGeneralNoise1 = function(){
         alpha: 0.7,
         variogramModel: "gaussian",
         newVariogram: true,
-        drawRadius: 0.7
+        drawRadius: 0.6
     };
     const colourSpectrum = colours1.noise;
     drawPattern(dataParams, variogramParams, colourSpectrum);
 
 };
 
+const experimetalDraw = function(){
+    const dataParams = {
+        mu: [110, 130],
+        variance: [120, 180],
+        numPoints: [160, 300]
+    };
+    const variogramParams = {
+        range: [5, 8],
+        sill: [105, 200],
+        nugget: [30, 40],
+        alpha: 0.7,
+        variogramModel: "gaussian",
+        newVariogram: true,
+        drawRadius: 0.6
+    };
+    const colourSpectrum = colours1.highContrast;
+    drawPattern(dataParams, variogramParams, colourSpectrum);
+};
+
+const plotSimple = function(){
+    const data = {
+        x: [128, 128, 128, 120, 150],
+        y: [128, 120, 136, 128, 128],
+        t: [80, 75, 75, 75, 60]
+    };
+    const variogramParams = {
+        useAlpha: true,
+        newVariogram: true,
+        ctx: ctxTexture
+    };
+
+    const data2 = {
+        x: [128, 128.5, 128.3, 129, 129, 135],
+        y: [128, 134, 145, 150, 155, 159],
+        t: [90, 92, 80, 91, 90, 93]
+    };
+
+    const data3 = {
+        x: [128, 128, 128, 128, 128, 108, 148],
+        y: [78, 108, 128, 148, 178, 128, 128],
+        t: [40, 85, 100, 85, 45, 90, 90]
+    };
+
+    // let degrees = 30;
+    // console.log(data2.x);
+    // console.log(Maths.pairData(data2.x, data2.y));
+    // // console.log(Maths.rotate(degrees, v));
+    // console.log(numbers.matrix.rotate([[1],[1]], degrees, 'clockwise'));
+
+
+    // console.log(xy);
+
+  Stats.setData(data3);
+  Stats.plotPoints(ctxData, data3);
+  Stats.plotVariogram(ctxTexture, variogramParams);
+};
+
 const plotVariogram = function(){
     plotBaseColour();
-    Stats.plotVariogram(ctxTexture, newVariogram);
+    const params = {newVariogram: newVariogram, useAlpha: true};
+    Stats.plotVariogram(ctxTexture, params);
     newVariogram = false;
     this.updateTexture();
 };
@@ -146,7 +207,9 @@ const init = function(){
 
     plotBaseColour();
     drawBaseOverlayPattern1();
-    drawGeneralNoise1();
+    // drawGeneralNoise1();
+    // experimetalDraw();
+    // plotSimple();
     /**
      * range: 40-60
      *  1.1.2 sill: 150-300
