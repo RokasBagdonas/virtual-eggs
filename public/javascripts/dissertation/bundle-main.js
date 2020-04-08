@@ -3237,7 +3237,7 @@ let numbers = require('numbers');
 
 // let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
 let texture; //THREE object
-let ctxData, ctxTexture;
+let ctxData, ctxTexture, ctxStreaks;
 let newVariogram = false;
 let WIDTH, HEIGHT;
 let colours0 = {
@@ -3253,7 +3253,7 @@ let colours1 = {
     baseOverlay: ["#9a8f7e","#a29279"],
     noise: ["#926a60", "#b96c50"],
     main: ["#786e6f", "#8d675c"]
-}
+};
 
 const getTexture = function(){
     return texture;
@@ -3263,8 +3263,8 @@ const updateTexture =  function(){
     texture.needsUpdate = true;
 };
 
-const plotBaseColour = function(){
-    ctxTexture.fillStyle = colours1.base[0];
+const plotBaseColour = function(colour){
+    ctxTexture.fillStyle = colour;
     ctxTexture.fillRect(0,0, WIDTH, HEIGHT);
 };
 
@@ -3315,7 +3315,7 @@ const drawPattern = function(dataParams, variogramParams, colourSpectrum){
 
 };
 
-const drawBaseOverlayPattern1 = function(){
+const drawBaseOverlayPattern1 = function(colours){
 
     const dataParams = {
         // mu: [WIDTH / 8, WIDTH / 1.42],
@@ -3333,7 +3333,7 @@ const drawBaseOverlayPattern1 = function(){
         drawRadius: 2,
         threshold: 80
     };
-    const colourSpectrum = colours1.baseOverlay;
+    const colourSpectrum = colours;
 
     drawPattern(dataParams, variogramParams, colourSpectrum);
 
@@ -3384,6 +3384,33 @@ const drawMainPattern1 = function(){
 };
 
 
+const drawStreaks1 = function(){
+    let value;
+    let colourPicker = new Rainbow();
+    colourPicker.setSpectrum("#323135","#e0dbe7");
+    colourPicker.setNumberRange(-10,10);
+    let yRange = [0, HEIGHT];
+
+    let n = new Noise(Math.random());
+    for(let x = 0; x < WIDTH; x++){
+        // let yLength = numbers.random.sample(yRange[0], yRange[1];
+            for(let y = 0; y < HEIGHT; y++){
+                // if()
+                value = Math.abs((n.perlin2(x / 50,y / 50)) + (n.perlin2(x / 25 ,y / 40))) * 256;
+                if(value < 10){
+                    ctxTexture.beginPath();
+                    ctxTexture.fillStyle = "#" + colourPicker.colourAt(value);
+                    ctxTexture.arc(x,y,1,0, Math.PI * 2);
+                    ctxTexture.fill();
+                }
+
+        }
+    }
+
+};
+
+
+
 const init = function(){
     let dataCanvas = document.getElementById("stats-points");
     WIDTH = dataCanvas.width;
@@ -3393,16 +3420,23 @@ const init = function(){
     ctxTexture = canvasTexture.getContext("2d");
     texture = new THREE.CanvasTexture(canvasTexture);
 
+    ctxStreaks = document.getElementById("streaks").getContext("2d");
+
+
     Stats.init(WIDTH, HEIGHT);
 
-    plotBaseColour();
-    drawBaseOverlayPattern1();
+    plotBaseColour(colours1.base[0]);
+    drawBaseOverlayPattern1(colours1.baseOverlay);
     drawGeneralNoise1();
     drawMainPattern1();
     drawGeneralNoise1();
     drawGeneralNoise1();
 
-    // experim  etalDraw();
+
+    // plotBaseColour0(colours0.base);
+    // drawStreaks0();
+
+    // experimetalDraw();
     // plotSimple();
     /**
      * range: 40-60

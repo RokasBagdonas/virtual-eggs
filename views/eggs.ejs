@@ -11,6 +11,7 @@
     <script src="/three/examples/js/controls/OrbitControls.js"></script>
     <script src="/three/examples/js/loaders/GLTFLoader.js"></script>
     <script src="/javascripts/dissertation/libs/kriging.js"></script>
+    <script src="/javascripts/dissertation/libs/noise.js"></script>
 <!--    <script src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.min.js"></script> &lt;!&ndash; For generating normal distribution &ndash;&gt;-->
     <script src="/rainbowvis/rainbowvis.js"></script>
 <!--    <script src="/numbers/numbers/random.js"></script>-->
@@ -90,7 +91,10 @@
 
     <div class="grid-item-scene" id="scene-container">
         <canvas id="scene-canvas"></canvas>
-        <!-- This div will hold our scene-->
+    </div>
+
+    <div>
+        <canvas width="256" height="256" id="streaks"></canvas>
     </div>
 
 
