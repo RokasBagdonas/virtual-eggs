@@ -3431,10 +3431,11 @@ const init = function(){
     drawMainPattern1();
     drawGeneralNoise1();
     drawGeneralNoise1();
+    drawStreaks1();
+
 
 
     // plotBaseColour0(colours0.base);
-    // drawStreaks0();
 
     // experimetalDraw();
     // plotSimple();
