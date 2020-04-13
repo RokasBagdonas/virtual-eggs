@@ -3,6 +3,11 @@
     border: 1px solid black;
 }
 
+html {
+    width: 100%;
+    height: 100%;
+}
+
 body {
     padding: 0;
     margin: 0;
@@ -12,9 +17,10 @@ body {
 
 #container {
     display: grid;
-    grid-template-rows: auto;
+    grid-template-rows: 50% 600px;
     grid-template-columns:  50% 50%;
-    position: relative;
+    height: 100%;
+    /*position: relative;*/
 }
 
 
@@ -36,13 +42,33 @@ body {
     grid-column: 1 / 2;
     grid-row: 2 / 3;
     position: relative;
+    width: 100%;
+    height: 600px;
+    /*width: 512px;*/
+    /*height: 512px;*/
     /*display: grid;*/
     /*grid-template-rows: 10% 90%;*/
     /*grid-template-columns: auto ;*/
 }
 
+#texture-container h5 {
+    margin: 0;
+    padding: 0;
+    border: initial;
+}
+
 #texture-container canvas {
-    position: fixed;
+    position: absolute;
+    width: 512px;
+    height: 512px;
+}
+
+#layer1, #layer2{
+    border: 1px solid crimson;
+}
+
+#layer3, #layer4 {
+    border: 1px solid magenta;
 }
 
 
