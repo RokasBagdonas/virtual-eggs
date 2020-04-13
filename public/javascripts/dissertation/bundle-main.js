@@ -3798,7 +3798,7 @@ let scene;
 function init() {
 
     container = document.querySelector( '#scene-container' );
-
+    console.log("A");
     scene = new THREE.Scene();
     scene.background = new THREE.Color( 0x8FBCD4 );
 
@@ -3807,9 +3807,9 @@ function init() {
     createLights();
     createRenderer();
 
-    EggTexture.init();
+    // EggTexture.init();
     loadEgg();
-    EggUI.initEggUI();
+    // EggUI.initEggUI();
 
     renderer.setAnimationLoop( () => {
         update();
@@ -3894,7 +3894,9 @@ function loadEgg() {
         const sc = 5;
         model.scale.set(sc, sc, sc);
         //TODO: change base material colours
-        model.material = new THREE.MeshStandardMaterial({map: EggTexture.getTexture(), flatShading: false});
+        let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
+        //let texture = EggTexture.getTexture();
+        model.material = new THREE.MeshStandardMaterial({map: texture, flatShading: false});
         model.position.copy( position );
 
         scene.add( model );
@@ -4116,7 +4118,7 @@ const plotVariogram = function(ctx, params){
             if (value <= threshold){
                 // if((x > 100 && x < 140) && (y > 100 && y < 140)){
                 //     radius = 0.1;
-                // }
+                  // }
                 ctx.beginPath();
                 ctx.fillStyle = "#" + colourScheme.colourAt(value);
                 ctx.arc(x, y, radius, 0, Math.PI * 2);

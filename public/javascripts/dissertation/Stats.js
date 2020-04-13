@@ -166,7 +166,7 @@ const plotVariogram = function(ctx, params){
             if (value <= threshold){
                 // if((x > 100 && x < 140) && (y > 100 && y < 140)){
                 //     radius = 0.1;
-                // }
+                  // }
                 ctx.beginPath();
                 ctx.fillStyle = "#" + colourScheme.colourAt(value);
                 ctx.arc(x, y, radius, 0, Math.PI * 2);

@@ -12,93 +12,48 @@
     <script src="/three/examples/js/loaders/GLTFLoader.js"></script>
     <script src="/javascripts/dissertation/libs/kriging.js"></script>
     <script src="/javascripts/dissertation/libs/noise.js"></script>
-<!--    <script src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.min.js"></script> &lt;!&ndash; For generating normal distribution &ndash;&gt;-->
     <script src="/rainbowvis/rainbowvis.js"></script>
-<!--    <script src="/numbers/numbers/random.js"></script>-->
-
 
     <script src="/javascripts/dissertation/bundle-main.js" defer></script>
-
-
 
 </head>
 <body>
 
-<div class="grid-container">
+<div id="container">
 
-    <div class="grid-item-nav" id="nav">
-        <h1><%= title %></h1>
-        <h3>Nav bar</h3>
+
+    <div class="item" id="scene-container">
+        <canvas id="scene-canvas" width="256" height="256"></canvas>
     </div>
 
-    <div class="grid-item-panel" id="right-panel">
-        <h4>Options panel</h4>
-        <div>
-            <h4>Stats</h4>
-            <div>
-                <h5>Spatially correlated field</h5>
-                <label for="sigma2-slider" id="sigma2-label">Sigma^2: </label> <br>
-                <input type="range" id="sigma2-slider" name="sigma^2"> <br>
-
-                <label for="alpha-slider" id="alpha-label">Alpha: </label> <br>
-                <input type="range" id="alpha-slider" name="alpha"> <br>
-
-
-                <label for="range-slider" id="range-label">Range: </label> <br>
-                <input type="range" id="range-slider" name="range"> <br>
-
-                <label for="sill-slider" id="sill-label">Sill: </label> <br>
-                <input type="range" id="sill-slider" name="sill"> <br>
-
-                <label for="nugget-slider" id="nugget-label">nugget: </label> <br>
-                <input type="range" id="nugget-slider" name="nugget"> <br>
-
-                <select id="variogramModel-select">
-                    <option value="gaussian">gaussian</option>
-                    <option value="exponential">exponential</option>
-                    <option value="spherical">spherical</option>
-                </select> <br>
-
-                <input type="button" value="re-evaluate" id="correlate-button" min="0" max="100"> <br>
-
-                <label for="interactive-checkbox">Interactive adjustment</label>
-                <input type="checkbox" id="interactive-checkbox" checked="true">
-                <canvas width="256" height="256" id="texture" style="position: relative; left: 0; top: 0; z-index: 0;"></canvas>
-
-                <h5>Stats points</h5>
-
-                <input type="button" id="rangePoints-button" value="baseOverlay"><br>
-
-
-                <label for="mu-slider" id="mu-label">mu: </label> <br>
-                <input type="range" id="mu-slider" name="mu">
-
-                <label for="variance-slider" id="variance-label">variance: </label> <br>
-                <input type="range" id="variance-slider" name="variance">
-
-                <label for="points-slider" id="points-label">Points: </label> <br>
-                <input type="range" id="points-slider" name="points">
-
-                <input type="button" value="generate points" id="points-button">
-                <canvas width="256" height="256" id="stats-points"></canvas>
 
 
 
-            </div>
+    <div class="item" id="params-container">
+            <h5> Params container header </h5>
+        <div class="param" id="texture-overlay">
+            <h6>Texture Layer</h6>
+        </div>
 
+        <div class="param" id="noise-overlay">
+            <h6>Noise Layer</h6>
+        </div>
+        <div class="param" id="main-pattern-overlay">
+            <h6>Main Pattern Layer</h6>
         </div>
     </div>
 
-    <div class="grid-item-scene" id="scene-container">
-        <canvas id="scene-canvas"></canvas>
-    </div>
 
-    <div>
-        <canvas width="256" height="256" id="streaks"></canvas>
-    </div>
-
+        <div class="item" id="texture-container">
+            <h5>Texture container header</h5>
+                    <canvas width="512" height="512" id="layer1"></canvas>
+                    <canvas width="512" height="512" id="layer2"></canvas>
+                    <canvas width="512" height="512" id="layer3"></canvas>
+                    <canvas width="512" height="512" id="layer4"></canvas>
+        </div>
 
 </div>
+
 
 
 </body>
