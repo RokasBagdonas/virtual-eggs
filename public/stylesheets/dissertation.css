@@ -17,50 +17,38 @@ body {
 
 #container {
     display: grid;
-    grid-template-rows: 50% 600px;
+    grid-template-rows: 50% 50%;
     grid-template-columns:  50% 50%;
     height: 100%;
     /*position: relative;*/
 }
 
 
-
-#scene-container {
-    grid-column: 1 / 2;
-    grid-row: 1 / 2;
-    width: 100%;
-    height: 100%;
-}
-
 #params-container {
-    grid-column: 2 / 3;
-    grid-row: 1 / 3;
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
 
 }
 
 #texture-container {
-    grid-column: 1 / 2;
-    grid-row: 2 / 3;
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
     position: relative;
     width: 100%;
-    height: 600px;
-    /*width: 512px;*/
-    /*height: 512px;*/
-    /*display: grid;*/
-    /*grid-template-rows: 10% 90%;*/
-    /*grid-template-columns: auto ;*/
-}
-
-#texture-container h5 {
-    margin: 0;
-    padding: 0;
-    border: initial;
+    height: 100%;
 }
 
 #texture-container canvas {
     position: absolute;
     width: 512px;
     height: 512px;
+}
+
+#scene-container {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    width: 100%;
+    height: 100%;
 }
 
 #layer1, #layer2{
