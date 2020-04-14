@@ -1,13 +1,3 @@
-/**
- * applies base colour and calcification layers for a given canvas.
- * 1. define colour scheme object
- * 2. define base colour function colouring
- * 3. define base overlay function
- */
-
-const Stats = require('../Stats.js');
-const utility = require('../utility.js');
-
 let width, height; //to be set in init()
 
 const init = function(w, h){
@@ -91,6 +81,10 @@ const paintBaseOverlayLayer = function(ctx2D, colourRange = COLOUR_SCHEME_1.base
 
 module.exports = {
     init: init,
-    paintBaseLayer: paintBaseLayer,
-    paintBaseOverlayLayer: paintBaseOverlayLayer
+    // paintBaseLayer: paintBaseLayer,
+    // paintBaseOverlayLayer: paintBaseOverlayLayer,
+    COLOUR_SCHEME_1: COLOUR_SCHEME_1,
+    COLOUR_SCHEME_2: COLOUR_SCHEME_2,
+    dataRangeParams: dataRangeParams,
+    variogramRangeParams: variogramRangeParams
 };

@@ -25,11 +25,8 @@ function init() {
     loadEgg();
     let width = 512, height = 512;
     Stats.init(width, height);
-    baseOverlay.init(width, height);
-    let ctx1 = document.getElementById("layer1").getContext("2d");
-    let ctx2 = document.getElementById("layer2").getContext("2d");
-    baseOverlay.paintBaseLayer(ctx1);
-    baseOverlay.paintBaseOverlayLayer(ctx2);
+    EggTexture.init(width, height);
+    EggTexture.drawTexture1();
     // EggUI.initEggUI();
 
     renderer.setAnimationLoop( () => {
