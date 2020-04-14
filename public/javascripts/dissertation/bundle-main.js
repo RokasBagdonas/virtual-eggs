@@ -3788,6 +3788,7 @@ module.exports = {
 const Stats = require('./Stats.js');
 const EggTexture = require('./EggTexture.js');
 const EggUI = require('./EggUI.js');
+const baseOverlay = require('./patternLayers/baseOverlay.js');
 // these need to be accessed inside more than one function so we'll declare them first
 let container;
 let camera;
@@ -3809,6 +3810,13 @@ function init() {
 
     // EggTexture.init();
     loadEgg();
+    let width = 512, height = 512;
+    Stats.init(width, height);
+    baseOverlay.init(width, height);
+    let ctx1 = document.getElementById("layer1").getContext("2d");
+    let ctx2 = document.getElementById("layer2").getContext("2d");
+    baseOverlay.paintBaseLayer(ctx1);
+    baseOverlay.paintBaseOverlayLayer(ctx2);
     // EggUI.initEggUI();
 
     renderer.setAnimationLoop( () => {
@@ -3926,7 +3934,7 @@ init();
 
 
 
-},{"./EggTexture.js":12,"./EggUI.js":13,"./Stats.js":16}],15:[function(require,module,exports){
+},{"./EggTexture.js":12,"./EggUI.js":13,"./Stats.js":16,"./patternLayers/baseOverlay.js":17}],15:[function(require,module,exports){
 let numbers = require('numbers');
 
 /**
@@ -3962,6 +3970,7 @@ module.exports = {
 */
 
 let numbers = require('numbers');
+let utility = require('./utility.js');
 
 //setup canvases---------------------------------
 let width = 256, height = 256;
@@ -4031,24 +4040,19 @@ const setRange = function (newRange){
 /**
  * Generates random values (heights) at random locations in a 2D area.
  * //1.
- * @param customParams {mu, variance, numPoints}
+ * @param customParams {muX, muY, varianceX, varianceY, numPoints}
  * TODO: Gaussian data
  */
 function generateData(customParams = {}) {
-    const mu = customParams.mu || defaultParams.mu;
-    const variance =  customParams.variance || defaultParams.variance;
-    const numPoints = customParams.numPoints || defaultParams.numPoints;
-    const x = numbers.random.distribution.normal(numPoints, mu, variance);
-    const y = numbers.random.distribution.normal(numPoints, mu, variance);
-    const t = numbers.random.distribution.normal(numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
-    // console.log(`t MAX: ${t.find(e => e >= 99)}`);
-    // console.log(`t MIN: ${t.find(e => e <= 0)}`);
+    const x = numbers.random.distribution.normal(customParams.numPoints, customParams.muX, customParams.varianceX);
+    const y = numbers.random.distribution.normal(customParams.numPoints, customParams.muY, customParams.varianceY);
+    const t = numbers.random.distribution.normal(customParams.numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
     data = {x,y,t};
 }
 
 const setData = function(newData){
     data = newData;
-}
+};
 
 
 /**
@@ -4082,10 +4086,11 @@ const plotPoints = function(ctx){
 
 
 /**
- * @param ctx canvas as 2D context to be drawn on.
- * @param params {range, sill, nugget, alpha, variogramModel, newVariogram, colours}
+ * @param {CanvasRenderingContext2D} ctx canvas as 2D context to be drawn on.
+ * @param params {range, sill, nugget, alpha, variogramModel, newVariogram}
+ * @param {Rainbow} colourScheme
  */
-const plotVariogram = function(ctx, params){
+const plotVariogram = function(ctx, params, colourScheme){
     if(ctx === undefined){
         console.error("plotVariogram: canvas is not provided");
         return;
@@ -4095,7 +4100,7 @@ const plotVariogram = function(ctx, params){
         variogram = kriging.train(data.t, data.x, data.y, variogramModel,
             (params.sigma2 || defaultParams.sigma2),(params.alpha || defaultParams.alpha));
 
-    if(!(params.useAlpha || false)){
+    if(!params.useAlpha){
         variogram.range = params.range || defaultParams.range;
         variogram.sill = params.sill || defaultParams.sill;
         variogram.nugget = params.nugget || defaultParams.nugget;
@@ -4111,7 +4116,7 @@ const plotVariogram = function(ctx, params){
     let value = 0; //initialise kriging prediciton value
 
     ctx.globalAlpha = alpha;
-    const colourScheme = params.colourScheme || colourPicker;
+    // const colourScheme = params.colourScheme || colourPicker;
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
@@ -4172,4 +4177,133 @@ let Stats = {
 
 module.exports = Stats;
 
+},{"./utility.js":18,"numbers":1}],17:[function(require,module,exports){
+/**
+ * applies base colour and calcification layers for a given canvas.
+ * 1. define colour scheme object
+ * 2. define base colour function colouring
+ * 3. define base overlay function
+ */
+
+const Stats = require('../Stats.js');
+const utility = require('../utility.js');
+
+let width, height; //to be set in init()
+
+const init = function(w, h){
+    width = w;
+    height = h;
+    dataRangeParams.muX = [width / 8.5, width / 1.4 ];
+    dataRangeParams.muY = [height * 0.1, height * 0.5];
+    dataRangeParams.varianceX = [width / 2 * 0.1, width / 2 * 0.3];
+    dataRangeParams.varianceY = [height / 11 , height / 7];
+    dataRangeParams.numPoints = [140, 170];
+
+};
+
+const COLOUR_SCHEME_1 = {
+    base: ["#6bbbbf", "#57b9bf"],
+    baseOverlay: ["#c0d282","#cdea6c"]
+};
+
+const COLOUR_SCHEME_2 = {
+    base: ["#fcefdf"],
+    baseOverlay: ["#9a8f7e","#a29279"]
+};
+
+const dataRangeParams = {
+    muX: [],
+    muY: [],
+    varianceX: 0,
+    varianceY: 0,
+    numPoints: []
+};
+
+const variogramRangeParams = {
+    range: [40, 60],
+    sill: [200, 280],
+    nugget: [100, 105],
+    alpha: 0.05,
+    variogramModel: "gaussian",
+    newVariogram: true,
+    drawRadius: 2,
+    threshold: 80
+};
+
+
+/**
+ * @param {CanvasRenderingContext2D} ctx2D
+ * @param {String} baseColour hex colour codes
+ */
+const paintBaseLayer = function(ctx2D, baseColour = COLOUR_SCHEME_1.base[0]){
+    ctx2D.fillStyle = baseColour;
+    ctx2D.fillRect(0,0, width, height);
+};
+
+/**
+ * Usually appears either at the tip or in the middle. Refers to dirt, or yellow marks (urine?)
+ * @param {CanvasRenderingContext2D} ctx2D
+ * @param {Array} colourRange hex colour codes
+ */
+const paintBaseOverlayLayer = function(ctx2D, colourRange = COLOUR_SCHEME_1.baseOverlay){
+    ctx2D.clearRect(0,0, width, height);
+    //0.TODO define a function that picks a coordinate space where the base overlay should be placed
+    //1. generate data points to be used for kriging
+    //1.1 get concrete dataRangeParams
+    let dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, dataRangeParams);
+    //1.2 generate data
+    Stats.generateData(dataParams);
+
+    //2. create Rainbow instance to be used for drawing
+    let colourScheme = new Rainbow();
+    colourScheme.setNumberRange(Stats.MIN_HEIGHT, Stats.MAX_HEIGHT);
+    colourScheme.setSpectrum(...COLOUR_SCHEME_1.baseOverlay);
+
+    //3. correlate points and draw them on canvas
+    //3.1 get Concrete variogramRangeParams values
+    console.log(variogramRangeParams);
+    let variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, variogramRangeParams);
+
+    //3.2 draw variogram
+    Stats.plotVariogram(ctx2D, variogramParams, colourScheme);
+};
+
+
+module.exports = {
+    init: init,
+    paintBaseLayer: paintBaseLayer,
+    paintBaseOverlayLayer: paintBaseOverlayLayer
+};
+
+},{"../Stats.js":16,"../utility.js":18}],18:[function(require,module,exports){
+let numbers = require('numbers');
+
+const getNumberInRange = function(tuple) {
+    if(typeof tuple !== "object" || tuple.length !== 2){
+        return tuple; //ignore
+    }
+    return numbers.random.sample(tuple[0], tuple[1], 1)[0];
+};
+
+/**
+ * Mapping function for object. Applies provided function for each property.
+ * func is responsible for checking the right type.
+ * @param {Object} object
+ * @param {Function} func
+ * @returns {Object}
+ */
+const mapFuncToObjProps = function(func, object){
+  for(e in object){
+      if(object[e]){
+          object[e] = func(object[e]);
+      }
+      //else skip
+  }
+  return object;
+};
+
+module.exports = {
+    getNumberInRange: getNumberInRange,
+    mapFuncToObjProps: mapFuncToObjProps
+};
 },{"numbers":1}]},{},[14]);

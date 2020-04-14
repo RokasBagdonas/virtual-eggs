@@ -10,6 +10,7 @@
 */
 
 let numbers = require('numbers');
+let utility = require('./utility.js');
 
 //setup canvases---------------------------------
 let width = 256, height = 256;
@@ -79,24 +80,19 @@ const setRange = function (newRange){
 /**
  * Generates random values (heights) at random locations in a 2D area.
  * //1.
- * @param customParams {mu, variance, numPoints}
+ * @param customParams {muX, muY, varianceX, varianceY, numPoints}
  * TODO: Gaussian data
  */
 function generateData(customParams = {}) {
-    const mu = customParams.mu || defaultParams.mu;
-    const variance =  customParams.variance || defaultParams.variance;
-    const numPoints = customParams.numPoints || defaultParams.numPoints;
-    const x = numbers.random.distribution.normal(numPoints, mu, variance);
-    const y = numbers.random.distribution.normal(numPoints, mu, variance);
-    const t = numbers.random.distribution.normal(numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
-    // console.log(`t MAX: ${t.find(e => e >= 99)}`);
-    // console.log(`t MIN: ${t.find(e => e <= 0)}`);
+    const x = numbers.random.distribution.normal(customParams.numPoints, customParams.muX, customParams.varianceX);
+    const y = numbers.random.distribution.normal(customParams.numPoints, customParams.muY, customParams.varianceY);
+    const t = numbers.random.distribution.normal(customParams.numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
     data = {x,y,t};
 }
 
 const setData = function(newData){
     data = newData;
-}
+};
 
 
 /**
@@ -130,10 +126,11 @@ const plotPoints = function(ctx){
 
 
 /**
- * @param ctx canvas as 2D context to be drawn on.
- * @param params {range, sill, nugget, alpha, variogramModel, newVariogram, colours}
+ * @param {CanvasRenderingContext2D} ctx canvas as 2D context to be drawn on.
+ * @param params {range, sill, nugget, alpha, variogramModel, newVariogram}
+ * @param {Rainbow} colourScheme
  */
-const plotVariogram = function(ctx, params){
+const plotVariogram = function(ctx, params, colourScheme){
     if(ctx === undefined){
         console.error("plotVariogram: canvas is not provided");
         return;
@@ -143,7 +140,7 @@ const plotVariogram = function(ctx, params){
         variogram = kriging.train(data.t, data.x, data.y, variogramModel,
             (params.sigma2 || defaultParams.sigma2),(params.alpha || defaultParams.alpha));
 
-    if(!(params.useAlpha || false)){
+    if(!params.useAlpha){
         variogram.range = params.range || defaultParams.range;
         variogram.sill = params.sill || defaultParams.sill;
         variogram.nugget = params.nugget || defaultParams.nugget;
@@ -159,7 +156,7 @@ const plotVariogram = function(ctx, params){
     let value = 0; //initialise kriging prediciton value
 
     ctx.globalAlpha = alpha;
-    const colourScheme = params.colourScheme || colourPicker;
+    // const colourScheme = params.colourScheme || colourPicker;
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
