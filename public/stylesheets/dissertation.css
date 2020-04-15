@@ -55,8 +55,8 @@ h5, h6{
 
 #texture-container canvas {
     position: absolute;
-    width: 512px;
-    height: 512px;
+    width: 256px;
+    height: 256px;
     background-color: transparent;
 }
 

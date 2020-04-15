@@ -23,7 +23,7 @@ function init() {
 
     // EggTexture.init();
     loadEgg();
-    let width = 512, height = 512;
+    let width = 256, height = 256;
     Stats.init(width, height);
     EggTexture.init(width, height);
     EggTexture.drawTexture1();
@@ -112,8 +112,8 @@ function loadEgg() {
         const sc = 5;
         model.scale.set(sc, sc, sc);
         //TODO: change base material colours
-        let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
-        //let texture = EggTexture.getTexture();
+        // let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
+        let texture = EggTexture.getTexture();
         model.material = new THREE.MeshStandardMaterial({map: texture, flatShading: false});
         model.position.copy( position );
 

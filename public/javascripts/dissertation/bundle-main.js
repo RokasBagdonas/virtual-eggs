@@ -3239,33 +3239,13 @@ let mainPattern = require('./patternLayers/main.js');
 let utility = require('./utility.js');
 
 // let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
-let texture; //THREE object
 let ctxData, ctxTexture, ctxStreaks;
 let baseCtx, baseOverlayCtx, noiseCtx, mainCtx;
 let width, height;
 
-let colours0 = {
-    base: ["#6bbbbf", "#57b9bf"],
-    baseOverlay: ["#c0d282","#cdea6c"],
-    noise: ["#21233b", "#333b39"],
-    main: ["#0c0d19"],
-    highContrast: ["#340a09","#ea3c00"]
-};
-
-let colours1 = {
-    base: ["#fcefdf"],
-    baseOverlay: ["#9a8f7e","#a29279"],
-    noise: ["#926a60", "#b96c50"],
-    main: ["#786e6f", "#8d675c"]
-};
-
-const getTexture = function(){
-    return texture;
-};
-
-const updateTexture =  function(){
-    texture.needsUpdate = true;
-};
+// const updateTexture =  function(){
+//     texture.needsUpdate = true;
+// };
 
 /**
  * @param {CanvasRenderingContext2D} ctx2D
@@ -3307,10 +3287,6 @@ const init = function(w, h){
     baseOverlayPattern.init(width, height);
     noisePattern.init(width, height);
     mainPattern.init(width, height);
-
-
-
-    //texture.needsUpdate = true;
 };
 
 
@@ -3323,6 +3299,23 @@ const drawTexture1 = function(){
 };
 
 
+const getTexture = function(){
+    //1. create Texture canvas
+    let textureCanvas = document.createElement("canvas");
+    textureCanvas.width = width; textureCanvas.height = height;
+    let textureCtx = textureCanvas.getContext("2d");
+
+    //2. retrieve all texture layers
+    let canvases = document.getElementsByClassName("texture");
+
+    //3. draw each layer onto the final canvas
+    for(const canvas of canvases){
+        textureCtx.drawImage(canvas, 0,0);
+    }
+
+    //4. return THREE CanvasTexture
+    return new THREE.CanvasTexture(textureCtx.canvas);
+};
 
 
 
@@ -3332,6 +3325,7 @@ const drawTexture1 = function(){
 
 
 
+//Legacy code
 const plotVariogram = function(){
     plotBaseColour();
     const params = {newVariogram: newVariogram, useAlpha: true};
@@ -3340,7 +3334,7 @@ const plotVariogram = function(){
     this.updateTexture();
 };
 
-//TODO: legacy
+//Legacy code
 const plotDistribution = function(){
     Stats.generateData();
     newVariogram = true;
@@ -3350,7 +3344,6 @@ const plotDistribution = function(){
 
 module.exports = {
     init: init,
-    updateTexture: updateTexture,
     getTexture: getTexture,
     drawPattern: drawPattern,
     plotDistribution: plotDistribution,
@@ -3630,7 +3623,7 @@ function init() {
 
     // EggTexture.init();
     loadEgg();
-    let width = 512, height = 512;
+    let width = 256, height = 256;
     Stats.init(width, height);
     EggTexture.init(width, height);
     EggTexture.drawTexture1();
@@ -3719,8 +3712,8 @@ function loadEgg() {
         const sc = 5;
         model.scale.set(sc, sc, sc);
         //TODO: change base material colours
-        let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
-        //let texture = EggTexture.getTexture();
+        // let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
+        let texture = EggTexture.getTexture();
         model.material = new THREE.MeshStandardMaterial({map: texture, flatShading: false});
         model.position.copy( position );
 
