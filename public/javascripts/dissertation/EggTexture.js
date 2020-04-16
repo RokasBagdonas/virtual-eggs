@@ -42,6 +42,15 @@ const drawPattern = function(ctx2D, colourRange, dataRangeParams, variogramRange
     Stats.plotVariogram(ctx2D, variogramParams, colourScheme);
 };
 
+/**
+ * @param {CanvasRenderingContext2D} ctx to be drawn on
+ * @param {muX, muY, varianceX, varianceY, numPoints} params
+ * @param {HexString} colour
+ */
+const drawGaussian = function(ctx, params, colour){
+
+}
+
 const init = function(w, h){
     width = w;
     height = h;

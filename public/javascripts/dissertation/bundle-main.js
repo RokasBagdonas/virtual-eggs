@@ -3275,6 +3275,15 @@ const drawPattern = function(ctx2D, colourRange, dataRangeParams, variogramRange
     Stats.plotVariogram(ctx2D, variogramParams, colourScheme);
 };
 
+/**
+ * @param {CanvasRenderingContext2D} ctx to be drawn on
+ * @param {muX, muY, varianceX, varianceY, numPoints} params
+ * @param {HexString} colour
+ */
+const drawGaussian = function(ctx, params, colour){
+
+}
+
 const init = function(w, h){
     width = w;
     height = h;
@@ -3416,188 +3425,29 @@ module.exports = {
  * 2. Calls generateData() and plotVariogram() with those variables.
  */
 
-},{"./Stats.js":15,"./patternLayers/baseOverlay.js":16,"./patternLayers/main.js":17,"./patternLayers/noise.js":18,"./utility.js":19,"numbers":1}],13:[function(require,module,exports){
-/**
-* Parameters:
-*  - canvas resolution (width ?== height)
-*  - num of points
-*  - mean
-*  - variance
-*  - range
-*  - nugget
-*
-* @type {{init: init}}
-*/
-
+},{"./Stats.js":16,"./patternLayers/baseOverlay.js":17,"./patternLayers/main.js":18,"./patternLayers/noise.js":19,"./utility.js":20,"numbers":1}],13:[function(require,module,exports){
 const Stats = require('./Stats.js');
 const EggTexture = require('./EggTexture.js');
+const Slider = require('./Slider.js');
 
-let isInteractive = true; //for updating the texture while parameters are being changed live
-
-
-function setupGeneratePoints(){
-    let slider = document.getElementById("points-slider");
-    let label = document.getElementById("points-label");
-    const initialPoints = Stats.MAX_POINTS / 2;
-    label.innerHTML = "" + initialPoints;
-
-    slider.max = Stats.MAX_POINTS;
-    slider.value = initialPoints;
-
-    slider.oninput = (event) => {
-        const points = Math.round(parseInt(event.target.value, 10));
-        Stats.defaultParams.numPoints = points;
-        label.innerHTML = "" + points;
-    };
-
-    let btn = document.getElementById("points-button");
-    btn.onclick = (event) =>{
-        EggTexture.plotDistribution();
-    };
-}
-
-function setupSpatiallyCorrelatedField() {
-    //sigma2
-    let slider = document.getElementById("sigma2-slider");
-    let label = document.getElementById("sigma2-label");
-
-    slider.step = "0.1";
-    slider.max = Stats.MAX_SIGMA2;
-    slider.value = Stats.defaultParams.sigma2;
-    label.innerHTML = "Sigma^2 = " + Stats.defaultParams.sigma2;
-
-    slider.oninput = (event) => {
-        // console.log("sigma2 slider");
-        Stats.defaultParams.sigma2 = parseFloat(event.target.value, 10);
-        label.innerHTML = "Sigma^2 = " + event.target.value;
-        if (isInteractive){
-            EggTexture.plotVariogram();
-        }
-    };
-
-    //alpha
-    slider = document.getElementById("alpha-slider");
-    let label2 = document.getElementById("alpha-label");
-
-    slider.min = 0;
-    slider.step = "0.01";
-    slider.max = Stats.MAX_ALPHA;
-    slider.value = Stats.defaultParams.alpha;
-    label2.innerHTML = "Alpha = " + Stats.defaultParams.alpha;
-
-    slider.oninput = (event) => {
-        Stats.defaultParams.alpha = parseInt(event.target.value, 10);
-        label2.innerHTML = "Alpha = " + event.target.value;
-        if (isInteractive){
-            EggTexture.plotVariogram();
-        }
-    };
-}
-
-function setupOther() {
-    let btn = document.getElementById("correlate-button");
-    btn.onclick = (event) => {
-        const model = document.getElementById("variogramModel-select");
-        Stats.setVariogramModel(model.value);
-        EggTexture.plotVariogram();
-    };
-
-    let chx = document.getElementById("interactive-checkbox");
-    chx.onclick = (event) => {
-        isInteractive = !isInteractive;
-    }
-}
-
-//TODO: refactor
-function setupStatsSlider(elementId, labelId, min, max, step, value, paramName){
-    let slider = document.getElementById(elementId);
-    let label = document.getElementById(labelId);
-    slider.min = min;
-    slider.max = max;
-    slider.step = step;
-    slider.value = value;
-    let labelInnerHTML =  `${slider.name}= ${value}`;
-    label.innerHTML = labelInnerHTML;
-
-}
-
-function setupVariogramSlider(elementId, labelId, min, max, step, value, paramName){
-    let slider = document.getElementById(elementId);
-    let label = document.getElementById(labelId);
-    slider.min = min;
-    slider.max = max;
-    slider.step = step;
-    slider.value = value;
-    let labelInnerHTML =  `${slider.name}= ${value}`;
-    label.innerHTML = labelInnerHTML;
-    slider.oninput = (event) => {
-        Stats.defaultParams[paramName] = parseFloat(event.target.value, 10);
-        label.innerHTML = slider.name + "= " + event.target.value;
-        if (isInteractive){
-            EggTexture.plotVariogram();
-        }
-    }
-}
-
-function setupDistributionSlider(elementId, labelId, min, max, step, value, paramName){
-    let slider = document.getElementById(elementId);
-    let label = document.getElementById(labelId);
-    slider.min = min;
-    slider.max = max;
-    slider.step = step;
-    slider.value = value;
-    let labelInnerHTML =  `${slider.name}= ${value}`;
-    label.innerHTML = labelInnerHTML;
-    slider.oninput = (event) => {
-        Stats.defaultParams[paramName] = parseFloat(event.target.value, 10);
-        label.innerHTML = slider.name + "= " + event.target.value;
-        EggTexture.plotDistribution();
-    }
-}
-
-function setupDrawPattern(){
-    let btn = document.getElementById("rangePoints-button");
-    //Base overlay
+/**
+ * Design a slider - brainstorm:
+ * slider adjusts certain parameter - done in calback
+ * slider has min max bounds - provide min max
+ * slider can be interactive - canvas is redrawn immediately.
+ * slider has to display current value - label
+ */
 
 
-    btn.onclick = (event) => {
-        EggTexture.drawBaseOverlayPattern();
-    }
-}
+// let slider1 = new Slider("range", 1, 100, 25, 1, );
 
-
-
-const initEggUI = function(){
-    setupGeneratePoints();
-    setupSpatiallyCorrelatedField();
-    setupOther();
-    setupVariogramSlider("range-slider", "range-label",
-        Stats.MIN_RANGE, Stats.MAX_RANGE, "0.1", 2,"range");
-    setupVariogramSlider("sill-slider", "sill-label",
-        Stats.MIN_SILL, Stats.MAX_SILL, "1", 200, "sill");
-    setupVariogramSlider("nugget-slider", "nugget-label",
-        Stats.MIN_NUGGET, Stats.MAX_NUGGET, "1", 100, "nugget");
-    setupDistributionSlider("mu-slider", "mu-label",
-        0, Stats.width, 1, Stats.defaultParams.mu, "mu");
-    setupDistributionSlider("variance-slider", "variance-label",
-        Stats.MIN_VARIANCE, Stats.MAX_VARIANCE, 1, Stats.defaultParams.variance, "variance");
-    setupDistributionSlider("points-slider", "points-label",
-        0, Stats.MAX_POINTS, 1, Stats.defaultParams.numPoints, "numPoints");
-
-    setupDrawPattern();
-};
-
-function setupVariogramUI(){
-
-}
 
 module.exports = {
-    initEggUI: initEggUI
 };
 
 
 
-},{"./EggTexture.js":12,"./Stats.js":15}],14:[function(require,module,exports){
+},{"./EggTexture.js":12,"./Slider.js":15,"./Stats.js":16}],14:[function(require,module,exports){
 const Stats = require('./Stats.js');
 const EggTexture = require('./EggTexture.js');
 const EggUI = require('./EggUI.js');
@@ -3744,7 +3594,60 @@ init();
 
 
 
-},{"./EggTexture.js":12,"./EggUI.js":13,"./Stats.js":15,"./patternLayers/baseOverlay.js":16}],15:[function(require,module,exports){
+},{"./EggTexture.js":12,"./EggUI.js":13,"./Stats.js":16,"./patternLayers/baseOverlay.js":17}],15:[function(require,module,exports){
+class Slider {
+
+    constructor(id, min, max, defaultValue, step, eventCallback, interactive = false) {
+        //will these element props be used anywhere?
+        this.id = id;
+        this.min = min;
+        this.max = max;
+        this.step = step;
+        this.eventCallback = eventCallback;
+        this.interactive = interactive; //bool
+
+        this.slider = document.createElement("input");
+        this.slider.setAttribute("type", "range");
+        this.slider.setAttribute("min", min);
+        this.slider.setAttribute("max", max);
+        this.slider.setAttribute("value", defaultValue);
+        this.slider.setAttribute("id", id);
+        this.slider.setAttribute("class", "slider-param");
+        this.slider.setAttribute("step", step);
+
+        this.label = document.createElement("label");
+        this.label.setAttribute("for", id);
+
+        this.checkbox = document.createElement("checkbox");
+        this.checkbox.setAttribute("type","checkbox");
+
+        this.container = document.createElement("div");
+        this.container.setAttribute("class", "container-slider");
+
+        this.container.appendChild(this.label);
+        this.container.appendChild(this.slider);
+        this.container.appendChild(this.checkbox);
+
+        this.slider.oninput = (event) => {
+            this.label.innerHTML = id + " = " + event.target.value;
+            //all event callbacks must accept bool, which is used to update the texture instantly.
+            this.eventCallback(parseFloat(event.target.value, 10), this.interactive);
+        };
+
+        this.checkbox.onclick = (e) => { this.toggleInteractive()};
+    }
+
+    toggleInteractive() {
+        this.interactive = !this.interactive;
+    }
+
+    getContainer() {
+        return this.container;
+    }
+}
+
+module.exports  = Slider;
+},{}],16:[function(require,module,exports){
 /**
 * Plan:
 * 1. Create an array of random points (Gaussian?)
@@ -3964,7 +3867,7 @@ let Stats = {
 
 module.exports = Stats;
 
-},{"./utility.js":19,"numbers":1}],16:[function(require,module,exports){
+},{"./utility.js":20,"numbers":1}],17:[function(require,module,exports){
 let width, height; //to be set in init()
 
 const init = function(w, h){
@@ -4056,7 +3959,7 @@ module.exports = {
     variogramRangeParams: variogramRangeParams
 };
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 let width, height; //to be set in init()
 
 
@@ -4130,7 +4033,7 @@ module.exports = {
 }
 
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 
 let width, height; //to be set in init()
 
@@ -4178,7 +4081,7 @@ module.exports = {
     dataRangeParams: dataRangeParams,
     variogramRangeParams: variogramRangeParams
 }
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 let numbers = require('numbers');
 
 const getNumberInRange = function(tuple) {
