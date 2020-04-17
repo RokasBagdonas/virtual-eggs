@@ -3235,10 +3235,10 @@ statistic.covariance = function (set1, set2) {
 
 module.exports = function(width, height){
 
-    let Stats = require('./Stats.js');
-    let baseOverlayPattern = require('./patternLayers/baseOverlay.js');
-    let noisePattern = require('./patternLayers/noise.js')(width, height);
-    let mainPattern = require('./patternLayers/main.js');
+let Stats = require('./Stats.js');
+let baseOverlayPattern = require('./patternLayers/baseOverlay.js')(width, height);
+let noisePattern = require('./patternLayers/noise.js')(width, height);
+let mainPattern = require('./patternLayers/main.js')(width, height);
 
 let module = {};
 // let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
@@ -3248,10 +3248,6 @@ let baseCtx = document.getElementById("base-layer").getContext("2d");
 let baseOverlayCtx = document.getElementById("baseOverlay-layer").getContext("2d");
 let noiseCtx = document.getElementById("noise-layer").getContext("2d");
 let mainCtx = document.getElementById("main-layer").getContext("2d");
-
-//setup all pattern modules
-baseOverlayPattern.init(width, height);
-mainPattern.init(width, height);
 
 
 /**
@@ -3295,9 +3291,9 @@ module.drawPattern = function(ctx2D, patternType, colourRange){
 module.drawTexture1 = function(){
     baseCtx.fillStyle = baseOverlayPattern.COLOUR_SCHEME_1.base[0];
     baseCtx.fillRect(0, 0, width, height);
-    // drawPattern(baseOverlayCtx, baseOverlayPattern, baseOverlayPattern.COLOUR_SCHEME_1.baseOverlay);
+    this.drawPattern(baseOverlayCtx, baseOverlayPattern, baseOverlayPattern.COLOUR_SCHEME_1.baseOverlay);
     this.drawPattern(noiseCtx, noisePattern, noisePattern.COLOUR_SCHEME_1.noise1);
-    // drawPattern(mainCtx, mainPattern, mainPattern.bigBlobsParams.COLOUR_SCHEME_1);
+    this.drawPattern(mainCtx, mainPattern, mainPattern.COLOUR_SCHEME_1);
 };
 
 
@@ -3760,38 +3756,31 @@ let Stats = {
 module.exports = Stats;
 
 },{"./utility.js":20,"numbers":1}],17:[function(require,module,exports){
-let width, height; //to be set in init()
+let utility = require('../utility.js');
+let Stats = require('../Stats.js');
 
-const init = function(w, h){
-    width = w;
-    height = h;
-    dataRangeParams.muX = [width / 8.5, width / 1.4 ];
-    dataRangeParams.muY = [height * 0.1, height * 0.5];
-    dataRangeParams.varianceX = [width / 2 * 0.1, width / 2 * 0.3];
-    dataRangeParams.varianceY = [height / 11 , height / 7];
-    dataRangeParams.numPoints = [140, 170];
+module.exports = function(width, height){
+let module = {};
 
-};
-
-const COLOUR_SCHEME_1 = {
+module.COLOUR_SCHEME_1 = {
     base: ["#6bbbbf", "#57b9bf"],
     baseOverlay: ["#c0d282","#cdea6c"]
 };
 
-const COLOUR_SCHEME_2 = {
+module.COLOUR_SCHEME_2 = {
     base: ["#fcefdf"],
     baseOverlay: ["#9a8f7e","#a29279"]
 };
 
-const dataRangeParams = {
-    muX: [],
-    muY: [],
-    varianceX: 0,
-    varianceY: 0,
-    numPoints: []
+module.dataRangeParams = {
+    muX: [width / 8.5, width / 1.4 ],
+    muY: [height * 0.1, height * 0.5],
+    varianceX: [width / 2 * 0.1, width / 2 * 0.3],
+    varianceY: [height / 11 , height / 7],
+    numPoints: [140, 170]
 };
 
-const variogramRangeParams = {
+module.variogramRangeParams = {
     range: [40, 60],
     sill: [200, 280],
     nugget: [100, 105],
@@ -3802,99 +3791,53 @@ const variogramRangeParams = {
     threshold: 80
 };
 
+module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
+//generate data from Stats
+module.data = Stats.generateData(module.dataParams);
 
-/**
- * @param {CanvasRenderingContext2D} ctx2D
- * @param {String} baseColour hex colour codes
- */
-const paintBaseLayer = function(ctx2D, baseColour = COLOUR_SCHEME_1.base[0]){
-    ctx2D.fillStyle = baseColour;
-    ctx2D.fillRect(0,0, width, height);
+module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
+
+
+return module;
 };
 
-/**
- * Usually appears either at the tip or in the middle. Refers to dirt, or yellow marks (urine?)
- * @param {CanvasRenderingContext2D} ctx2D
- * @param {Array} colourRange hex colour codes
- */
-const paintBaseOverlayLayer = function(ctx2D, colourRange = COLOUR_SCHEME_1.baseOverlay){
-    ctx2D.clearRect(0,0, width, height);
-    //0.TODO define a function that picks a coordinate space where the base overlay should be placed
-    //1. generate data points to be used for kriging
-    //1.1 get concrete dataRangeParams
-    let dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, dataRangeParams);
-    //1.2 generate data
-    Stats.generateData(dataParams);
-
-    //2. create Rainbow instance to be used for drawing
-    let colourScheme = new Rainbow();
-    colourScheme.setNumberRange(Stats.MIN_HEIGHT, Stats.MAX_HEIGHT);
-    colourScheme.setSpectrum(...COLOUR_SCHEME_1.baseOverlay);
-
-    //3. correlate points and draw them on canvas
-    //3.1 get Concrete variogramRangeParams values
-    console.log(variogramRangeParams);
-    let variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, variogramRangeParams);
-
-    //3.2 draw variogram
-    Stats.plotVariogram(ctx2D, variogramParams, colourScheme);
-};
-
-
-module.exports = {
-    init: init,
-    // paintBaseLayer: paintBaseLayer,
-    // paintBaseOverlayLayer: paintBaseOverlayLayer,
-    COLOUR_SCHEME_1: COLOUR_SCHEME_1,
-    COLOUR_SCHEME_2: COLOUR_SCHEME_2,
-    dataRangeParams: dataRangeParams,
-    variogramRangeParams: variogramRangeParams
-};
-
-},{}],18:[function(require,module,exports){
-let width, height; //to be set in init()
-
-
-
-
-const init = function(w, h){
-  width = w;
-  height = h;
-  bigBlobsParams.dataRangeParams.muX = [w / 8, w / 1.42];
-  bigBlobsParams.dataRangeParams.muY = [h / 8, h / 1.42];
-  bigBlobsParams.dataRangeParams.varianceX = [w / 7.3, w / 7.8];
-  bigBlobsParams.dataRangeParams.varianceY = [h / 7.3, h / 8];
-  bigBlobsParams.dataRangeParams.numPoints = [140, 180];
-};
-
-
-
+},{"../Stats.js":16,"../utility.js":20}],18:[function(require,module,exports){
+let utility = require('../utility.js');
+let Stats = require('../Stats.js');
 //big blobs
-const bigBlobsParams = {
-    dataRangeParams : {
-        muX: [],
-        muY: [],
-        varianceX: [],
-        varianceY: [],
-        numPoints: []
-    },
-    variogramRangeParams : {
-        range: [50, 90],
-        sill: [250, 330],
-        nugget: [80, 90],
-        alpha: 1,
-        variogramModel: "gaussian",
-        newVariogram: true,
-        drawRadius: 3,
-        threshold: 90
-    },
+module.exports = function(width, height){
+let module = {};
 
-    COLOUR_SCHEME_1 : ["#786e6f", "#8d675c"]
-
+module.dataRangeParams = {
+    muX: [width / 8, width / 1.42],
+    muY: [height / 8, height / 1.42],
+    varianceX: [width / 7.3, width / 7.8],
+    varianceY: [height / 7.3, height / 8],
+    numPoints: [140, 180]
+};
+module.variogramRangeParams = {
+    range: [50, 90],
+    sill: [250, 330],
+    nugget: [80, 90],
+    alpha: 1,
+    variogramModel: "gaussian",
+    newVariogram: true,
+    drawRadius: 3,
+    threshold: 90
 };
 
+module.COLOUR_SCHEME_1 = ["#786e6f", "#8d675c"];
+    
 
-const drawStreaks1 = function(ctx2D, width, height){
+module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
+//generate data from Stats
+module.data = Stats.generateData(module.dataParams);
+
+module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
+
+
+//pattern 2. TODO: Port to main-streaks.js
+drawStreaks1 = function(ctx2D, width, height){
     let value;
     let colourPicker = new Rainbow();
     colourPicker.setSpectrum("#323135","#e0dbe7");
@@ -3919,13 +3862,13 @@ const drawStreaks1 = function(ctx2D, width, height){
 
 };
 
-module.exports = {
-    init: init,
-    bigBlobsParams: bigBlobsParams
-}
+
+return module;
+
+};
 
 
-},{}],19:[function(require,module,exports){
+},{"../Stats.js":16,"../utility.js":20}],19:[function(require,module,exports){
 let utility = require('../utility.js');
 let Stats = require('../Stats.js');
 

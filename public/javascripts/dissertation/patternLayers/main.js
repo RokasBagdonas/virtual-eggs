@@ -1,46 +1,39 @@
-let width, height; //to be set in init()
-
-
-
-
-const init = function(w, h){
-  width = w;
-  height = h;
-  bigBlobsParams.dataRangeParams.muX = [w / 8, w / 1.42];
-  bigBlobsParams.dataRangeParams.muY = [h / 8, h / 1.42];
-  bigBlobsParams.dataRangeParams.varianceX = [w / 7.3, w / 7.8];
-  bigBlobsParams.dataRangeParams.varianceY = [h / 7.3, h / 8];
-  bigBlobsParams.dataRangeParams.numPoints = [140, 180];
-};
-
-
-
+let utility = require('../utility.js');
+let Stats = require('../Stats.js');
 //big blobs
-const bigBlobsParams = {
-    dataRangeParams : {
-        muX: [],
-        muY: [],
-        varianceX: [],
-        varianceY: [],
-        numPoints: []
-    },
-    variogramRangeParams : {
-        range: [50, 90],
-        sill: [250, 330],
-        nugget: [80, 90],
-        alpha: 1,
-        variogramModel: "gaussian",
-        newVariogram: true,
-        drawRadius: 3,
-        threshold: 90
-    },
+module.exports = function(width, height){
+let module = {};
 
-    COLOUR_SCHEME_1 : ["#786e6f", "#8d675c"]
-
+module.dataRangeParams = {
+    muX: [width / 8, width / 1.42],
+    muY: [height / 8, height / 1.42],
+    varianceX: [width / 7.3, width / 7.8],
+    varianceY: [height / 7.3, height / 8],
+    numPoints: [140, 180]
+};
+module.variogramRangeParams = {
+    range: [50, 90],
+    sill: [250, 330],
+    nugget: [80, 90],
+    alpha: 1,
+    variogramModel: "gaussian",
+    newVariogram: true,
+    drawRadius: 3,
+    threshold: 90
 };
 
+module.COLOUR_SCHEME_1 = ["#786e6f", "#8d675c"];
+    
 
-const drawStreaks1 = function(ctx2D, width, height){
+module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
+//generate data from Stats
+module.data = Stats.generateData(module.dataParams);
+
+module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
+
+
+//pattern 2. TODO: Port to main-streaks.js
+drawStreaks1 = function(ctx2D, width, height){
     let value;
     let colourPicker = new Rainbow();
     colourPicker.setSpectrum("#323135","#e0dbe7");
@@ -65,8 +58,8 @@ const drawStreaks1 = function(ctx2D, width, height){
 
 };
 
-module.exports = {
-    init: init,
-    bigBlobsParams: bigBlobsParams
-}
+
+return module;
+
+};
 

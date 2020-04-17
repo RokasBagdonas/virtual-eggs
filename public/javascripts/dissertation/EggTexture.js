@@ -2,10 +2,10 @@
 
 module.exports = function(width, height){
 
-    let Stats = require('./Stats.js');
-    let baseOverlayPattern = require('./patternLayers/baseOverlay.js');
-    let noisePattern = require('./patternLayers/noise.js')(width, height);
-    let mainPattern = require('./patternLayers/main.js');
+let Stats = require('./Stats.js');
+let baseOverlayPattern = require('./patternLayers/baseOverlay.js')(width, height);
+let noisePattern = require('./patternLayers/noise.js')(width, height);
+let mainPattern = require('./patternLayers/main.js')(width, height);
 
 let module = {};
 // let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
@@ -15,10 +15,6 @@ let baseCtx = document.getElementById("base-layer").getContext("2d");
 let baseOverlayCtx = document.getElementById("baseOverlay-layer").getContext("2d");
 let noiseCtx = document.getElementById("noise-layer").getContext("2d");
 let mainCtx = document.getElementById("main-layer").getContext("2d");
-
-//setup all pattern modules
-baseOverlayPattern.init(width, height);
-mainPattern.init(width, height);
 
 
 /**
@@ -62,9 +58,9 @@ module.drawPattern = function(ctx2D, patternType, colourRange){
 module.drawTexture1 = function(){
     baseCtx.fillStyle = baseOverlayPattern.COLOUR_SCHEME_1.base[0];
     baseCtx.fillRect(0, 0, width, height);
-    // drawPattern(baseOverlayCtx, baseOverlayPattern, baseOverlayPattern.COLOUR_SCHEME_1.baseOverlay);
+    this.drawPattern(baseOverlayCtx, baseOverlayPattern, baseOverlayPattern.COLOUR_SCHEME_1.baseOverlay);
     this.drawPattern(noiseCtx, noisePattern, noisePattern.COLOUR_SCHEME_1.noise1);
-    // drawPattern(mainCtx, mainPattern, mainPattern.bigBlobsParams.COLOUR_SCHEME_1);
+    this.drawPattern(mainCtx, mainPattern, mainPattern.COLOUR_SCHEME_1);
 };
 
 
