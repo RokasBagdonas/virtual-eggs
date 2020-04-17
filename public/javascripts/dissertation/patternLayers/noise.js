@@ -1,20 +1,18 @@
 let utility = require('../utility.js');
 let Stats = require('../Stats.js');
 
-let width, height; //to be set in init()
-let data; //3D data
-let dataParams;
-let variogramParams; //actual variogram params, post generated
+module.exports = function(width, height){
+let module = {};
 
-const COLOUR_SCHEME_1 = {
+module.COLOUR_SCHEME_1 = {
     noise1: ["#21233b", "#333b39"]
 };
 
-const COLOUR_SCHEME_2 = {
+module.COLOUR_SCHEME_2 = {
     noise1: ["#926a60", "#b96c50"]
 };
 
-const variogramRangeParams = {
+module.variogramRangeParams = {
     range: [2, 5],
     sill: [38, 50],
     nugget: [100, 102], //TODO: adjust with regards to range?
@@ -26,51 +24,21 @@ const variogramRangeParams = {
 };
 
 
-const dataRangeParams = {
-    muX: [],
-    muY: [],
-    varianceX: [],
-    varianceY: [],
-    numPoints: []
+module.dataRangeParams = {
+    muX: [width / 1.8, width / 2.5 ],
+    muY: [height / 1.8, height / 2.5],
+    varianceX: [width / 1.8, width / 2.5],
+    varianceY: [height / 1.8 , height / 2.5],
+    numPoints: [200, 300]
 };
 
-dataRangeParams.muX = [width / 1.8, width / 2.5 ];
-dataRangeParams.muY = [height / 1.8, height / 2.5];
-dataRangeParams.varianceX = [width / 1.8, width / 2.5];
-dataRangeParams.varianceY = [height / 1.8 , height / 2.5];
-dataRangeParams.numPoints = [200, 300];
-
-dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, dataRangeParams);
+module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
 //generate data from Stats
-data = Stats.generateData(dataParams);
+module.data = Stats.generateData(module.dataParams);
 
-variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, variogramRangeParams);
+module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
 
-const init = function(w, h){
-    width = w;
-    height = h;
-    // dataRangeParams.muX = [width / 1.8, width / 2.5 ];
-    // dataRangeParams.muY = [height / 1.8, height / 2.5];
-    // dataRangeParams.varianceX = [width / 1.8, width / 2.5];
-    // dataRangeParams.varianceY = [height / 1.8 , height / 2.5];
-    // dataRangeParams.numPoints = [200, 300];
-    //
-    // dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, dataRangeParams);
-    // //generate data from Stats
-    // data = Stats.generateData(dataParams);
-    //
-    // variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, variogramRangeParams);
+
+return module;
 };
 
-
-
-module.exports = {
-    init: init,
-    COLOUR_SCHEME_1: COLOUR_SCHEME_1,
-    COLOUR_SCHEME_2: COLOUR_SCHEME_2,
-    dataRangeParams: dataRangeParams,
-    dataParams: dataParams,
-    variogramRangeParams: variogramRangeParams,
-    variogramParams: variogramParams,
-    data: data
-};

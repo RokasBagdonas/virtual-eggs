@@ -1,5 +1,5 @@
 const Stats = require('./Stats.js');
-const EggTexture = require('./EggTexture.js');
+const EggTexture = require('./EggTexture.js')(256, 256);
 const EggUI = require('./EggUI.js');
 const baseOverlay = require('./patternLayers/baseOverlay.js');
 // these need to be accessed inside more than one function so we'll declare them first
@@ -25,7 +25,6 @@ function init() {
     loadEgg();
     let width = 256, height = 256;
     Stats.init(width, height);
-    EggTexture.init(width, height);
     EggTexture.drawTexture1();
     // EggUI.initEggUI();
 

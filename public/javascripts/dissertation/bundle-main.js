@@ -3231,28 +3231,35 @@ statistic.covariance = function (set1, set2) {
 };
 
 },{"./basic":3}],12:[function(require,module,exports){
-let Stats = require('./Stats.js');
-let numbers = require('numbers');
-let baseOverlayPattern = require('./patternLayers/baseOverlay.js');
-let noisePattern = require('./patternLayers/noise.js');
-let mainPattern = require('./patternLayers/main.js');
-let utility = require('./utility.js');
 
+
+module.exports = function(width, height){
+
+    let Stats = require('./Stats.js');
+    let baseOverlayPattern = require('./patternLayers/baseOverlay.js');
+    let noisePattern = require('./patternLayers/noise.js')(width, height);
+    let mainPattern = require('./patternLayers/main.js');
+
+let module = {};
 // let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
 let ctxData, ctxTexture, ctxStreaks;
-let baseCtx, baseOverlayCtx, noiseCtx, mainCtx;
-let width, height;
+//init
+let baseCtx = document.getElementById("base-layer").getContext("2d");
+let baseOverlayCtx = document.getElementById("baseOverlay-layer").getContext("2d");
+let noiseCtx = document.getElementById("noise-layer").getContext("2d");
+let mainCtx = document.getElementById("main-layer").getContext("2d");
 
-// const updateTexture =  function(){
-//     texture.needsUpdate = true;
-// };
+//setup all pattern modules
+baseOverlayPattern.init(width, height);
+mainPattern.init(width, height);
+
 
 /**
  * @param {CanvasRenderingContext2D} ctx2D
  * @param {Array} colourRange :: [colourHexes]
  * @param {Object} patternType
  */
-const drawPattern = function(ctx2D, patternType, colourRange){
+module.drawPattern = function(ctx2D, patternType, colourRange){
     //0.TODO define a function that picks a coordinate space where the base overlay should be placed
     //1. generate data points to be used for kriging
     //1.1 get concrete dataRangeParams
@@ -3283,31 +3290,18 @@ const drawPattern = function(ctx2D, patternType, colourRange){
 //
 // };
 
-const init = function(w, h){
-    width = w;
-    height = h;
-    baseCtx = document.getElementById("base-layer").getContext("2d");
-    baseOverlayCtx = document.getElementById("baseOverlay-layer").getContext("2d");
-    noiseCtx = document.getElementById("noise-layer").getContext("2d");
-    mainCtx = document.getElementById("main-layer").getContext("2d");
-
-    //setup all pattern modules
-    baseOverlayPattern.init(width, height);
-    noisePattern.init(width, height);
-    mainPattern.init(width, height);
-};
 
 
-const drawTexture1 = function(){
+module.drawTexture1 = function(){
     baseCtx.fillStyle = baseOverlayPattern.COLOUR_SCHEME_1.base[0];
     baseCtx.fillRect(0, 0, width, height);
     // drawPattern(baseOverlayCtx, baseOverlayPattern, baseOverlayPattern.COLOUR_SCHEME_1.baseOverlay);
-    drawPattern(noiseCtx, noisePattern, noisePattern.COLOUR_SCHEME_1.noise1);
+    this.drawPattern(noiseCtx, noisePattern, noisePattern.COLOUR_SCHEME_1.noise1);
     // drawPattern(mainCtx, mainPattern, mainPattern.bigBlobsParams.COLOUR_SCHEME_1);
 };
 
 
-const getTexture = function(){
+module.getTexture = function(){
     //1. create Texture canvas
     let textureCanvas = document.createElement("canvas");
     textureCanvas.width = width; textureCanvas.height = height;
@@ -3325,20 +3319,13 @@ const getTexture = function(){
     return new THREE.CanvasTexture(textureCtx.canvas);
 };
 
-
-
-
-
-module.exports = {
-    init: init,
-    getTexture: getTexture,
-    drawPattern: drawPattern,
-    drawTexture1: drawTexture1
+return module;
 
 };
 
 
-},{"./Stats.js":16,"./patternLayers/baseOverlay.js":17,"./patternLayers/main.js":18,"./patternLayers/noise.js":19,"./utility.js":20,"numbers":1}],13:[function(require,module,exports){
+
+},{"./Stats.js":16,"./patternLayers/baseOverlay.js":17,"./patternLayers/main.js":18,"./patternLayers/noise.js":19}],13:[function(require,module,exports){
 const Stats = require('./Stats.js');
 const EggTexture = require('./EggTexture.js');
 const Slider = require('./Slider.js');
@@ -3363,7 +3350,7 @@ module.exports = {
 
 },{"./EggTexture.js":12,"./Slider.js":15,"./Stats.js":16}],14:[function(require,module,exports){
 const Stats = require('./Stats.js');
-const EggTexture = require('./EggTexture.js');
+const EggTexture = require('./EggTexture.js')(256, 256);
 const EggUI = require('./EggUI.js');
 const baseOverlay = require('./patternLayers/baseOverlay.js');
 // these need to be accessed inside more than one function so we'll declare them first
@@ -3389,7 +3376,6 @@ function init() {
     loadEgg();
     let width = 256, height = 256;
     Stats.init(width, height);
-    EggTexture.init(width, height);
     EggTexture.drawTexture1();
     // EggUI.initEggUI();
 
@@ -3943,20 +3929,18 @@ module.exports = {
 let utility = require('../utility.js');
 let Stats = require('../Stats.js');
 
-let width, height; //to be set in init()
-let data; //3D data
-let dataParams;
-let variogramParams; //actual variogram params, post generated
+module.exports = function(width, height){
+let module = {};
 
-const COLOUR_SCHEME_1 = {
+module.COLOUR_SCHEME_1 = {
     noise1: ["#21233b", "#333b39"]
 };
 
-const COLOUR_SCHEME_2 = {
+module.COLOUR_SCHEME_2 = {
     noise1: ["#926a60", "#b96c50"]
 };
 
-const variogramRangeParams = {
+module.variogramRangeParams = {
     range: [2, 5],
     sill: [38, 50],
     nugget: [100, 102], //TODO: adjust with regards to range?
@@ -3968,54 +3952,25 @@ const variogramRangeParams = {
 };
 
 
-const dataRangeParams = {
-    muX: [],
-    muY: [],
-    varianceX: [],
-    varianceY: [],
-    numPoints: []
+module.dataRangeParams = {
+    muX: [width / 1.8, width / 2.5 ],
+    muY: [height / 1.8, height / 2.5],
+    varianceX: [width / 1.8, width / 2.5],
+    varianceY: [height / 1.8 , height / 2.5],
+    numPoints: [200, 300]
 };
 
-dataRangeParams.muX = [width / 1.8, width / 2.5 ];
-dataRangeParams.muY = [height / 1.8, height / 2.5];
-dataRangeParams.varianceX = [width / 1.8, width / 2.5];
-dataRangeParams.varianceY = [height / 1.8 , height / 2.5];
-dataRangeParams.numPoints = [200, 300];
-
-dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, dataRangeParams);
+module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
 //generate data from Stats
-data = Stats.generateData(dataParams);
+module.data = Stats.generateData(module.dataParams);
 
-variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, variogramRangeParams);
+module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
 
-const init = function(w, h){
-    width = w;
-    height = h;
-    // dataRangeParams.muX = [width / 1.8, width / 2.5 ];
-    // dataRangeParams.muY = [height / 1.8, height / 2.5];
-    // dataRangeParams.varianceX = [width / 1.8, width / 2.5];
-    // dataRangeParams.varianceY = [height / 1.8 , height / 2.5];
-    // dataRangeParams.numPoints = [200, 300];
-    //
-    // dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, dataRangeParams);
-    // //generate data from Stats
-    // data = Stats.generateData(dataParams);
-    //
-    // variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, variogramRangeParams);
+
+return module;
 };
 
 
-
-module.exports = {
-    init: init,
-    COLOUR_SCHEME_1: COLOUR_SCHEME_1,
-    COLOUR_SCHEME_2: COLOUR_SCHEME_2,
-    dataRangeParams: dataRangeParams,
-    dataParams: dataParams,
-    variogramRangeParams: variogramRangeParams,
-    variogramParams: variogramParams,
-    data: data
-};
 },{"../Stats.js":16,"../utility.js":20}],20:[function(require,module,exports){
 let numbers = require('numbers');
 
