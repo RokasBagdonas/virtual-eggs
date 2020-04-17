@@ -24,7 +24,7 @@ function init() {
     EggTexture.combineTextures();
     texture = EggTexture.getTexture();
     loadEgg();
-    
+
     let width = 256, height = 256;
     Stats.init(width, height);
 

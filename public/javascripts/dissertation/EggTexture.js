@@ -65,6 +65,7 @@ module.combineTextures = function(){
     }
 
     //4. return THREE CanvasTexture
+
     texture = new THREE.CanvasTexture(textureCtx.canvas);
 };
 
@@ -79,6 +80,7 @@ function updatePatternProperty(ctx, newValue, patternNamespace,  property, prope
         ctx.clearRect(0,0,width, height);
         module.drawPattern(ctx, patternNamespace);
         module.combineTextures();
+        texture.needsUpdate = true;
     }
 
 }
