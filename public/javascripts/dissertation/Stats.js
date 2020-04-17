@@ -31,7 +31,6 @@ let defaultParams = {
 };
 
 let variogram;
-let data;
 
 let variogramModel = "gaussian";
 
@@ -81,25 +80,19 @@ const setRange = function (newRange){
  * Generates random values (heights) at random locations in a 2D area.
  * //1.
  * @param customParams {muX, muY, varianceX, varianceY, numPoints}
- * TODO: Gaussian data
  */
 function generateData(customParams = {}) {
     const x = numbers.random.distribution.normal(customParams.numPoints, customParams.muX, customParams.varianceX);
     const y = numbers.random.distribution.normal(customParams.numPoints, customParams.muY, customParams.varianceY);
     const t = numbers.random.distribution.normal(customParams.numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
-    data = {x,y,t};
+    return {x,y,t};
 }
-
-const setData = function(newData){
-    data = newData;
-};
-
 
 /**
  * //2.
  * TODO: plot points as on a sphere (or do coordinate transformation relative to the model path) (AvianBioRes15)
  */
-const plotPoints = function(ctx){
+const plotPoints = function(ctx, data){
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, width, height);
     let x, y, h;
@@ -129,8 +122,9 @@ const plotPoints = function(ctx){
  * @param {CanvasRenderingContext2D} ctx canvas as 2D context to be drawn on.
  * @param params {range, sill, nugget, alpha, variogramModel, newVariogram}
  * @param {Rainbow} colourScheme
+ * @param {Object} data 3D data: X, Y, Height
  */
-const plotVariogram = function(ctx, params, colourScheme){
+const plotVariogram = function(ctx, data, params, colourScheme){
     if(ctx === undefined){
         console.error("plotVariogram: canvas is not provided");
         return;
@@ -191,11 +185,9 @@ let Stats = {
     plotPoints: plotPoints,
     plotVariogram: plotVariogram,
     init: init,
-    setData: setData,
     width: width,
     height: height,
     defaultParams: defaultParams,
-    data: data,
     variogramModel: variogramModel,
     MIN_MU: MIN_MU,
     MAX_MU: MAX_MU,

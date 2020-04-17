@@ -15,6 +15,7 @@ const Slider = require('./Slider.js');
 
 
 module.exports = {
+
 };
 
 
