@@ -14,6 +14,8 @@ module.COLOUR_SCHEME_2 = {
     baseOverlay: ["#9a8f7e","#a29279"]
 };
 
+module.colourScheme = module.COLOUR_SCHEME_1["baseOverlay"];
+
 module.dataRangeParams = {
     muX: [width / 8.5, width / 1.4 ],
     muY: [height * 0.1, height * 0.5],

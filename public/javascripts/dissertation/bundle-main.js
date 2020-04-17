@@ -3231,8 +3231,6 @@ statistic.covariance = function (set1, set2) {
 };
 
 },{"./basic":3}],12:[function(require,module,exports){
-
-
 module.exports = function(width, height){
 
 let Stats = require('./Stats.js');
@@ -3243,6 +3241,7 @@ let mainPattern = require('./patternLayers/main.js')(width, height);
 let module = {};
 // let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
 let ctxData, ctxTexture, ctxStreaks;
+let texture; //THREE js Canvas texture
 //init
 let baseCtx = document.getElementById("base-layer").getContext("2d");
 let baseOverlayCtx = document.getElementById("baseOverlay-layer").getContext("2d");
@@ -3255,26 +3254,15 @@ let mainCtx = document.getElementById("main-layer").getContext("2d");
  * @param {Array} colourRange :: [colourHexes]
  * @param {Object} patternType
  */
-module.drawPattern = function(ctx2D, patternType, colourRange){
+module.drawPattern = function(ctx2D, patternNamespace){
     //0.TODO define a function that picks a coordinate space where the base overlay should be placed
-    //1. generate data points to be used for kriging
-    //1.1 get concrete dataRangeParams
-    // let dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, dataRangeParams);
-
-    //1.2 generate data. Data is set in Stats
-    // Stats.generateData(dataParams);
-
     //2. create Rainbow instance
     let colourScheme = new Rainbow();
     colourScheme.setNumberRange(Stats.MIN_HEIGHT, Stats.MAX_HEIGHT);
-    colourScheme.setSpectrum(...colourRange);
-
-    //3. correlate points and draw them on canvas
-    //3.1 get Concrete variogramRangeParams values
-    // let variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, variogramRangeParams);
+    colourScheme.setSpectrum(...(patternNamespace.colourScheme));
 
     //3.2 draw variogram
-    Stats.plotVariogram(ctx2D, patternType.data, patternType.variogramParams, colourScheme);
+    Stats.plotVariogram(ctx2D, patternNamespace.data, patternNamespace.variogramParams, colourScheme);
 };
 
 /**
@@ -3286,18 +3274,16 @@ module.drawPattern = function(ctx2D, patternType, colourRange){
 //
 // };
 
-
-
-module.drawTexture1 = function(){
+module.drawTextures = function(){
     baseCtx.fillStyle = baseOverlayPattern.COLOUR_SCHEME_1.base[0];
     baseCtx.fillRect(0, 0, width, height);
-    this.drawPattern(baseOverlayCtx, baseOverlayPattern, baseOverlayPattern.COLOUR_SCHEME_1.baseOverlay);
-    this.drawPattern(noiseCtx, noisePattern, noisePattern.COLOUR_SCHEME_1.noise1);
-    this.drawPattern(mainCtx, mainPattern, mainPattern.COLOUR_SCHEME_1);
+    this.drawPattern(baseOverlayCtx, baseOverlayPattern);
+    this.drawPattern(noiseCtx, noisePattern);
+    this.drawPattern(mainCtx, mainPattern);
 };
 
 
-module.getTexture = function(){
+module.combineTextures = function(){
     //1. create Texture canvas
     let textureCanvas = document.createElement("canvas");
     textureCanvas.width = width; textureCanvas.height = height;
@@ -3312,8 +3298,28 @@ module.getTexture = function(){
     }
 
     //4. return THREE CanvasTexture
-    return new THREE.CanvasTexture(textureCtx.canvas);
+    texture = new THREE.CanvasTexture(textureCtx.canvas);
 };
+
+module.getTexture = function() {return texture};
+
+
+//=============================================================================
+//event callbacks for EggUI to change parameters
+function updatePatternProperty(ctx, newValue, patternNamespace,  property, propertyType = variogramParams, isInteractive = true){
+    patternNamespace[`${propertyType}`][`${property}`] = newValue;
+    if(isInteractive){
+        ctx.clearRect(0,0,width, height);
+        module.drawPattern(ctx, patternNamespace);
+        module.combineTextures();
+    }
+
+}
+
+module.setBaseOverlayRange = function(newRange, isInteractive){
+    updatePatternProperty(baseOverlayCtx, newRange, baseOverlayPattern, "range", "variogramParams", isInteractive);
+};
+
 
 return module;
 
@@ -3322,32 +3328,35 @@ return module;
 
 
 },{"./Stats.js":16,"./patternLayers/baseOverlay.js":17,"./patternLayers/main.js":18,"./patternLayers/noise.js":19}],13:[function(require,module,exports){
-const Stats = require('./Stats.js');
-const EggTexture = require('./EggTexture.js');
+
+module.exports = function(width, height){
+const EggTexture = require('./EggTexture.js')(width, height);
 const Slider = require('./Slider.js');
 
-/**
- * Design a slider - brainstorm:
- * slider adjusts certain parameter - done in calback
- * slider has min max bounds - provide min max
- * slider can be interactive - canvas is redrawn immediately.
- * slider has to display current value - label
- */
+let module = {};
+
+module.test = function(){console.log("Egg UI test ")}
 
 
-// let slider1 = new Slider("range", 1, 100, 25, 1, );
+module.addBaseOverlayRangeSlider = function(){
+    let slider1 = new Slider("range", 1, 100, 25, 1,
+        EggTexture.setBaseOverlayRange);
+    let baseParamContainer = document.getElementById("base-param");
+    baseParamContainer.appendChild(slider1.container);
+};
 
-
-module.exports = {
-
+return module;
 };
 
 
 
-},{"./EggTexture.js":12,"./Slider.js":15,"./Stats.js":16}],14:[function(require,module,exports){
+
+
+
+},{"./EggTexture.js":12,"./Slider.js":15}],14:[function(require,module,exports){
 const Stats = require('./Stats.js');
 const EggTexture = require('./EggTexture.js')(256, 256);
-const EggUI = require('./EggUI.js');
+const EggUI = require('./EggUI.js')(256, 256);
 const baseOverlay = require('./patternLayers/baseOverlay.js');
 // these need to be accessed inside more than one function so we'll declare them first
 let container;
@@ -3355,11 +3364,10 @@ let camera;
 let controls;
 let renderer;
 let scene;
-
+let texture;
 function init() {
 
     container = document.querySelector( '#scene-container' );
-    console.log("A");
     scene = new THREE.Scene();
     scene.background = new THREE.Color( 0x8FBCD4 );
 
@@ -3368,12 +3376,15 @@ function init() {
     createLights();
     createRenderer();
 
-    // EggTexture.init();
+    EggTexture.drawTextures();
+    EggTexture.combineTextures();
+    texture = EggTexture.getTexture();
     loadEgg();
+    
     let width = 256, height = 256;
     Stats.init(width, height);
-    EggTexture.drawTexture1();
-    // EggUI.initEggUI();
+
+    EggUI.addBaseOverlayRangeSlider();
 
     renderer.setAnimationLoop( () => {
         update();
@@ -3457,9 +3468,9 @@ function loadEgg() {
         let model = gltf.scene.children[ 0 ];
         const sc = 5;
         model.scale.set(sc, sc, sc);
-        //TODO: change base material colours
-        // let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
-        let texture = EggTexture.getTexture();
+        //TODO: change base material colours.
+        //let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
+        // let texture = EggTexture.getTexture();
         model.material = new THREE.MeshStandardMaterial({map: texture, flatShading: false});
         model.position.copy( position );
 
@@ -3493,12 +3504,16 @@ init();
 },{"./EggTexture.js":12,"./EggUI.js":13,"./Stats.js":16,"./patternLayers/baseOverlay.js":17}],15:[function(require,module,exports){
 class Slider {
 
-    constructor(id, min, max, defaultValue, step, eventCallback, interactive = false) {
+    constructor(id, min, max, defaultValue, step, eventCallback, interactive = true) {
         //will these element props be used anywhere?
-        this.id = id;
-        this.min = min;
-        this.max = max;
-        this.step = step;
+        /**
+         * callback has to:
+         * 1. update a certain property
+         *  1.1. access pattern namespace and change the parameter
+         * 2. redraw the texture
+         * 2.1 via EggTexture:
+         * 3. apply it to the egg
+         */
         this.eventCallback = eventCallback;
         this.interactive = interactive; //bool
 
@@ -3506,10 +3521,10 @@ class Slider {
         this.slider.setAttribute("type", "range");
         this.slider.setAttribute("min", min);
         this.slider.setAttribute("max", max);
+        this.slider.setAttribute("step", step);
         this.slider.setAttribute("value", defaultValue);
         this.slider.setAttribute("id", id);
         this.slider.setAttribute("class", "slider-param");
-        this.slider.setAttribute("step", step);
 
         this.label = document.createElement("label");
         this.label.setAttribute("for", id);
@@ -3772,6 +3787,8 @@ module.COLOUR_SCHEME_2 = {
     baseOverlay: ["#9a8f7e","#a29279"]
 };
 
+module.colourScheme = module.COLOUR_SCHEME_1["baseOverlay"];
+
 module.dataRangeParams = {
     muX: [width / 8.5, width / 1.4 ],
     muY: [height * 0.1, height * 0.5],
@@ -3827,7 +3844,8 @@ module.variogramRangeParams = {
 };
 
 module.COLOUR_SCHEME_1 = ["#786e6f", "#8d675c"];
-    
+
+module.colourScheme = module.COLOUR_SCHEME_1;
 
 module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
 //generate data from Stats
@@ -3882,6 +3900,8 @@ module.COLOUR_SCHEME_1 = {
 module.COLOUR_SCHEME_2 = {
     noise1: ["#926a60", "#b96c50"]
 };
+
+module.colourScheme = module.COLOUR_SCHEME_1["noise1"];
 
 module.variogramRangeParams = {
     range: [2, 5],

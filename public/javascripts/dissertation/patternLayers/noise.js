@@ -12,6 +12,8 @@ module.COLOUR_SCHEME_2 = {
     noise1: ["#926a60", "#b96c50"]
 };
 
+module.colourScheme = module.COLOUR_SCHEME_1["noise1"];
+
 module.variogramRangeParams = {
     range: [2, 5],
     sill: [38, 50],

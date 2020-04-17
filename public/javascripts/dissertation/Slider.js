@@ -1,11 +1,15 @@
 class Slider {
 
-    constructor(id, min, max, defaultValue, step, eventCallback, interactive = false) {
+    constructor(id, min, max, defaultValue, step, eventCallback, interactive = true) {
         //will these element props be used anywhere?
-        this.id = id;
-        this.min = min;
-        this.max = max;
-        this.step = step;
+        /**
+         * callback has to:
+         * 1. update a certain property
+         *  1.1. access pattern namespace and change the parameter
+         * 2. redraw the texture
+         * 2.1 via EggTexture:
+         * 3. apply it to the egg
+         */
         this.eventCallback = eventCallback;
         this.interactive = interactive; //bool
 
@@ -13,10 +17,10 @@ class Slider {
         this.slider.setAttribute("type", "range");
         this.slider.setAttribute("min", min);
         this.slider.setAttribute("max", max);
+        this.slider.setAttribute("step", step);
         this.slider.setAttribute("value", defaultValue);
         this.slider.setAttribute("id", id);
         this.slider.setAttribute("class", "slider-param");
-        this.slider.setAttribute("step", step);
 
         this.label = document.createElement("label");
         this.label.setAttribute("for", id);

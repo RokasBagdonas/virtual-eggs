@@ -1,21 +1,24 @@
-const Stats = require('./Stats.js');
-const EggTexture = require('./EggTexture.js');
+
+module.exports = function(width, height){
+const EggTexture = require('./EggTexture.js')(width, height);
 const Slider = require('./Slider.js');
 
-/**
- * Design a slider - brainstorm:
- * slider adjusts certain parameter - done in calback
- * slider has min max bounds - provide min max
- * slider can be interactive - canvas is redrawn immediately.
- * slider has to display current value - label
- */
+let module = {};
+
+module.test = function(){console.log("Egg UI test ")}
 
 
-// let slider1 = new Slider("range", 1, 100, 25, 1, );
-
-
-module.exports = {
-
+module.addBaseOverlayRangeSlider = function(){
+    let slider1 = new Slider("range", 1, 100, 25, 1,
+        EggTexture.setBaseOverlayRange);
+    let baseParamContainer = document.getElementById("base-param");
+    baseParamContainer.appendChild(slider1.container);
 };
+
+return module;
+};
+
+
+
 
 

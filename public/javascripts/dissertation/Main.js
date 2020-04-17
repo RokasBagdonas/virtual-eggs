@@ -1,6 +1,6 @@
 const Stats = require('./Stats.js');
 const EggTexture = require('./EggTexture.js')(256, 256);
-const EggUI = require('./EggUI.js');
+const EggUI = require('./EggUI.js')(256, 256);
 const baseOverlay = require('./patternLayers/baseOverlay.js');
 // these need to be accessed inside more than one function so we'll declare them first
 let container;
@@ -8,11 +8,10 @@ let camera;
 let controls;
 let renderer;
 let scene;
-
+let texture;
 function init() {
 
     container = document.querySelector( '#scene-container' );
-    console.log("A");
     scene = new THREE.Scene();
     scene.background = new THREE.Color( 0x8FBCD4 );
 
@@ -21,12 +20,15 @@ function init() {
     createLights();
     createRenderer();
 
-    // EggTexture.init();
+    EggTexture.drawTextures();
+    EggTexture.combineTextures();
+    texture = EggTexture.getTexture();
     loadEgg();
+    
     let width = 256, height = 256;
     Stats.init(width, height);
-    EggTexture.drawTexture1();
-    // EggUI.initEggUI();
+
+    EggUI.addBaseOverlayRangeSlider();
 
     renderer.setAnimationLoop( () => {
         update();
@@ -110,9 +112,9 @@ function loadEgg() {
         let model = gltf.scene.children[ 0 ];
         const sc = 5;
         model.scale.set(sc, sc, sc);
-        //TODO: change base material colours
-        // let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
-        let texture = EggTexture.getTexture();
+        //TODO: change base material colours.
+        //let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
+        // let texture = EggTexture.getTexture();
         model.material = new THREE.MeshStandardMaterial({map: texture, flatShading: false});
         model.position.copy( position );
 
