@@ -92,9 +92,10 @@ function generateData(customParams = {}) {
  * //2.
  * TODO: plot points as on a sphere (or do coordinate transformation relative to the model path) (AvianBioRes15)
  */
-const plotPoints = function(ctx, data){
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, width, height);
+const plotPoints = function(ctx, data, colourPicker = colourPicker){
+    // ctx.fillStyle = "#ffffff";
+    ctx.clearRect(0,0,width, height);
+    // ctx.fillRect(0, 0, width, height);
     let x, y, h;
     const radius = 2;
     for(let i = 0; i < defaultParams.numPoints; i++){

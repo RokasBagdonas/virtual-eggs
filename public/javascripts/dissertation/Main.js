@@ -1,8 +1,6 @@
 const Stats = require('./Stats.js');
 const EggTexture = require('./EggTexture.js')(256, 256);
-const EggUI = require('./EggUI.js')(256, 256);
-const baseOverlay = require('./patternLayers/baseOverlay.js');
-// these need to be accessed inside more than one function so we'll declare them first
+
 let container;
 let camera;
 let controls;
@@ -20,15 +18,15 @@ function init() {
     createLights();
     createRenderer();
 
-    EggTexture.drawTextures();
+    EggTexture.initTextures();
     EggTexture.combineTextures();
     texture = EggTexture.getTexture();
+
+    console.log("MAIN: " + texture.uuid);
     loadEgg();
 
-    let width = 256, height = 256;
-    Stats.init(width, height);
-
-    EggUI.addBaseOverlayRangeSlider();
+    // let width = 256, height = 256;
+    // Stats.init(width, height);
 
     renderer.setAnimationLoop( () => {
         update();
@@ -77,6 +75,7 @@ function createRenderer() {
 
 function update() {
     // EggTexture.update();
+    // console.log(texture.uuid);
 }
 
 function render() {

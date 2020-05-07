@@ -1,6 +1,7 @@
 
 module.exports = function(width, height){
 const EggTexture = require('./EggTexture.js')(width, height);
+console.log("UI: " + EggTexture.getTexture().uuid);
 const Slider = require('./Slider.js');
 
 let module = {};

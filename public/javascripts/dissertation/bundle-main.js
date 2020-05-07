@@ -3231,65 +3231,339 @@ statistic.covariance = function (set1, set2) {
 };
 
 },{"./basic":3}],12:[function(require,module,exports){
+/*
+RainbowVis-JS 
+Released under Eclipse Public License - v 1.0
+*/
+
+function Rainbow()
+{
+	"use strict";
+	var gradients = null;
+	var minNum = 0;
+	var maxNum = 100;
+	var colours = ['ff0000', 'ffff00', '00ff00', '0000ff']; 
+	setColours(colours);
+	
+	function setColours (spectrum) 
+	{
+		if (spectrum.length < 2) {
+			throw new Error('Rainbow must have two or more colours.');
+		} else {
+			var increment = (maxNum - minNum)/(spectrum.length - 1);
+			var firstGradient = new ColourGradient();
+			firstGradient.setGradient(spectrum[0], spectrum[1]);
+			firstGradient.setNumberRange(minNum, minNum + increment);
+			gradients = [ firstGradient ];
+			
+			for (var i = 1; i < spectrum.length - 1; i++) {
+				var colourGradient = new ColourGradient();
+				colourGradient.setGradient(spectrum[i], spectrum[i + 1]);
+				colourGradient.setNumberRange(minNum + increment * i, minNum + increment * (i + 1)); 
+				gradients[i] = colourGradient; 
+			}
+
+			colours = spectrum;
+		}
+	}
+
+	this.setSpectrum = function () 
+	{
+		setColours(arguments);
+		return this;
+	}
+
+	this.setSpectrumByArray = function (array)
+	{
+		setColours(array);
+		return this;
+	}
+
+	this.colourAt = function (number)
+	{
+		if (isNaN(number)) {
+			throw new TypeError(number + ' is not a number');
+		} else if (gradients.length === 1) {
+			return gradients[0].colourAt(number);
+		} else {
+			var segment = (maxNum - minNum)/(gradients.length);
+			var index = Math.min(Math.floor((Math.max(number, minNum) - minNum)/segment), gradients.length - 1);
+			return gradients[index].colourAt(number);
+		}
+	}
+
+	this.colorAt = this.colourAt;
+
+	this.setNumberRange = function (minNumber, maxNumber)
+	{
+		if (maxNumber > minNumber) {
+			minNum = minNumber;
+			maxNum = maxNumber;
+			setColours(colours);
+		} else {
+			throw new RangeError('maxNumber (' + maxNumber + ') is not greater than minNumber (' + minNumber + ')');
+		}
+		return this;
+	}
+}
+
+function ColourGradient() 
+{
+	"use strict";
+	var startColour = 'ff0000';
+	var endColour = '0000ff';
+	var minNum = 0;
+	var maxNum = 100;
+
+	this.setGradient = function (colourStart, colourEnd)
+	{
+		startColour = getHexColour(colourStart);
+		endColour = getHexColour(colourEnd);
+	}
+
+	this.setNumberRange = function (minNumber, maxNumber)
+	{
+		if (maxNumber > minNumber) {
+			minNum = minNumber;
+			maxNum = maxNumber;
+		} else {
+			throw new RangeError('maxNumber (' + maxNumber + ') is not greater than minNumber (' + minNumber + ')');
+		}
+	}
+
+	this.colourAt = function (number)
+	{
+		return calcHex(number, startColour.substring(0,2), endColour.substring(0,2)) 
+			+ calcHex(number, startColour.substring(2,4), endColour.substring(2,4)) 
+			+ calcHex(number, startColour.substring(4,6), endColour.substring(4,6));
+	}
+	
+	function calcHex(number, channelStart_Base16, channelEnd_Base16)
+	{
+		var num = number;
+		if (num < minNum) {
+			num = minNum;
+		}
+		if (num > maxNum) {
+			num = maxNum;
+		} 
+		var numRange = maxNum - minNum;
+		var cStart_Base10 = parseInt(channelStart_Base16, 16);
+		var cEnd_Base10 = parseInt(channelEnd_Base16, 16); 
+		var cPerUnit = (cEnd_Base10 - cStart_Base10)/numRange;
+		var c_Base10 = Math.round(cPerUnit * (num - minNum) + cStart_Base10);
+		return formatHex(c_Base10.toString(16));
+	}
+
+	function formatHex(hex) 
+	{
+		if (hex.length === 1) {
+			return '0' + hex;
+		} else {
+			return hex;
+		}
+	} 
+	
+	function isHexColour(string)
+	{
+		var regex = /^#?[0-9a-fA-F]{6}$/i;
+		return regex.test(string);
+	}
+
+	function getHexColour(string)
+	{
+		if (isHexColour(string)) {
+			return string.substring(string.length - 6, string.length);
+		} else {
+			var name = string.toLowerCase();
+			if (colourNames.hasOwnProperty(name)) {
+				return colourNames[name];
+			}
+			throw new Error(string + ' is not a valid colour.');
+		}
+	}
+	
+	// Extended list of CSS colornames s taken from
+	// http://www.w3.org/TR/css3-color/#svg-color
+	var colourNames = {
+		aliceblue: "F0F8FF",
+		antiquewhite: "FAEBD7",
+		aqua: "00FFFF",
+		aquamarine: "7FFFD4",
+		azure: "F0FFFF",
+		beige: "F5F5DC",
+		bisque: "FFE4C4",
+		black: "000000",
+		blanchedalmond: "FFEBCD",
+		blue: "0000FF",
+		blueviolet: "8A2BE2",
+		brown: "A52A2A",
+		burlywood: "DEB887",
+		cadetblue: "5F9EA0",
+		chartreuse: "7FFF00",
+		chocolate: "D2691E",
+		coral: "FF7F50",
+		cornflowerblue: "6495ED",
+		cornsilk: "FFF8DC",
+		crimson: "DC143C",
+		cyan: "00FFFF",
+		darkblue: "00008B",
+		darkcyan: "008B8B",
+		darkgoldenrod: "B8860B",
+		darkgray: "A9A9A9",
+		darkgreen: "006400",
+		darkgrey: "A9A9A9",
+		darkkhaki: "BDB76B",
+		darkmagenta: "8B008B",
+		darkolivegreen: "556B2F",
+		darkorange: "FF8C00",
+		darkorchid: "9932CC",
+		darkred: "8B0000",
+		darksalmon: "E9967A",
+		darkseagreen: "8FBC8F",
+		darkslateblue: "483D8B",
+		darkslategray: "2F4F4F",
+		darkslategrey: "2F4F4F",
+		darkturquoise: "00CED1",
+		darkviolet: "9400D3",
+		deeppink: "FF1493",
+		deepskyblue: "00BFFF",
+		dimgray: "696969",
+		dimgrey: "696969",
+		dodgerblue: "1E90FF",
+		firebrick: "B22222",
+		floralwhite: "FFFAF0",
+		forestgreen: "228B22",
+		fuchsia: "FF00FF",
+		gainsboro: "DCDCDC",
+		ghostwhite: "F8F8FF",
+		gold: "FFD700",
+		goldenrod: "DAA520",
+		gray: "808080",
+		green: "008000",
+		greenyellow: "ADFF2F",
+		grey: "808080",
+		honeydew: "F0FFF0",
+		hotpink: "FF69B4",
+		indianred: "CD5C5C",
+		indigo: "4B0082",
+		ivory: "FFFFF0",
+		khaki: "F0E68C",
+		lavender: "E6E6FA",
+		lavenderblush: "FFF0F5",
+		lawngreen: "7CFC00",
+		lemonchiffon: "FFFACD",
+		lightblue: "ADD8E6",
+		lightcoral: "F08080",
+		lightcyan: "E0FFFF",
+		lightgoldenrodyellow: "FAFAD2",
+		lightgray: "D3D3D3",
+		lightgreen: "90EE90",
+		lightgrey: "D3D3D3",
+		lightpink: "FFB6C1",
+		lightsalmon: "FFA07A",
+		lightseagreen: "20B2AA",
+		lightskyblue: "87CEFA",
+		lightslategray: "778899",
+		lightslategrey: "778899",
+		lightsteelblue: "B0C4DE",
+		lightyellow: "FFFFE0",
+		lime: "00FF00",
+		limegreen: "32CD32",
+		linen: "FAF0E6",
+		magenta: "FF00FF",
+		maroon: "800000",
+		mediumaquamarine: "66CDAA",
+		mediumblue: "0000CD",
+		mediumorchid: "BA55D3",
+		mediumpurple: "9370DB",
+		mediumseagreen: "3CB371",
+		mediumslateblue: "7B68EE",
+		mediumspringgreen: "00FA9A",
+		mediumturquoise: "48D1CC",
+		mediumvioletred: "C71585",
+		midnightblue: "191970",
+		mintcream: "F5FFFA",
+		mistyrose: "FFE4E1",
+		moccasin: "FFE4B5",
+		navajowhite: "FFDEAD",
+		navy: "000080",
+		oldlace: "FDF5E6",
+		olive: "808000",
+		olivedrab: "6B8E23",
+		orange: "FFA500",
+		orangered: "FF4500",
+		orchid: "DA70D6",
+		palegoldenrod: "EEE8AA",
+		palegreen: "98FB98",
+		paleturquoise: "AFEEEE",
+		palevioletred: "DB7093",
+		papayawhip: "FFEFD5",
+		peachpuff: "FFDAB9",
+		peru: "CD853F",
+		pink: "FFC0CB",
+		plum: "DDA0DD",
+		powderblue: "B0E0E6",
+		purple: "800080",
+		red: "FF0000",
+		rosybrown: "BC8F8F",
+		royalblue: "4169E1",
+		saddlebrown: "8B4513",
+		salmon: "FA8072",
+		sandybrown: "F4A460",
+		seagreen: "2E8B57",
+		seashell: "FFF5EE",
+		sienna: "A0522D",
+		silver: "C0C0C0",
+		skyblue: "87CEEB",
+		slateblue: "6A5ACD",
+		slategray: "708090",
+		slategrey: "708090",
+		snow: "FFFAFA",
+		springgreen: "00FF7F",
+		steelblue: "4682B4",
+		tan: "D2B48C",
+		teal: "008080",
+		thistle: "D8BFD8",
+		tomato: "FF6347",
+		turquoise: "40E0D0",
+		violet: "EE82EE",
+		wheat: "F5DEB3",
+		white: "FFFFFF",
+		whitesmoke: "F5F5F5",
+		yellow: "FFFF00",
+		yellowgreen: "9ACD32"
+	}
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = Rainbow;
+}
+
+},{}],13:[function(require,module,exports){
+//Namespace for combining canvases and creating egg texture.
 module.exports = function(width, height){
 
-let Stats = require('./Stats.js');
-let baseOverlayPattern = require('./patternLayers/baseOverlay.js')(width, height);
-let noisePattern = require('./patternLayers/noise.js')(width, height);
-let mainPattern = require('./patternLayers/main.js')(width, height);
+let base = require('./patternLayers/base.js')();
+let pepper_plot = require('./patternLayers/pepper-plot.js')();
+
 
 let module = {};
-// let texture = new THREE.CanvasTexture(Stats.ctxVariogram.canvas); //THREE object
-let ctxData, ctxTexture, ctxStreaks;
-let texture; //THREE js Canvas texture
-//init
-let baseCtx = document.getElementById("base-layer").getContext("2d");
-let baseOverlayCtx = document.getElementById("baseOverlay-layer").getContext("2d");
-let noiseCtx = document.getElementById("noise-layer").getContext("2d");
-let mainCtx = document.getElementById("main-layer").getContext("2d");
+//setup Main texture
+let canvasTexture = document.createElement("canvas");
+canvasTexture.width = width; canvasTexture.height = height;
+let texture = new THREE.CanvasTexture(canvasTexture); //THREE js Canvas texture
 
-
-/**
- * @param {CanvasRenderingContext2D} ctx2D
- * @param {Array} colourRange :: [colourHexes]
- * @param {Object} patternType
- */
-module.drawPattern = function(ctx2D, patternNamespace){
-    //0.TODO define a function that picks a coordinate space where the base overlay should be placed
-    //2. create Rainbow instance
-    let colourScheme = new Rainbow();
-    colourScheme.setNumberRange(Stats.MIN_HEIGHT, Stats.MAX_HEIGHT);
-    colourScheme.setSpectrum(...(patternNamespace.colourScheme));
-
-    //3.2 draw variogram
-    Stats.plotVariogram(ctx2D, patternNamespace.data, patternNamespace.variogramParams, colourScheme);
+module.initTextures = function() {
+    base.draw();
+    pepper_plot.draw();
 };
-
-/**
- * @param {CanvasRenderingContext2D} ctx to be drawn on
- * @param {muX, muY, varianceX, varianceY, numPoints} params
- * @param {HexString} colour
- */
-// const drawGaussian = function(ctx, params, colour){
-//
-// };
-
-module.drawTextures = function(){
-    baseCtx.fillStyle = baseOverlayPattern.COLOUR_SCHEME_1.base[0];
-    baseCtx.fillRect(0, 0, width, height);
-    this.drawPattern(baseOverlayCtx, baseOverlayPattern);
-    this.drawPattern(noiseCtx, noisePattern);
-    this.drawPattern(mainCtx, mainPattern);
-};
-
 
 module.combineTextures = function(){
     //1. create Texture canvas
-    let textureCanvas = document.createElement("canvas");
-    textureCanvas.width = width; textureCanvas.height = height;
-    let textureCtx = textureCanvas.getContext("2d");
+    let textureCtx = canvasTexture.getContext("2d");
 
-    //2. retrieve all texture layers
+    //2. retrieve all texture layers. TODO: in what sequence are they retrieved?
     let canvases = document.getElementsByClassName("texture");
 
     //3. draw each layer onto the final canvas
@@ -3297,70 +3571,25 @@ module.combineTextures = function(){
         textureCtx.drawImage(canvas, 0,0);
     }
 
-    //4. return THREE CanvasTexture
-
-    texture = new THREE.CanvasTexture(textureCtx.canvas);
+    //4. return THREE CanvasTexture.
+    texture.canvas = canvasTexture;
+    texture.updateTexture = true;
+    // texture = new THREE.CanvasTexture(textureCtx.canvas);
+    console.log(texture.uuid);
 };
 
 module.getTexture = function() {return texture};
 
-
-//=============================================================================
-//event callbacks for EggUI to change parameters
-function updatePatternProperty(ctx, newValue, patternNamespace,  property, propertyType = variogramParams, isInteractive = true){
-    patternNamespace[`${propertyType}`][`${property}`] = newValue;
-    if(isInteractive){
-        ctx.clearRect(0,0,width, height);
-        module.drawPattern(ctx, patternNamespace);
-        module.combineTextures();
-        texture.needsUpdate = true;
-    }
-
-}
-
-module.setBaseOverlayRange = function(newRange, isInteractive){
-    updatePatternProperty(baseOverlayCtx, newRange, baseOverlayPattern, "range", "variogramParams", isInteractive);
-};
-
-
 return module;
 
 };
 
 
 
-},{"./Stats.js":16,"./patternLayers/baseOverlay.js":17,"./patternLayers/main.js":18,"./patternLayers/noise.js":19}],13:[function(require,module,exports){
-
-module.exports = function(width, height){
-const EggTexture = require('./EggTexture.js')(width, height);
-const Slider = require('./Slider.js');
-
-let module = {};
-
-module.test = function(){console.log("Egg UI test ")}
-
-
-module.addBaseOverlayRangeSlider = function(){
-    let slider1 = new Slider("range", 1, 100, 25, 1,
-        EggTexture.setBaseOverlayRange);
-    let baseParamContainer = document.getElementById("base-param");
-    baseParamContainer.appendChild(slider1.container);
-};
-
-return module;
-};
-
-
-
-
-
-
-},{"./EggTexture.js":12,"./Slider.js":15}],14:[function(require,module,exports){
+},{"./patternLayers/base.js":16,"./patternLayers/pepper-plot.js":17}],14:[function(require,module,exports){
 const Stats = require('./Stats.js');
 const EggTexture = require('./EggTexture.js')(256, 256);
-const EggUI = require('./EggUI.js')(256, 256);
-const baseOverlay = require('./patternLayers/baseOverlay.js');
-// these need to be accessed inside more than one function so we'll declare them first
+
 let container;
 let camera;
 let controls;
@@ -3378,15 +3607,15 @@ function init() {
     createLights();
     createRenderer();
 
-    EggTexture.drawTextures();
+    EggTexture.initTextures();
     EggTexture.combineTextures();
     texture = EggTexture.getTexture();
+
+    console.log("MAIN: " + texture.uuid);
     loadEgg();
 
-    let width = 256, height = 256;
-    Stats.init(width, height);
-
-    EggUI.addBaseOverlayRangeSlider();
+    // let width = 256, height = 256;
+    // Stats.init(width, height);
 
     renderer.setAnimationLoop( () => {
         update();
@@ -3435,6 +3664,7 @@ function createRenderer() {
 
 function update() {
     // EggTexture.update();
+    // console.log(texture.uuid);
 }
 
 function render() {
@@ -3503,64 +3733,7 @@ init();
 
 
 
-},{"./EggTexture.js":12,"./EggUI.js":13,"./Stats.js":16,"./patternLayers/baseOverlay.js":17}],15:[function(require,module,exports){
-class Slider {
-
-    constructor(id, min, max, defaultValue, step, eventCallback, interactive = true) {
-        //will these element props be used anywhere?
-        /**
-         * callback has to:
-         * 1. update a certain property
-         *  1.1. access pattern namespace and change the parameter
-         * 2. redraw the texture
-         * 2.1 via EggTexture:
-         * 3. apply it to the egg
-         */
-        this.eventCallback = eventCallback;
-        this.interactive = interactive; //bool
-
-        this.slider = document.createElement("input");
-        this.slider.setAttribute("type", "range");
-        this.slider.setAttribute("min", min);
-        this.slider.setAttribute("max", max);
-        this.slider.setAttribute("step", step);
-        this.slider.setAttribute("value", defaultValue);
-        this.slider.setAttribute("id", id);
-        this.slider.setAttribute("class", "slider-param");
-
-        this.label = document.createElement("label");
-        this.label.setAttribute("for", id);
-
-        this.checkbox = document.createElement("checkbox");
-        this.checkbox.setAttribute("type","checkbox");
-
-        this.container = document.createElement("div");
-        this.container.setAttribute("class", "container-slider");
-
-        this.container.appendChild(this.label);
-        this.container.appendChild(this.slider);
-        this.container.appendChild(this.checkbox);
-
-        this.slider.oninput = (event) => {
-            this.label.innerHTML = id + " = " + event.target.value;
-            //all event callbacks must accept bool, which is used to update the texture instantly.
-            this.eventCallback(parseFloat(event.target.value, 10), this.interactive);
-        };
-
-        this.checkbox.onclick = (e) => { this.toggleInteractive()};
-    }
-
-    toggleInteractive() {
-        this.interactive = !this.interactive;
-    }
-
-    getContainer() {
-        return this.container;
-    }
-}
-
-module.exports  = Slider;
-},{}],16:[function(require,module,exports){
+},{"./EggTexture.js":13,"./Stats.js":15}],15:[function(require,module,exports){
 /**
 * Plan:
 * 1. Create an array of random points (Gaussian?)
@@ -3655,9 +3828,10 @@ function generateData(customParams = {}) {
  * //2.
  * TODO: plot points as on a sphere (or do coordinate transformation relative to the model path) (AvianBioRes15)
  */
-const plotPoints = function(ctx, data){
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, width, height);
+const plotPoints = function(ctx, data, colourPicker = colourPicker){
+    // ctx.fillStyle = "#ffffff";
+    ctx.clearRect(0,0,width, height);
+    // ctx.fillRect(0, 0, width, height);
     let x, y, h;
     const radius = 2;
     for(let i = 0; i < defaultParams.numPoints; i++){
@@ -3772,171 +3946,108 @@ let Stats = {
 
 module.exports = Stats;
 
-},{"./utility.js":20,"numbers":1}],17:[function(require,module,exports){
+},{"./utility.js":18,"numbers":1}],16:[function(require,module,exports){
 let utility = require('../utility.js');
 let Stats = require('../Stats.js');
 
-module.exports = function(width, height){
+module.exports = function(){
 let module = {};
+//init -----------------------------------------------------
+const CANVAS_ID = "base-layer";
+let canvas = document.getElementById(CANVAS_ID);
+let width = canvas.clientWidth;
+let height = canvas.clientHeight;
+let ctx = canvas.getContext("2d");
 
-module.COLOUR_SCHEME_1 = {
-    base: ["#6bbbbf", "#57b9bf"],
-    baseOverlay: ["#c0d282","#cdea6c"]
+module.colourScheme = ["#6bbbbf"];
+
+module.draw = function() {
+  ctx.fillStyle = module.colourScheme[0];
+  ctx.fillRect(0,0,width, height);
 };
-
-module.COLOUR_SCHEME_2 = {
-    base: ["#fcefdf"],
-    baseOverlay: ["#9a8f7e","#a29279"]
-};
-
-module.colourScheme = module.COLOUR_SCHEME_1["baseOverlay"];
-
-module.dataRangeParams = {
-    muX: [width / 8.5, width / 1.4 ],
-    muY: [height * 0.1, height * 0.5],
-    varianceX: [width / 2 * 0.1, width / 2 * 0.3],
-    varianceY: [height / 11 , height / 7],
-    numPoints: [140, 170]
-};
-
-module.variogramRangeParams = {
-    range: [40, 60],
-    sill: [200, 280],
-    nugget: [100, 105],
-    alpha: 0.05,
-    variogramModel: "gaussian",
-    newVariogram: true,
-    drawRadius: 2,
-    threshold: 80
-};
-
-module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
-//generate data from Stats
-module.data = Stats.generateData(module.dataParams);
-
-module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
-
 
 return module;
 };
 
-},{"../Stats.js":16,"../utility.js":20}],18:[function(require,module,exports){
-let utility = require('../utility.js');
+// module.COLOUR_SCHEME_1 = {
+//     base: ["#6bbbbf", "#57b9bf"],
+//     baseOverlay: ["#c0d282","#cdea6c"]
+// };
+//
+// module.COLOUR_SCHEME_2 = {
+//     base: ["#fcefdf"],
+//     baseOverlay: ["#9a8f7e","#a29279"]
+// };
+//
+// module.colourScheme = module.COLOUR_SCHEME_1["baseOverlay"];
+//
+// module.dataRangeParams = {
+//     muX: [width / 8.5, width / 1.4 ],
+//     muY: [height * 0.1, height * 0.5],
+//     varianceX: [width / 2 * 0.1, width / 2 * 0.3],
+//     varianceY: [height / 11 , height / 7],
+//     numPoints: [140, 170]
+// };
+//
+// module.variogramRangeParams = {
+//     range: [40, 60],
+//     sill: [200, 280],
+//     nugget: [100, 105],
+//     alpha: 0.05,
+//     variogramModel: "gaussian",
+//     newVariogram: true,
+//     drawRadius: 2,
+//     threshold: 80
+// };
+//
+// module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
+// //generate data from Stats
+// module.data = Stats.generateData(module.dataParams);
+//
+// module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
+
+},{"../Stats.js":15,"../utility.js":18}],17:[function(require,module,exports){
+let rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');
-//big blobs
-module.exports = function(width, height){
+module.exports = function(){
 let module = {};
-
-module.dataRangeParams = {
-    muX: [width / 8, width / 1.42],
-    muY: [height / 8, height / 1.42],
-    varianceX: [width / 7.3, width / 7.8],
-    varianceY: [height / 7.3, height / 8],
-    numPoints: [140, 180]
-};
-module.variogramRangeParams = {
-    range: [50, 90],
-    sill: [250, 330],
-    nugget: [80, 90],
-    alpha: 1,
-    variogramModel: "gaussian",
-    newVariogram: true,
-    drawRadius: 3,
-    threshold: 90
-};
-
-module.COLOUR_SCHEME_1 = ["#786e6f", "#8d675c"];
-
-module.colourScheme = module.COLOUR_SCHEME_1;
-
-module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
-//generate data from Stats
-module.data = Stats.generateData(module.dataParams);
-
-module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
+console.log("pepper plot init");
+//init -----------------------------------------------------
+const CANVAS_ID = "pepper-plot";
+let canvas = document.getElementById(CANVAS_ID);
+let width = canvas.clientWidth;
+let height = canvas.clientHeight;
+let ctx = canvas.getContext("2d");
 
 
-//pattern 2. TODO: Port to main-streaks.js
-drawStreaks1 = function(ctx2D, width, height){
-    let value;
-    let colourPicker = new Rainbow();
-    colourPicker.setSpectrum("#323135","#e0dbe7");
-    colourPicker.setNumberRange(-10,10);
-    let yRange = [0, height];
-
-    let n = new Noise(Math.random());
-    for(let x = 0; x < width; x++){
-        // let yLength = numbers.random.sample(yRange[0], yRange[1];
-        for(let y = 0; y < height; y++){
-            // if()
-            value = Math.abs((n.perlin2(x / 50,y / 50)) + (n.perlin2(x / 25 ,y / 40))) * 256;
-            if(value < 10){
-                ctx2D.beginPath();
-                ctx2D.fillStyle = "#" + colourPicker.colourAt(value);
-                ctx2D.arc(x,y,1,0, Math.PI * 2);
-                ctx2D.fill();
-            }
-
-        }
-    }
-
+module.parameters = {
+    numPoints: 160,
+    muX: width / 2,
+    muY: height / 2,
+    varianceX: width / 5,
+    varianceY: height / 4
 };
 
 
-return module;
 
+module.colourScheme = ['#4b555e', '#222426'];
+
+let colourPicker = new rainbow();
+colourPicker.setNumberRange(0, 100);
+colourPicker.setSpectrum(module.colourScheme[0], module.colourScheme[1]);
+
+
+module.draw = function(){
+    Stats.plotPoints(ctx, Stats.generateData(module.parameters), colourPicker );
 };
+window.draw = module.draw;
 
 
-},{"../Stats.js":16,"../utility.js":20}],19:[function(require,module,exports){
-let utility = require('../utility.js');
-let Stats = require('../Stats.js');
-
-module.exports = function(width, height){
-let module = {};
-
-module.COLOUR_SCHEME_1 = {
-    noise1: ["#21233b", "#333b39"]
-};
-
-module.COLOUR_SCHEME_2 = {
-    noise1: ["#926a60", "#b96c50"]
-};
-
-module.colourScheme = module.COLOUR_SCHEME_1["noise1"];
-
-module.variogramRangeParams = {
-    range: [2, 5],
-    sill: [38, 50],
-    nugget: [100, 102], //TODO: adjust with regards to range?
-    alpha: 0.7,
-    variogramModel: "gaussian",
-    newVariogram: true,
-    drawRadius: 0.6,
-    threshold: 100
-};
-
-
-module.dataRangeParams = {
-    muX: [width / 1.8, width / 2.5 ],
-    muY: [height / 1.8, height / 2.5],
-    varianceX: [width / 1.8, width / 2.5],
-    varianceY: [height / 1.8 , height / 2.5],
-    numPoints: [200, 300]
-};
-
-module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
-//generate data from Stats
-module.data = Stats.generateData(module.dataParams);
-
-module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
 
 
 return module;
 };
-
-
-},{"../Stats.js":16,"../utility.js":20}],20:[function(require,module,exports){
+},{"../Stats.js":15,"rainbowvis.js":12}],18:[function(require,module,exports){
 let numbers = require('numbers');
 
 const getNumberInRange = function(tuple) {
