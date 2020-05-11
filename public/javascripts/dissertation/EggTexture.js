@@ -4,7 +4,7 @@ module.exports = function(width, height){
 let base = require('./patternLayers/base.js')();
 let pepper_plot = require('./patternLayers/pepper-plot.js')();
 let blotch = require('./patternLayers/blotch.js')();
-let scrawl = require('./patternLayers/scrawl.js')();
+let scrawl = require('./patternLayers/streaks.js')();
 let test = require('./patternLayers/test.js')();
 
 let module = {};
