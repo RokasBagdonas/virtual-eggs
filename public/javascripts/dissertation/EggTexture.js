@@ -3,17 +3,22 @@ module.exports = function(width, height){
 
 let base = require('./patternLayers/base.js')();
 let pepper_plot = require('./patternLayers/pepper-plot.js')();
-
+let blotch = require('./patternLayers/blotch.js')();
+let scrawl = require('./patternLayers/scrawl.js')();
+let test = require('./patternLayers/test.js')();
 
 let module = {};
-//setup Main texture
+//setup Main texture.
 let canvasTexture = document.createElement("canvas");
 canvasTexture.width = width; canvasTexture.height = height;
 let texture = new THREE.CanvasTexture(canvasTexture); //THREE js Canvas texture
 
 module.initTextures = function() {
     base.draw();
-    pepper_plot.draw();
+    // pepper_plot.draw();
+    // blotch.draw_small_blotch();
+    scrawl.draw();
+
 };
 
 module.combineTextures = function(){

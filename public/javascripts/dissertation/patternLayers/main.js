@@ -24,6 +24,7 @@ module.variogramRangeParams = {
 
 module.COLOUR_SCHEME_1 = ["#786e6f", "#8d675c"];
 
+
 module.colourScheme = module.COLOUR_SCHEME_1;
 
 module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);

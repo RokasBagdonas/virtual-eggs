@@ -3546,17 +3546,22 @@ module.exports = function(width, height){
 
 let base = require('./patternLayers/base.js')();
 let pepper_plot = require('./patternLayers/pepper-plot.js')();
-
+let blotch = require('./patternLayers/blotch.js')();
+let scrawl = require('./patternLayers/scrawl.js')();
+let test = require('./patternLayers/test.js')();
 
 let module = {};
-//setup Main texture
+//setup Main texture.
 let canvasTexture = document.createElement("canvas");
 canvasTexture.width = width; canvasTexture.height = height;
 let texture = new THREE.CanvasTexture(canvasTexture); //THREE js Canvas texture
 
 module.initTextures = function() {
     base.draw();
-    pepper_plot.draw();
+    // pepper_plot.draw();
+    // blotch.draw_small_blotch();
+    scrawl.draw();
+
 };
 
 module.combineTextures = function(){
@@ -3586,7 +3591,9 @@ return module;
 
 
 
-},{"./patternLayers/base.js":16,"./patternLayers/pepper-plot.js":17}],14:[function(require,module,exports){
+},{"./patternLayers/base.js":16,"./patternLayers/blotch.js":17,"./patternLayers/pepper-plot.js":18,"./patternLayers/scrawl.js":19,"./patternLayers/test.js":20}],14:[function(require,module,exports){
+
+
 const Stats = require('./Stats.js');
 const EggTexture = require('./EggTexture.js')(256, 256);
 
@@ -3614,8 +3621,6 @@ function init() {
     console.log("MAIN: " + texture.uuid);
     loadEgg();
 
-    // let width = 256, height = 256;
-    // Stats.init(width, height);
 
     renderer.setAnimationLoop( () => {
         update();
@@ -3626,7 +3631,7 @@ function init() {
 
 function createCamera() {
     camera = new THREE.PerspectiveCamera( 35, container.clientWidth / container.clientHeight, 0.1, 1000 );
-    camera.position.set( 0.5075552374771982, 0.011933679289453922, 0.34080907654190784); //to be centered near egg
+    camera.position.set(0.6817724298342465, 0.6424984836519444,-0.024665450387858244);
 }
 
 function createControls() {
@@ -3701,7 +3706,7 @@ function loadEgg() {
         const sc = 5;
         model.scale.set(sc, sc, sc);
         //TODO: change base material colours.
-        //let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
+        // let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
         // let texture = EggTexture.getTexture();
         model.material = new THREE.MeshStandardMaterial({map: texture, flatShading: false});
         model.position.copy( position );
@@ -3729,10 +3734,11 @@ function loadEgg() {
 
 }
 
+
+
 init();
 
-
-
+window.main = {scene, camera};
 },{"./EggTexture.js":13,"./Stats.js":15}],15:[function(require,module,exports){
 /**
 * Plan:
@@ -3861,7 +3867,7 @@ const plotPoints = function(ctx, data, colourPicker = colourPicker){
  * @param {Rainbow} colourScheme
  * @param {Object} data 3D data: X, Y, Height
  */
-const plotVariogram = function(ctx, data, params, colourScheme){
+const plotVariogram = function(ctx, width, height, data, params, colourScheme){
     if(ctx === undefined){
         console.error("plotVariogram: canvas is not provided");
         return;
@@ -3891,7 +3897,7 @@ const plotVariogram = function(ctx, data, params, colourScheme){
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
-            if (value <= threshold){
+            if (value >= threshold){
                 // if((x > 100 && x < 140) && (y > 100 && y < 140)){
                 //     radius = 0.1;
                   // }
@@ -3904,6 +3910,24 @@ const plotVariogram = function(ctx, data, params, colourScheme){
         }
     }
 };
+
+const octavePerlin = function(x, y, octaves, persistence) {
+    let total = 0;
+    let frequency = 3;
+    let amplitude = 10;
+    let maxValue = 0;  // Used for normalizing result to 0.0 - 1.0
+    let n = new Noise(Math.random());
+    for(let i=0; i<octaves; i++) {
+        total += n.perlin2(x * frequency / 50, y * frequency / 40) * amplitude;
+
+        maxValue += amplitude;
+
+        amplitude *= persistence;
+        frequency *= 2;
+    }
+
+    return total/maxValue;
+}
 
 const init = function(w, h){
     width = w || width;
@@ -3921,6 +3945,7 @@ let Stats = {
     generateData: generateData,
     plotPoints: plotPoints,
     plotVariogram: plotVariogram,
+    octavePerlin: octavePerlin,
     init: init,
     width: width,
     height: height,
@@ -3946,7 +3971,7 @@ let Stats = {
 
 module.exports = Stats;
 
-},{"./utility.js":18,"numbers":1}],16:[function(require,module,exports){
+},{"./utility.js":21,"numbers":1}],16:[function(require,module,exports){
 let utility = require('../utility.js');
 let Stats = require('../Stats.js');
 
@@ -4006,7 +4031,95 @@ return module;
 //
 // module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
 
-},{"../Stats.js":15,"../utility.js":18}],17:[function(require,module,exports){
+},{"../Stats.js":15,"../utility.js":21}],17:[function(require,module,exports){
+let utility = require('../utility.js');
+let rainbow = require('rainbowvis.js');
+let Stats = require('../Stats.js');
+
+module.exports = function(){
+let module = {};
+
+//init-----------------------------------------------------
+const CANVAS_ID_1 = "small-blotch";
+let canvas = document.getElementById(CANVAS_ID_1);
+let width = canvas.clientWidth;
+let height = canvas.clientHeight;
+let ctx = canvas.getContext("2d");
+
+
+const COLOUR_SCHEME_1 = ["#1f302e", "#111414"];
+const COLOUR_SCHEME_2 = ["#eaa28b", "#8e4312"];
+module.colourScheme = COLOUR_SCHEME_1;
+
+let colourPicker = new rainbow();
+colourPicker.setNumberRange(-100, 100);
+colourPicker.setSpectrum(module.colourScheme[0], module.colourScheme[1]);
+
+
+module.dataRangeParams = {
+    muX: [width / 8, width / 1.42],
+    muY: [height / 8, height / 1.42],
+    varianceX: [width / 7.3, width / 7.8],
+    varianceY: [height / 7.3, height / 8],
+    numPoints: [140, 180]
+};
+
+module.variogramRangeParams = {
+    range: [50, 90],
+    sill: [250, 330],
+    nugget: [80, 90],
+    alpha: 1,
+    variogramModel: "gaussian",
+    newVariogram: true,
+    useAlpha: false,
+    drawRadius: 3,
+    threshold: 1
+};
+
+
+
+//v1 0 big blotches
+// module.variogramParams = {
+//     range: 20,
+//     sill: 250,
+//     nugget: 10,
+//     alpha: 1,
+//     variogramModel: "gaussian",
+//     newVariogram: true,
+//     useAlpha: false,
+//     drawRadius: 2,
+//     threshold: 80
+// };
+
+    module.variogramParams = {
+        range: 10,
+        sill: 250,
+        nugget: 10,
+        alpha: 1,
+        variogramModel: "gaussian",
+        newVariogram: true,
+        useAlpha: false,
+        drawRadius: 2,
+        threshold: 80
+    };
+
+module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
+// module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
+
+
+
+
+module.draw_small_blotch = function() {
+    ctx.clearRect(0,0,width, height);
+    let data = Stats.generateData(module.dataParams);
+    Stats.plotVariogram(ctx, width, height, data, module.variogramParams, colourPicker);
+};
+
+
+return module;
+};
+
+},{"../Stats.js":15,"../utility.js":21,"rainbowvis.js":12}],18:[function(require,module,exports){
 let rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');
 module.exports = function(){
@@ -4047,7 +4160,196 @@ window.draw = module.draw;
 
 return module;
 };
-},{"../Stats.js":15,"rainbowvis.js":12}],18:[function(require,module,exports){
+},{"../Stats.js":15,"rainbowvis.js":12}],19:[function(require,module,exports){
+let Rainbow = require('rainbowvis.js');
+let Stats = require('../Stats.js');
+let numbers = require('numbers');
+module.exports = function(){
+    let module = {};
+    console.log("scrawl init");
+//init -----------------------------------------------------
+const CANVAS_ID = "scrawl";
+let canvas = document.getElementById(CANVAS_ID);
+let width = canvas.clientWidth;
+let height = canvas.clientHeight;
+let ctx = canvas.getContext("2d");
+
+
+
+let streaks_bounds1 = {
+    top_left:     {x: 0, y: 0},
+    bottom_left:  {x: 0, y: height * 0.6},
+    top_right:    {x: width, y: 0},
+    bottom_right: {x: width, y: height * 0.6 }
+};
+
+let streak_bounds_default =  {
+    top_left:     {x: 0, y: 0},
+    bottom_left:  {x: 0, y: height },
+    top_right:    {x: width, y: 0},
+    bottom_right: {x: width, y: height }
+    };
+
+module.colourScheme = ['#73739c', '#222426'];
+
+let colourPicker = new Rainbow();
+colourPicker.setNumberRange(-10, 10);
+colourPicker.setSpectrum(module.colourScheme[0], module.colourScheme[1]);
+
+module.draw = function(){
+    drawScrawl();
+    // drawMask(ctx);
+    // drawStreaks1();
+};
+
+//used for splitting perlin noise into separate streaks.
+const drawMask = function(ctx){
+    let interval = [10, 20];
+    let stripe_thickness = 7; //pixels
+    let num_of_intervals = Math.floor(numbers.random.sample(interval[0], interval[1], 1)[0]);
+
+    //y
+    for(let y = 0; y < height; y += stripe_thickness + height / num_of_intervals){
+        ctx.clearRect(0, y, width, stripe_thickness);
+    }
+
+    //x
+    // for(let x = 0; x < width; x += stripe_thickness + width / num_of_intervals ){
+    //     ctx.clearRect(x, 0, stripe_thickness, height );
+    // }
+};
+
+const drawScrawl = function(){
+    let final_value;
+    let octave_1;
+    let octave_2;
+    // let n = new Noise(Math.random());
+    let n = new Noise(0.5);
+    let drawing_area = streak_bounds_default;
+
+    //scale
+    let octave_1_period_x = 1 / 30;
+    let octave_1_period_y = 1 / 30;
+
+    //direction and scale
+    let octave_2_period_x = 1 / 25;
+    let octave_2_period_y = 1 / 40;
+    let thickness = 210;
+    let threshold = 10;
+
+    for(let x = drawing_area.top_left.x; x < drawing_area.top_right.x; x++){
+
+        for(let y = drawing_area.top_left.y; y < drawing_area.bottom_right.y; y++){
+
+            // perlin_value = Math.abs((n.perlin2(x / 50, y / 50)) + (n.perlin2(x / 25, y / 40))) * 256;
+            octave_1 = n.perlin2(x * octave_1_period_x, y * octave_1_period_y);
+            octave_2 = n.perlin2(x * octave_2_period_x, y * octave_2_period_y);
+
+            perlin_value = Math.abs(octave_1 + octave_2) * thickness;
+            if(perlin_value < threshold){
+                ctx.beginPath();
+                ctx.fillStyle = '#' + colourPicker.colourAt(perlin_value);
+                ctx.arc(x,y,1,0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+};
+
+const drawShorthand = function(){
+    let final_value;
+    let octave_1;
+    let octave_2;
+    // let n = new Noise(Math.random());
+    let n = new Noise(0.5);
+    let drawing_area = streak_bounds_default;
+
+    //scale
+    let octave_1_period_x = 1 / 30;
+    let octave_1_period_y = 1 / 30;
+
+    //direction and scale
+    let octave_2_period_x = 1 / 25;
+    let octave_2_period_y = 1 / 40;
+    let thickness = 210;
+    let threshold = 10;
+
+    for(let x = drawing_area.top_left.x; x < drawing_area.top_right.x; x++){
+
+        for(let y = drawing_area.top_left.y; y < drawing_area.bottom_right.y; y++){
+
+            // perlin_value = Math.abs((n.perlin2(x / 50, y / 50)) + (n.perlin2(x / 25, y / 40))) * 256;
+            octave_1 = n.perlin2(x * octave_1_period_x, y * octave_1_period_y);
+            octave_2 = n.perlin2(x * octave_2_period_x, y * octave_2_period_y);
+
+            perlin_value = Math.abs(octave_1 + octave_2) * thickness;
+            if(perlin_value < threshold){
+                ctx.beginPath();
+                ctx.fillStyle = '#' + colourPicker.colourAt(perlin_value);
+                ctx.arc(x,y,1,0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+};
+
+
+//shorthand
+//    value = Math.abs((n.perlin2(x / 50, y / 50)) + (n.perlin2(x / 12, y / 20))) * 256;
+
+
+
+
+
+    return module;
+};
+window.scrawl = module.exports;
+
+
+},{"../Stats.js":15,"numbers":1,"rainbowvis.js":12}],20:[function(require,module,exports){
+
+module.exports = function(){
+module = {};
+
+let canvas = document.getElementById("test");
+let width = canvas.width;
+let height = canvas.height;
+let ctx =  canvas.getContext("2d");
+
+let corners = {
+    top_left: {x: 0, y: 0},
+    top_right: {x: width-10, y: 0},
+    bottom_left: {x: 0, y: height-10},
+    bottom_right: {x: width-10, y: height-10},
+    center: {x: width / 2 - 10, y: height / 2 - 10},
+    bottom_mid: {x: width / 2 - 10, y: height - 10},
+    top_mid: {x: width / 2 - 10 , y: 0},
+    cl: {x: width / 2 - 40, y: height / 2 - 10},
+    cr: {x: width / 2 + 20, y: height / 2 - 10},
+    ct: {x: width / 2 - 10, y: height / 2 - 50},
+    cb: {x: width / 2 - 10, y: height / 2 + 30},
+    mid_left: {x: 0, y: height / 2 - 10},
+    mid_right: {x: width - 10, y: height / 2 - 10}
+
+};
+
+
+ctx.fillStyle = '#fc0388';
+
+module.draw = function() {
+    for(let c in corners){
+        if(c === "cr")
+            ctx.fillStyle = '#f5f542';
+        else
+            ctx.fillStyle = '#fc0388';
+        ctx.fillRect(corners[c].x, corners[c].y, 10, 10);
+    }
+};
+
+
+return module;
+};
+},{}],21:[function(require,module,exports){
 let numbers = require('numbers');
 
 const getNumberInRange = function(tuple) {

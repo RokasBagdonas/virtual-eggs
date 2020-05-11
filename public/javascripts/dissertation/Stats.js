@@ -125,7 +125,7 @@ const plotPoints = function(ctx, data, colourPicker = colourPicker){
  * @param {Rainbow} colourScheme
  * @param {Object} data 3D data: X, Y, Height
  */
-const plotVariogram = function(ctx, data, params, colourScheme){
+const plotVariogram = function(ctx, width, height, data, params, colourScheme){
     if(ctx === undefined){
         console.error("plotVariogram: canvas is not provided");
         return;
@@ -155,7 +155,7 @@ const plotVariogram = function(ctx, data, params, colourScheme){
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
             value = kriging.predict(x, y, variogram);
-            if (value <= threshold){
+            if (value >= threshold){
                 // if((x > 100 && x < 140) && (y > 100 && y < 140)){
                 //     radius = 0.1;
                   // }
@@ -168,6 +168,24 @@ const plotVariogram = function(ctx, data, params, colourScheme){
         }
     }
 };
+
+const octavePerlin = function(x, y, octaves, persistence) {
+    let total = 0;
+    let frequency = 3;
+    let amplitude = 10;
+    let maxValue = 0;  // Used for normalizing result to 0.0 - 1.0
+    let n = new Noise(Math.random());
+    for(let i=0; i<octaves; i++) {
+        total += n.perlin2(x * frequency / 50, y * frequency / 40) * amplitude;
+
+        maxValue += amplitude;
+
+        amplitude *= persistence;
+        frequency *= 2;
+    }
+
+    return total/maxValue;
+}
 
 const init = function(w, h){
     width = w || width;
@@ -185,6 +203,7 @@ let Stats = {
     generateData: generateData,
     plotPoints: plotPoints,
     plotVariogram: plotVariogram,
+    octavePerlin: octavePerlin,
     init: init,
     width: width,
     height: height,

@@ -1,3 +1,5 @@
+
+
 const Stats = require('./Stats.js');
 const EggTexture = require('./EggTexture.js')(256, 256);
 
@@ -25,8 +27,6 @@ function init() {
     console.log("MAIN: " + texture.uuid);
     loadEgg();
 
-    // let width = 256, height = 256;
-    // Stats.init(width, height);
 
     renderer.setAnimationLoop( () => {
         update();
@@ -37,7 +37,7 @@ function init() {
 
 function createCamera() {
     camera = new THREE.PerspectiveCamera( 35, container.clientWidth / container.clientHeight, 0.1, 1000 );
-    camera.position.set( 0.5075552374771982, 0.011933679289453922, 0.34080907654190784); //to be centered near egg
+    camera.position.set(0.6817724298342465, 0.6424984836519444,-0.024665450387858244);
 }
 
 function createControls() {
@@ -112,7 +112,7 @@ function loadEgg() {
         const sc = 5;
         model.scale.set(sc, sc, sc);
         //TODO: change base material colours.
-        //let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
+        // let texture = new THREE.TextureLoader().load("../images/UV-map.jpg");
         // let texture = EggTexture.getTexture();
         model.material = new THREE.MeshStandardMaterial({map: texture, flatShading: false});
         model.position.copy( position );
@@ -140,6 +140,8 @@ function loadEgg() {
 
 }
 
+
+
 init();
 
-
+window.main = {scene, camera};
