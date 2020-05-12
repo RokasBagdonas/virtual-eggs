@@ -3547,6 +3547,7 @@ let pepper_plot = require('./patternLayers/pepper-plot.js')();
 let blotch = require('./patternLayers/blotch.js')();
 let streaks = require('./patternLayers/streaks.js');
 let test = require('./patternLayers/test.js')();
+
 module.exports = {
 
     canvasTexture : undefined,
@@ -3564,6 +3565,8 @@ module.exports = {
 
     init: function(){
         this.canvasTexture = document.createElement("canvas");
+        // let a = document.getElementById("texture-container");
+        // a.appendChild(this.canvasTexture);
         this.width = 256; this.height = 256;
         this.canvasTexture.width = this.width; this.canvasTexture.height = this.height;
         this.texture = new THREE.CanvasTexture(this.canvasTexture); //THREE js Canvas texture
@@ -3574,6 +3577,11 @@ module.exports = {
     combineTextures : function(){
         //1. create Texture canvas
         let textureCtx = this.canvasTexture.getContext("2d");
+        textureCtx.clearRect(0,0,this.width, this.height);
+
+        this.texture.canvas = this.canvasTexture;
+        this.texture.updateTexture = true;
+
 
         //2. retrieve all texture layers. TODO: in what sequence are they retrieved?
         let canvases = document.getElementsByClassName("texture");
@@ -3584,9 +3592,10 @@ module.exports = {
 
         //4. return THREE CanvasTexture.
         this.texture.canvas = this.canvasTexture;
-        this.texture.updateTexture = true;
+        this.texture.needsUpdate = true;
         // texture = new THREE.CanvasTexture(textureCtx.canvas);
         console.log(this.texture.uuid);
+
     },
 
     redrawTexture: function(drawCallback){
@@ -3596,69 +3605,84 @@ module.exports = {
 
 };
 
+window.EggTexture = module.exports;
 
-// module.exports = function(width, height){
-//
-// let base = require('./patternLayers/base.js')();
-// let pepper_plot = require('./patternLayers/pepper-plot.js')();
-// let blotch = require('./patternLayers/blotch.js')();
-// let streaks = require('./patternLayers/streaks.js');
-// let test = require('./patternLayers/test.js')();
-//
-//
+
+
+
+},{"./patternLayers/base.js":18,"./patternLayers/blotch.js":19,"./patternLayers/pepper-plot.js":20,"./patternLayers/streaks.js":21,"./patternLayers/test.js":22}],14:[function(require,module,exports){
+let Slider = require('./Slider.js');
+let streaks = require('./patternLayers/streaks.js');
+let EggTexture = require('./EggTexture.js');
+
+module.exports = {
+
+    streaks_container : document.getElementById("streaks-container"),
+    blotches_container: document.getElementById('blotches-container'),
+    other_container: document.getElementById('other-container'),
+
+    initStreaksUI: function(){
+        //1. create sliders.
+      //1.1 Scrawl
+        console.log("ewgg ui: " + streaks.scrawl_params.thickness);
+      let test = new Slider('scrawl thickness',
+          streaks.ui_params.thickness_min, streaks.ui_params.thickness_max,
+          streaks.ui_params.thickness_default, streaks.ui_params.thickness_step,
+          streaks.scale_scrawl_thickness
+      );
+
+      this.streaks_container.appendChild(test.container);
+
+
+      //1.2 shorthand
+
+      //2. create checkboxes.
+
+        //3. reapply textures
+
+
+    },
+
+    initBlotchesUI: function(){
+
+    },
+
+    initOtherUI: function(){
+
+    },
+
+    init: function(){
+        this.initStreaksUI();
+    },
+
+
+};
+
+// module.exports = function(){
 //
 // let module = {};
-// //setup Main texture.
-// let canvasTexture = document.createElement("canvas");
-// canvasTexture.width = width; canvasTexture.height = height;
-// let texture = new THREE.CanvasTexture(canvasTexture); //THREE js Canvas texture
 //
-// module.initTextures = function() {
-//     base.draw();
-//     pepper_plot.draw();
-//     blotch.draw_small_blotch();
-//     streaks.draw();
+// module.test = function(){console.log("Egg UI test ")};
 //
+// module.addBaseOverlayRangeSlider = function(){
+//     let slider1 = new Slider("range", 1, 100, 25, 1,
+//         EggTexture.setBaseOverlayRange);
+//     let baseParamContainer = document.getElementById("base-param");
+//     baseParamContainer.appendChild(slider1.container);
 // };
-//
-// module.redrawTexture = function(drawCallback){
-//     drawCallback();
-//     module.combineTextures();
-// };
-//
-// module.combineTextures = function(){
-//     //1. create Texture canvas
-//     let textureCtx = canvasTexture.getContext("2d");
-//
-//     //2. retrieve all texture layers. TODO: in what sequence are they retrieved?
-//     let canvases = document.getElementsByClassName("texture");
-//     //3. draw each layer onto the final canvas
-//     for(const canvas of canvases){
-//         textureCtx.drawImage(canvas, 0,0);
-//     }
-//
-//     //4. return THREE CanvasTexture.
-//     texture.canvas = canvasTexture;
-//     texture.updateTexture = true;
-//     // texture = new THREE.CanvasTexture(textureCtx.canvas);
-//     console.log(texture.uuid);
-// };
-//
-// module.getTexture = function() {return texture};
 //
 // return module;
-//
 // };
 
 
 
 
-},{"./patternLayers/base.js":16,"./patternLayers/blotch.js":17,"./patternLayers/pepper-plot.js":18,"./patternLayers/streaks.js":19,"./patternLayers/test.js":20}],14:[function(require,module,exports){
 
 
-const Stats = require('./Stats.js');
+
+},{"./EggTexture.js":13,"./Slider.js":16,"./patternLayers/streaks.js":21}],15:[function(require,module,exports){
 const EggTexture = require('./EggTexture.js');
-
+const EggUI = require('./EggUI.js');
 let container;
 let camera;
 let controls;
@@ -3679,6 +3703,7 @@ function init() {
     EggTexture.init();
     EggTexture.combineTextures();
     texture = EggTexture.getTexture();
+    EggUI.init();
 
     console.log("MAIN: " + texture.uuid);
     loadEgg();
@@ -3800,8 +3825,75 @@ function loadEgg() {
 
 init();
 
-window.main = {scene, camera};
-},{"./EggTexture.js":13,"./Stats.js":15}],15:[function(require,module,exports){
+window.main = {scene, camera, texture};
+},{"./EggTexture.js":13,"./EggUI.js":14}],16:[function(require,module,exports){
+class Slider {
+
+    constructor(id, min, max, defaultValue, step, eventCallback, interactive = true) {
+        this.scrawl_params = {thickness: 44444};
+
+        //will these element props be used anywhere?
+        /**
+         * callback has to:
+         * 1. update a certain property
+         *  1.1. access pattern namespace and change the parameter
+         * 2. redraw the texture
+         * 2.1 via EggTexture:
+         * 3. apply it to the egg
+         */
+        this.eventCallback = eventCallback;
+        this.interactive = interactive; //bool
+
+        this.slider = document.createElement("input");
+        this.slider.setAttribute("type", "range");
+        this.slider.setAttribute("min", min);
+        this.slider.setAttribute("max", max);
+        this.slider.setAttribute("step", step);
+        this.slider.setAttribute("value", defaultValue);
+        this.slider.setAttribute("id", id);
+        this.slider.setAttribute("class", "slider-param");
+
+        this.label = document.createElement("label");
+        this.label.innerHTML = id;
+        this.label.setAttribute("for", id);
+
+
+        this.checkbox = document.createElement("input");
+        this.checkbox.setAttribute("type","checkbox");
+        this.checkbox.setAttribute("id", `${id}-chbox`);
+        let checkboxLabel = document.createElement("label");
+        checkboxLabel.setAttribute("for", `${id}-chbox`);
+        checkboxLabel.innerHTML = "interactive?";
+
+        this.container = document.createElement("div");
+        this.container.setAttribute("class", "container-slider");
+
+        this.container.appendChild(this.label);
+        this.container.appendChild(checkboxLabel);
+        this.container.appendChild(this.checkbox);
+        this.container.appendChild(document.createElement('br'));
+        this.container.appendChild(this.slider);
+
+        this.slider.oninput = (event) => {
+            this.label.innerHTML = id + " = " + event.target.value;
+            //all event callbacks must accept bool, which is used to update the texture instantly.
+            this.eventCallback(parseFloat(event.target.value, 10), this.interactive);
+        };
+
+        this.checkbox.onclick = (e) => { this.toggleInteractive()};
+    }
+
+    toggleInteractive() {
+        this.interactive = !this.interactive;
+    }
+
+    getContainer() {
+        return this.container;
+    }
+}
+
+module.exports  = Slider;
+},{}],17:[function(require,module,exports){
 /**
 * Plan:
 * 1. Create an array of random points (Gaussian?)
@@ -4033,7 +4125,7 @@ let Stats = {
 
 module.exports = Stats;
 
-},{"./utility.js":21,"numbers":1}],16:[function(require,module,exports){
+},{"./utility.js":23,"numbers":1}],18:[function(require,module,exports){
 let utility = require('../utility.js');
 let Stats = require('../Stats.js');
 
@@ -4093,7 +4185,7 @@ return module;
 //
 // module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
 
-},{"../Stats.js":15,"../utility.js":21}],17:[function(require,module,exports){
+},{"../Stats.js":17,"../utility.js":23}],19:[function(require,module,exports){
 let utility = require('../utility.js');
 let rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');
@@ -4181,7 +4273,7 @@ module.draw_small_blotch = function() {
 return module;
 };
 
-},{"../Stats.js":15,"../utility.js":21,"rainbowvis.js":12}],18:[function(require,module,exports){
+},{"../Stats.js":17,"../utility.js":23,"rainbowvis.js":12}],20:[function(require,module,exports){
 let rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');
 module.exports = function(){
@@ -4222,7 +4314,7 @@ window.draw = module.draw;
 
 return module;
 };
-},{"../Stats.js":15,"rainbowvis.js":12}],19:[function(require,module,exports){
+},{"../Stats.js":17,"rainbowvis.js":12}],21:[function(require,module,exports){
 let Rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');
 let numbers = require('numbers');
@@ -4245,15 +4337,27 @@ ui_params : {
     thickness_default: 10
 },
 
-scrawl_params : { octave_1: {
+scrawl_params : {
+    octave_1: {
     period_x: 1 / 30,
     period_y: 1 / 30
+    },
+    octave_2: {
+        period_x: 1 / 25,
+        period_y: 1 / 40
+    },
+    thickness: 10,
+    seed: Math.random()
 },
-octave_2: {
-    period_x: 1 / 25,
-    period_y: 1 / 40
-}
+
+scale_scrawl_thickness : function(scalar, interactive = false){
+    streaks.scrawl_params.thickness = scalar;
+    if(interactive){
+        streaks.drawScrawl(false);
+    }
 },
+
+
 init: function(){
     //scrawl --
     this.canvas_scrawl = document.getElementById(this.CANVAS_ID_1);
@@ -4299,10 +4403,10 @@ shorthand_params : {
     octave_2: {
         period_x: 1 / 25,
         period_y: 1 / 40
-    }
+    },
+    thickness : 10,
+    seed: 0.5
 },
-
-
 
 colourScheme : ['#73739c', '#222426'],
 
@@ -4311,10 +4415,6 @@ initColourPicker: function() {
     this.colourPicker.setNumberRange(-10, 10);
     this.colourPicker.setSpectrum(this.colourScheme[0], this.colourScheme[1]);
 },
-
-
-
-
 
 
 streaks_bounds1 : undefined,
@@ -4375,13 +4475,14 @@ drawMask : function(ctx, width, height){
 
 drawShorthand : function(){
     this.ctx_shorthand.clearRect(0,0, this.width_shorthand, this.height_shorthand);
-    this.drawStreaks(this.ctx_shorthand, this.shorthand_params.octave_1, this.shorthand_params.octave_2);
+    this.drawStreaks(this.ctx_shorthand, this.shorthand_params.octave_1, this.shorthand_params.octave_2, this.shorthand_params.thickness);
     this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
 
 },
-drawScrawl : function(){
+drawScrawl : function(newSeed = false){
     this.ctx_scrawl.clearRect(0,0, this.width_scrawl, this.height_scrawl);
-    this.drawStreaks(this.ctx_scrawl, this.scrawl_params.octave_1, this.scrawl_params.octave_2);
+    if(newSeed) this.scrawl_params.seed = Math.random();
+    this.drawStreaks(this.ctx_scrawl, this.scrawl_params.octave_1, this.scrawl_params.octave_2, this.scrawl_params.thickness, this.scrawl_params.seed);
     this.drawMask(this.ctx_scrawl, this.width_scrawl, this.height_scrawl);
 },
 
@@ -4396,7 +4497,7 @@ module.exports.init();
 
 window.streaks = module.exports;
 
-},{"../Stats.js":15,"numbers":1,"rainbowvis.js":12}],20:[function(require,module,exports){
+},{"../Stats.js":17,"numbers":1,"rainbowvis.js":12}],22:[function(require,module,exports){
 
 module.exports = function(){
 module = {};
@@ -4438,7 +4539,7 @@ module.draw = function() {
 
 return module;
 };
-},{}],21:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 let numbers = require('numbers');
 
 const getNumberInRange = function(tuple) {
@@ -4469,4 +4570,4 @@ module.exports = {
     getNumberInRange: getNumberInRange,
     mapFuncToObjProps: mapFuncToObjProps
 };
-},{"numbers":1}]},{},[14]);
+},{"numbers":1}]},{},[15]);

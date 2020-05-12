@@ -1,8 +1,5 @@
-
-
-const Stats = require('./Stats.js');
 const EggTexture = require('./EggTexture.js');
-
+const EggUI = require('./EggUI.js');
 let container;
 let camera;
 let controls;
@@ -23,6 +20,7 @@ function init() {
     EggTexture.init();
     EggTexture.combineTextures();
     texture = EggTexture.getTexture();
+    EggUI.init();
 
     console.log("MAIN: " + texture.uuid);
     loadEgg();
@@ -144,4 +142,4 @@ function loadEgg() {
 
 init();
 
-window.main = {scene, camera};
+window.main = {scene, camera, texture};

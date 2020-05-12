@@ -1,34 +1,46 @@
+let Slider = require('./Slider.js');
+let streaks = require('./patternLayers/streaks.js');
+let EggTexture = require('./EggTexture.js');
 
-let Slider = require('Slider.js');
-let streaks = require('patternLayers/streaks.js');
-let EggTexture = require('EggTexture.js');
 module.exports = {
 
-    initStreaksUI: {
-      //1. create sliders.
-      //1.1 Scrawl
-      let test = new Slider('slider-scrawl',
-          streaks.ui_params.thickness_min, streaks.ui_params.thickness_max,
-          streaks.ui_params.thickness_default, streaks.ui_params.thickness_step, EggTexture. )
+    streaks_container : document.getElementById("streaks-container"),
+    blotches_container: document.getElementById('blotches-container'),
+    other_container: document.getElementById('other-container'),
 
-        //1.2 shorthand.
+    initStreaksUI: function(){
+        //1. create sliders.
+      //1.1 Scrawl
+        console.log("ewgg ui: " + streaks.scrawl_params.thickness);
+      let test = new Slider('scrawl thickness',
+          streaks.ui_params.thickness_min, streaks.ui_params.thickness_max,
+          streaks.ui_params.thickness_default, streaks.ui_params.thickness_step,
+          streaks.scale_scrawl_thickness
+      );
+
+      this.streaks_container.appendChild(test.container);
+
+
+      //1.2 shorthand
 
       //2. create checkboxes.
 
+        //3. reapply textures
+
 
     },
 
-    initBlotchesUI: {
+    initBlotchesUI: function(){
 
     },
 
-    initOtherUI: {
+    initOtherUI: function(){
 
     },
 
-    init: {
-
-    }
+    init: function(){
+        this.initStreaksUI();
+    },
 
 
 };

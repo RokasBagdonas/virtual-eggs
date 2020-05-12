@@ -4,6 +4,7 @@ let pepper_plot = require('./patternLayers/pepper-plot.js')();
 let blotch = require('./patternLayers/blotch.js')();
 let streaks = require('./patternLayers/streaks.js');
 let test = require('./patternLayers/test.js')();
+
 module.exports = {
 
     canvasTexture : undefined,
@@ -21,6 +22,8 @@ module.exports = {
 
     init: function(){
         this.canvasTexture = document.createElement("canvas");
+        // let a = document.getElementById("texture-container");
+        // a.appendChild(this.canvasTexture);
         this.width = 256; this.height = 256;
         this.canvasTexture.width = this.width; this.canvasTexture.height = this.height;
         this.texture = new THREE.CanvasTexture(this.canvasTexture); //THREE js Canvas texture
@@ -31,6 +34,11 @@ module.exports = {
     combineTextures : function(){
         //1. create Texture canvas
         let textureCtx = this.canvasTexture.getContext("2d");
+        textureCtx.clearRect(0,0,this.width, this.height);
+
+        this.texture.canvas = this.canvasTexture;
+        this.texture.updateTexture = true;
+
 
         //2. retrieve all texture layers. TODO: in what sequence are they retrieved?
         let canvases = document.getElementsByClassName("texture");
@@ -41,9 +49,10 @@ module.exports = {
 
         //4. return THREE CanvasTexture.
         this.texture.canvas = this.canvasTexture;
-        this.texture.updateTexture = true;
+        this.texture.needsUpdate = true;
         // texture = new THREE.CanvasTexture(textureCtx.canvas);
         console.log(this.texture.uuid);
+
     },
 
     redrawTexture: function(drawCallback){
@@ -53,59 +62,7 @@ module.exports = {
 
 };
 
-
-// module.exports = function(width, height){
-//
-// let base = require('./patternLayers/base.js')();
-// let pepper_plot = require('./patternLayers/pepper-plot.js')();
-// let blotch = require('./patternLayers/blotch.js')();
-// let streaks = require('./patternLayers/streaks.js');
-// let test = require('./patternLayers/test.js')();
-//
-//
-//
-// let module = {};
-// //setup Main texture.
-// let canvasTexture = document.createElement("canvas");
-// canvasTexture.width = width; canvasTexture.height = height;
-// let texture = new THREE.CanvasTexture(canvasTexture); //THREE js Canvas texture
-//
-// module.initTextures = function() {
-//     base.draw();
-//     pepper_plot.draw();
-//     blotch.draw_small_blotch();
-//     streaks.draw();
-//
-// };
-//
-// module.redrawTexture = function(drawCallback){
-//     drawCallback();
-//     module.combineTextures();
-// };
-//
-// module.combineTextures = function(){
-//     //1. create Texture canvas
-//     let textureCtx = canvasTexture.getContext("2d");
-//
-//     //2. retrieve all texture layers. TODO: in what sequence are they retrieved?
-//     let canvases = document.getElementsByClassName("texture");
-//     //3. draw each layer onto the final canvas
-//     for(const canvas of canvases){
-//         textureCtx.drawImage(canvas, 0,0);
-//     }
-//
-//     //4. return THREE CanvasTexture.
-//     texture.canvas = canvasTexture;
-//     texture.updateTexture = true;
-//     // texture = new THREE.CanvasTexture(textureCtx.canvas);
-//     console.log(texture.uuid);
-// };
-//
-// module.getTexture = function() {return texture};
-//
-// return module;
-//
-// };
+window.EggTexture = module.exports;
 
 
 

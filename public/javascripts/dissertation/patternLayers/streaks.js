@@ -20,15 +20,27 @@ ui_params : {
     thickness_default: 10
 },
 
-scrawl_params : { octave_1: {
+scrawl_params : {
+    octave_1: {
     period_x: 1 / 30,
     period_y: 1 / 30
+    },
+    octave_2: {
+        period_x: 1 / 25,
+        period_y: 1 / 40
+    },
+    thickness: 10,
+    seed: Math.random()
 },
-octave_2: {
-    period_x: 1 / 25,
-    period_y: 1 / 40
-}
+
+scale_scrawl_thickness : function(scalar, interactive = false){
+    streaks.scrawl_params.thickness = scalar;
+    if(interactive){
+        streaks.drawScrawl(false);
+    }
 },
+
+
 init: function(){
     //scrawl --
     this.canvas_scrawl = document.getElementById(this.CANVAS_ID_1);
@@ -74,10 +86,10 @@ shorthand_params : {
     octave_2: {
         period_x: 1 / 25,
         period_y: 1 / 40
-    }
+    },
+    thickness : 10,
+    seed: 0.5
 },
-
-
 
 colourScheme : ['#73739c', '#222426'],
 
@@ -86,10 +98,6 @@ initColourPicker: function() {
     this.colourPicker.setNumberRange(-10, 10);
     this.colourPicker.setSpectrum(this.colourScheme[0], this.colourScheme[1]);
 },
-
-
-
-
 
 
 streaks_bounds1 : undefined,
@@ -150,13 +158,14 @@ drawMask : function(ctx, width, height){
 
 drawShorthand : function(){
     this.ctx_shorthand.clearRect(0,0, this.width_shorthand, this.height_shorthand);
-    this.drawStreaks(this.ctx_shorthand, this.shorthand_params.octave_1, this.shorthand_params.octave_2);
+    this.drawStreaks(this.ctx_shorthand, this.shorthand_params.octave_1, this.shorthand_params.octave_2, this.shorthand_params.thickness);
     this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
 
 },
-drawScrawl : function(){
+drawScrawl : function(newSeed = false){
     this.ctx_scrawl.clearRect(0,0, this.width_scrawl, this.height_scrawl);
-    this.drawStreaks(this.ctx_scrawl, this.scrawl_params.octave_1, this.scrawl_params.octave_2);
+    if(newSeed) this.scrawl_params.seed = Math.random();
+    this.drawStreaks(this.ctx_scrawl, this.scrawl_params.octave_1, this.scrawl_params.octave_2, this.scrawl_params.thickness, this.scrawl_params.seed);
     this.drawMask(this.ctx_scrawl, this.width_scrawl, this.height_scrawl);
 },
 
