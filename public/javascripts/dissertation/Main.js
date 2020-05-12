@@ -1,7 +1,7 @@
 
 
 const Stats = require('./Stats.js');
-const EggTexture = require('./EggTexture.js')(256, 256);
+const EggTexture = require('./EggTexture.js');
 
 let container;
 let camera;
@@ -20,7 +20,7 @@ function init() {
     createLights();
     createRenderer();
 
-    EggTexture.initTextures();
+    EggTexture.init();
     EggTexture.combineTextures();
     texture = EggTexture.getTexture();
 

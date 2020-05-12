@@ -16,7 +16,8 @@ ui_params : {
     period_step: 0.01,
     thickness_min: 0.1,
     thickness_max: 20,
-    thickness_step: 0.1
+    thickness_step: 0.1,
+    thickness_default: 10
 },
 
 scrawl_params : { octave_1: {
