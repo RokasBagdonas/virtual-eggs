@@ -23,6 +23,11 @@ module.initTextures = function() {
 
 };
 
+module.redrawTexture = function(drawCallback){
+    drawCallback();
+    module.combineTextures();
+};
+
 module.combineTextures = function(){
     //1. create Texture canvas
     let textureCtx = canvasTexture.getContext("2d");
@@ -46,5 +51,4 @@ module.getTexture = function() {return texture};
 return module;
 
 };
-
 

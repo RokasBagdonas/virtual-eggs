@@ -13,8 +13,10 @@ ctx_scrawl : undefined,
 ui_params : {
     period_min: 0.01,
     period_max: 10,
+    period_step: 0.01,
     thickness_min: 0.1,
-    thickness_max: 20
+    thickness_max: 20,
+    thickness_step: 0.1
 },
 
 scrawl_params : { octave_1: {
@@ -146,11 +148,13 @@ drawMask : function(ctx, width, height){
 },
 
 drawShorthand : function(){
+    this.ctx_shorthand.clearRect(0,0, this.width_shorthand, this.height_shorthand);
     this.drawStreaks(this.ctx_shorthand, this.shorthand_params.octave_1, this.shorthand_params.octave_2);
     this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
 
 },
 drawScrawl : function(){
+    this.ctx_scrawl.clearRect(0,0, this.width_scrawl, this.height_scrawl);
     this.drawStreaks(this.ctx_scrawl, this.scrawl_params.octave_1, this.scrawl_params.octave_2);
     this.drawMask(this.ctx_scrawl, this.width_scrawl, this.height_scrawl);
 },
