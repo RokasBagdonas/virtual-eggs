@@ -28,17 +28,28 @@
 
 
     <div class="item" id="params-container">
-            <h5> Params container header </h5>
-        <div class="param" id="base-param">
-            <h6>Base Layer</h6>
-            <input type="range">
-        </div>
 
-        <div class="param" id="noise-param">
-            <h6>Noise Layer</h6>
-        </div>
-        <div class="param" id="main-pattern-param">
-            <h6>Main Pattern Layer</h6>
+        <div id="active-patterns"> </div>
+
+
+        <div id="parameter-adjustment">
+            <h5> Parameter adjustment </h5>
+
+            <div class="param" id="streaks">
+                <h6>Streaks</h6>
+                <input type="range" class="slider" id="streaks-thickness" name="thickness">
+            </div>
+
+            <div class="param" id="blotches">
+                <h6>Blotches</h6>
+            </div>
+
+
+
+            <div class="param" id="other">
+                <h6>Other</h6>
+            </div>
+
         </div>
     </div>
 
@@ -53,7 +64,7 @@
             <canvas class="texture" id="shorthand"          width="256" height="256"></canvas>
             <canvas class="texture" id="cap"                width="256" height="256"></canvas>
 
-            <canvas class="texture" id="test"                width="256" height="256"></canvas>
+            <canvas class="texture" id="test"               width="256" height="256"></canvas>
 
 
         </div>

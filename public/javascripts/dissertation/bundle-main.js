@@ -3547,8 +3547,10 @@ module.exports = function(width, height){
 let base = require('./patternLayers/base.js')();
 let pepper_plot = require('./patternLayers/pepper-plot.js')();
 let blotch = require('./patternLayers/blotch.js')();
-let scrawl = require('./patternLayers/streaks.js')();
+let streaks = require('./patternLayers/streaks.js');
 let test = require('./patternLayers/test.js')();
+
+
 
 let module = {};
 //setup Main texture.
@@ -3558,9 +3560,9 @@ let texture = new THREE.CanvasTexture(canvasTexture); //THREE js Canvas texture
 
 module.initTextures = function() {
     base.draw();
-    // pepper_plot.draw();
-    // blotch.draw_small_blotch();
-    scrawl.draw();
+    pepper_plot.draw();
+    blotch.draw_small_blotch();
+    streaks.draw();
 
 };
 
@@ -3570,7 +3572,6 @@ module.combineTextures = function(){
 
     //2. retrieve all texture layers. TODO: in what sequence are they retrieved?
     let canvases = document.getElementsByClassName("texture");
-
     //3. draw each layer onto the final canvas
     for(const canvas of canvases){
         textureCtx.drawImage(canvas, 0,0);
@@ -4164,61 +4165,69 @@ return module;
 let Rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');
 let numbers = require('numbers');
-module.exports = function(){
-    let module = {};
-console.log("streaks init");
-//init -----------------------------------------------------
-//scrawl
-const CANVAS_ID_1 = "scrawl";
-let canvas_scrawl = document.getElementById(CANVAS_ID_1);
-let width_scrawl = canvas_scrawl.clientWidth;
-let height_scrawl = canvas_scrawl.clientHeight;
-let ctx_scrawl = canvas_scrawl.getContext("2d");
+module.exports = {
 
-//shorthand
-const CANVAS_ID_2 = "shorthand";
-let canvas_shorthand = document.getElementById(CANVAS_ID_2);
-let width_shorthand = canvas_shorthand.clientWidth;
-let height_shorthand = canvas_shorthand.clientHeight;
-let ctx_shorthand = canvas_shorthand.getContext("2d");
+//scrawl-----
+CANVAS_ID_1: "scrawl",
+canvas_scrawl : undefined ,
+width_scrawl : undefined,
+height_scrawl : undefined,
+ctx_scrawl : undefined,
 
-let streaks_bounds1 = {
-    top_left:     {x: 0, y: 0},
-    bottom_left:  {x: 0, y: height_scrawl * 0.6},
-    top_right:    {x: width_scrawl, y: 0},
-    bottom_right: {x: width_scrawl, y: height_scrawl * 0.6 }
-};
+ui_params : {
+    period_min: 0.01,
+    period_max: 10,
+    thickness_min: 0.1,
+    thickness_max: 20
+},
 
-let streak_bounds_default =  {
-    top_left:     {x: 0, y: 0},
-    bottom_left:  {x: 0, y: height_scrawl },
-    top_right:    {x: width_scrawl, y: 0},
-    bottom_right: {x: width_scrawl, y: height_scrawl }
+scrawl_params : { octave_1: {
+    period_x: 1 / 30,
+    period_y: 1 / 30
+},
+octave_2: {
+    period_x: 1 / 25,
+    period_y: 1 / 40
+}
+},
+init: function(){
+    //scrawl --
+    this.canvas_scrawl = document.getElementById(this.CANVAS_ID_1);
+    this.width_scrawl = this.canvas_scrawl.clientWidth;
+    this.height_scrawl = this.canvas_scrawl.clientHeight;
+    this.ctx_scrawl = this.canvas_scrawl.getContext("2d");
+
+    this.canvas_shorthand = document.getElementById(this.CANVAS_ID_2);
+    this.width_shorthand = this.canvas_shorthand.clientWidth;
+    this.height_shorthand = this.canvas_shorthand.clientHeight;
+    this.ctx_shorthand = this.canvas_shorthand.getContext("2d");
+
+    this.initColourPicker();
+
+    this.streaks_bounds1 = {
+        top_left:     {x: 0, y: 0},
+        bottom_left:  {x: 0, y: this.height_scrawl * 0.6},
+        top_right:    {x: this.width_scrawl, y: 0},
+        bottom_right: {x: this.width_scrawl, y: this.height_scrawl * 0.6 }
     };
 
-module.colourScheme = ['#73739c', '#222426'];
-
-let colourPicker = new Rainbow();
-colourPicker.setNumberRange(-10, 10);
-colourPicker.setSpectrum(module.colourScheme[0], module.colourScheme[1]);
-
-module.draw = function(){
-    module.drawScrawl();
-    module.drawShorthand();
-};
-
-module.scrawl_params = {
-    octave_1: {
-        period_x: 1 / 30,
-        period_y: 1 / 30
-    },
-    octave_2: {
-        period_x: 1 / 25,
-        period_y: 1 / 40
+    this.streak_bounds_default =  {
+        top_left:     {x: 0, y: 0},
+        bottom_left:  {x: 0, y: this.height_scrawl },
+        top_right:    {x: this.width_scrawl, y: 0},
+        bottom_right: {x: this.width_scrawl, y: this.height_scrawl }
     }
-};
+},
 
-module.shorthand_params = {
+
+//shorthand-----
+CANVAS_ID_2:"shorthand",
+canvas_shorthand: undefined,
+width_shorthand : undefined,
+height_shorthand : undefined,
+ctx_shorthand : undefined,
+
+shorthand_params : {
     octave_1: {
         period_x: 1 / 10,
         period_y: 1 / 10
@@ -4227,28 +4236,41 @@ module.shorthand_params = {
         period_x: 1 / 25,
         period_y: 1 / 40
     }
-};
-
-module.drawScrawl = function(){
-    drawStreaks(ctx_scrawl, module.scrawl_params.octave_1, module.scrawl_params.octave_2);
-    drawMask(ctx_scrawl);
-};
-
-module.drawShorthand = function(){
-    drawStreaks(ctx_shorthand, module.shorthand_params.octave_1, module.shorthand_params.octave_2);
-    drawMask(ctx_shorthand);
-
-};
+},
 
 
 
+colourScheme : ['#73739c', '#222426'],
 
-function drawStreaks(ctx, octave_1, octave_2, thickness=10, seed=Math.random()){
+colourPicker : new Rainbow(),
+initColourPicker: function() {
+    this.colourPicker.setNumberRange(-10, 10);
+    this.colourPicker.setSpectrum(this.colourScheme[0], this.colourScheme[1]);
+},
+
+
+
+
+
+
+streaks_bounds1 : undefined,
+streak_bounds_default : undefined,
+
+
+/**
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {period_x, period_y} octave_1 used for scale
+ * @param {period_x, period_y} octave_2 scale and "stretching" direction
+ * @param thickness
+ * @param seed
+ */
+drawStreaks : function(ctx, octave_1, octave_2, thickness=10, seed=Math.random()){
     let perlin_value;
     let o_1;
     let o_2;
     let n = new Noise(seed);
-    let drawing_area = streak_bounds_default;
+    let drawing_area = this.streak_bounds_default;
     let perlin_scalar = 210;
 
     for(let x = drawing_area.top_left.x; x < drawing_area.top_right.x; x++){
@@ -4262,35 +4284,51 @@ function drawStreaks(ctx, octave_1, octave_2, thickness=10, seed=Math.random()){
 
             if(perlin_value < thickness){
                 ctx.beginPath();
-                ctx.fillStyle = '#' + colourPicker.colourAt(perlin_value);
+                ctx.fillStyle = '#' + this.colourPicker.colourAt(perlin_value);
                 ctx.arc(x,y,1,0, Math.PI * 2);
                 ctx.fill();
             }
         }
-    }
-
 }
 
+},
 //used for splitting perlin noise into separate streaks.
-    const drawMask = function(ctx_scrawl){
-        let interval = [10, 20];
-        let stripe_thickness = 7; //pixels
-        let num_of_intervals = Math.floor(numbers.random.sample(interval[0], interval[1], 1)[0]);
+drawMask : function(ctx, width, height){
+    let interval = [10, 20];
+    let stripe_thickness = 7; //pixels
+    let num_of_intervals = Math.floor(numbers.random.sample(interval[0], interval[1], 1)[0]);
 
-        //y
-        for(let y = 0; y < height_scrawl; y += stripe_thickness + height_scrawl / num_of_intervals){
-            ctx_scrawl.clearRect(0, y, width_scrawl, stripe_thickness);
-        }
+    //y
+    for(let y = 0; y < height; y += stripe_thickness + height / num_of_intervals){
+        ctx.clearRect(0, y, width, stripe_thickness);
+    }
 
-        //x
-        // for(let x = 0; x < width_scrawl; x += stripe_thickness + width_scrawl / num_of_intervals ){
-        //     ctx_scrawl.clearRect(x, 0, stripe_thickness, height_scrawl );
-        // }
-    };
+    //x
+    // for(let x = 0; x < width; x += stripe_thickness + width / num_of_intervals ){
+    //     ctx.clearRect(x, 0, stripe_thickness, height );
+    // }
+},
 
-    return module;
+drawShorthand : function(){
+    this.drawStreaks(this.ctx_shorthand, this.shorthand_params.octave_1, this.shorthand_params.octave_2);
+    this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
+
+},
+drawScrawl : function(){
+    this.drawStreaks(this.ctx_scrawl, this.scrawl_params.octave_1, this.scrawl_params.octave_2);
+    this.drawMask(this.ctx_scrawl, this.width_scrawl, this.height_scrawl);
+},
+
+draw : function(){
+    this.drawScrawl();
+    this.drawShorthand();
+},
+
 };
 
+module.exports.init();
+
+window.streaks = module.exports;
 
 },{"../Stats.js":15,"numbers":1,"rainbowvis.js":12}],20:[function(require,module,exports){
 
@@ -4331,7 +4369,6 @@ module.draw = function() {
         ctx.fillRect(corners[c].x, corners[c].y, 10, 10);
     }
 };
-
 
 return module;
 };

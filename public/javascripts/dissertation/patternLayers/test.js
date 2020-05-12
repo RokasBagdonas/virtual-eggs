@@ -37,6 +37,5 @@ module.draw = function() {
     }
 };
 
-
 return module;
 };

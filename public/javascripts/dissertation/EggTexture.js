@@ -4,8 +4,10 @@ module.exports = function(width, height){
 let base = require('./patternLayers/base.js')();
 let pepper_plot = require('./patternLayers/pepper-plot.js')();
 let blotch = require('./patternLayers/blotch.js')();
-let scrawl = require('./patternLayers/streaks.js')();
+let streaks = require('./patternLayers/streaks.js');
 let test = require('./patternLayers/test.js')();
+
+
 
 let module = {};
 //setup Main texture.
@@ -15,9 +17,9 @@ let texture = new THREE.CanvasTexture(canvasTexture); //THREE js Canvas texture
 
 module.initTextures = function() {
     base.draw();
-    // pepper_plot.draw();
-    // blotch.draw_small_blotch();
-    scrawl.draw();
+    pepper_plot.draw();
+    blotch.draw_small_blotch();
+    streaks.draw();
 
 };
 
@@ -27,7 +29,6 @@ module.combineTextures = function(){
 
     //2. retrieve all texture layers. TODO: in what sequence are they retrieved?
     let canvases = document.getElementsByClassName("texture");
-
     //3. draw each layer onto the final canvas
     for(const canvas of canvases){
         textureCtx.drawImage(canvas, 0,0);
