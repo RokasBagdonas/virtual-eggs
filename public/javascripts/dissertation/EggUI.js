@@ -9,24 +9,43 @@ module.exports = {
     other_container: document.getElementById('other-container'),
 
     initStreaksUI: function(){
+
         //1. create sliders.
-      //1.1 Scrawl
-        console.log("ewgg ui: " + streaks.scrawl_params.thickness);
-      let test = new Slider('scrawl thickness',
-          streaks.ui_params.thickness_min, streaks.ui_params.thickness_max,
-          streaks.ui_params.thickness_default, streaks.ui_params.thickness_step,
-          streaks.scale_scrawl_thickness
-      );
+        //1.1 Scrawl
+        let scrawl_thickness = new Slider('scrawl thickness',
+            streaks.ui_params.thickness_min, streaks.ui_params.thickness_max,
+            streaks.ui_params.thickness_default, streaks.ui_params.thickness_step,
+            streaks.scale_scrawl_thickness
+        );
+        let scrawl_octaves = new Slider('scrawl octaves',
+            streaks.ui_params.period_min, streaks.ui_params.period_max,
+            streaks.ui_params.scrawl_period_scalar, streaks.ui_params.period_step,
+            streaks.scale_scrawl_periods);
 
-      this.streaks_container.appendChild(test.container);
+        this.streaks_container.appendChild(scrawl_thickness.container);
+        this.streaks_container.appendChild(scrawl_octaves.container);
 
+        //1.2 shorthand
+        let shorthand_thickness = new Slider('shorthand thickness',
+            streaks.ui_params.thickness_min, streaks.ui_params.thickness_max,
+            streaks.ui_params.thickness_default, streaks.ui_params.thickness_step,
+            streaks.scale_shorthand_thickness
+        );
+        let shorthand_octaves = new Slider('shorthand octaves',
+            streaks.ui_params.period_min, streaks.ui_params.period_max,
+            streaks.ui_params.shorthand_period_scalar, streaks.ui_params.period_step,
+            streaks.scale_shorthand_periods);
 
-      //1.2 shorthand
-
-      //2. create checkboxes.
+        this.streaks_container.appendChild(shorthand_thickness.container);
+        this.streaks_container.appendChild(shorthand_octaves.container);
+        //2. create checkboxes.
 
         //3. reapply textures
-
+        let reapply_button = document.createElement("input");
+        reapply_button.setAttribute("type", "button");
+        reapply_button.setAttribute("value", "reapply streaks");
+        reapply_button.onclick = (e) => {EggTexture.combineTextures()};
+        this.streaks_container.appendChild(reapply_button);
 
     },
 
