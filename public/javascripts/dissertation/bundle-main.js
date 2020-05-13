@@ -3544,7 +3544,7 @@ if (typeof module !== 'undefined') {
 //Namespace for combining canvases and creating egg texture.
 let base = require('./patternLayers/base.js')();
 let pepper_plot = require('./patternLayers/pepper-plot.js')();
-let blotch = require('./patternLayers/blotch.js')();
+let blotch = require('./patternLayers/blotch.js');
 let streaks = require('./patternLayers/streaks.js');
 let test = require('./patternLayers/test.js')();
 
@@ -3633,7 +3633,8 @@ module.exports = {
         let scrawl_octaves = new Slider('scrawl octaves',
             streaks.ui_params.period_min, streaks.ui_params.period_max,
             streaks.ui_params.scrawl_period_scalar, streaks.ui_params.period_step,
-            streaks.scale_scrawl_periods);
+            streaks.scale_scrawl_periods
+        );
 
         this.streaks_container.appendChild(scrawl_thickness.container);
         this.streaks_container.appendChild(scrawl_octaves.container);
@@ -3644,16 +3645,17 @@ module.exports = {
             streaks.ui_params.thickness_default, streaks.ui_params.thickness_step,
             streaks.scale_shorthand_thickness
         );
+
         let shorthand_octaves = new Slider('shorthand octaves',
             streaks.ui_params.period_min, streaks.ui_params.period_max,
             streaks.ui_params.shorthand_period_scalar, streaks.ui_params.period_step,
-            streaks.scale_shorthand_periods);
+            streaks.scale_shorthand_periods
+        );
 
         this.streaks_container.appendChild(shorthand_thickness.container);
         this.streaks_container.appendChild(shorthand_octaves.container);
-        //2. create checkboxes.
 
-        //3. reapply textures
+        //2. reapply textures
         let reapply_button = document.createElement("input");
         reapply_button.setAttribute("type", "button");
         reapply_button.setAttribute("value", "reapply streaks");
@@ -3676,22 +3678,6 @@ module.exports = {
 
 
 };
-
-// module.exports = function(){
-//
-// let module = {};
-//
-// module.test = function(){console.log("Egg UI test ")};
-//
-// module.addBaseOverlayRangeSlider = function(){
-//     let slider1 = new Slider("range", 1, 100, 25, 1,
-//         EggTexture.setBaseOverlayRange);
-//     let baseParamContainer = document.getElementById("base-param");
-//     baseParamContainer.appendChild(slider1.container);
-// };
-//
-// return module;
-// };
 
 
 
@@ -4209,35 +4195,23 @@ let utility = require('../utility.js');
 let rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');
 
-module.exports = function(){
-let module = {};
+module.exports = {
 
 //init-----------------------------------------------------
-const CANVAS_ID_1 = "small-blotch";
-let canvas = document.getElementById(CANVAS_ID_1);
-let width = canvas.clientWidth;
-let height = canvas.clientHeight;
-let ctx = canvas.getContext("2d");
+CANVAS_ID_1 : "small-blotch",
+canvas : undefined,
+width : undefined,
+height : undefined,
+ctx : undefined,
 
 
-const COLOUR_SCHEME_1 = ["#1f302e", "#111414"];
-const COLOUR_SCHEME_2 = ["#eaa28b", "#8e4312"];
-module.colourScheme = COLOUR_SCHEME_1;
+COLOUR_SCHEME_1 : ["#1f302e", "#111414"],
+COLOUR_SCHEME_2 : ["#eaa28b", "#8e4312"],
 
-let colourPicker = new rainbow();
-colourPicker.setNumberRange(-100, 100);
-colourPicker.setSpectrum(module.colourScheme[0], module.colourScheme[1]);
+colourPicker : new rainbow(),
 
-
-module.dataRangeParams = {
-    muX: [width / 8, width / 1.42],
-    muY: [height / 8, height / 1.42],
-    varianceX: [width / 7.3, width / 7.8],
-    varianceY: [height / 7.3, height / 8],
-    numPoints: [140, 180]
-};
-
-module.variogramRangeParams = {
+dataRangeParams : undefined,
+variogramRangeParams : {
     range: [50, 90],
     sill: [250, 330],
     nugget: [80, 90],
@@ -4247,7 +4221,7 @@ module.variogramRangeParams = {
     useAlpha: false,
     drawRadius: 3,
     threshold: 1
-};
+},
 
 
 
@@ -4264,34 +4238,69 @@ module.variogramRangeParams = {
 //     threshold: 80
 // };
 
-    module.variogramParams = {
-        range: 10,
-        sill: 250,
-        nugget: 10,
+variogramParams : {
+    range: 10,
+    sill: 250,
+    nugget: 10,
+    alpha: 1,
+    variogramModel: "gaussian",
+    newVariogram: true,
+    useAlpha: false,
+    drawRadius: 2,
+    threshold: 80
+},
+
+dataParams : undefined,
+// module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
+
+init: function(){
+    this.CANVAS_ID_1 = "small-blotch";
+    this.canvas = document.getElementById(this.CANVAS_ID_1);
+    this.width = this.canvas.clientWidth;
+    this.height = this.canvas.clientHeight;
+    this.ctx = this.canvas.getContext("2d");
+
+    this.colourScheme = this.COLOUR_SCHEME_1;
+    this.colourPicker.setNumberRange(-100, 100);
+    this.colourPicker.setSpectrum(this.colourScheme[0], this.colourScheme[1]);
+
+
+    this.dataRangeParams = {
+        muX: [this.width / 8, this.width / 1.42],
+        muY: [this.height / 8, this.height / 1.42],
+        varianceX: [this.width / 7.3, this.width / 7.8],
+        varianceY: [this.height / 7.3, this.height / 8],
+        numPoints: [140, 180]
+    };
+
+    this.variogramRangeParams = {
+        range: [50, 90],
+        sill: [250, 330],
+        nugget: [80, 90],
         alpha: 1,
         variogramModel: "gaussian",
         newVariogram: true,
         useAlpha: false,
-        drawRadius: 2,
-        threshold: 80
+        drawRadius: 3,
+        threshold: 1
     };
 
-module.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.dataRangeParams);
-// module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
+    this.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.dataRangeParams);
+
+},
 
 
 
+draw_small_blotch : function() {
+    blotch.ctx.clearRect(0,0,this.width, this.height);
+    let data = Stats.generateData(this.dataParams);
+    Stats.plotVariogram(this.ctx, this.width, this.height, data, this.variogramParams, this.colourPicker);
+},
 
-module.draw_small_blotch = function() {
-    ctx.clearRect(0,0,width, height);
-    let data = Stats.generateData(module.dataParams);
-    Stats.plotVariogram(ctx, width, height, data, module.variogramParams, colourPicker);
+
 };
-
-
-return module;
-};
-
+module.exports.init();
+window.blotch = module.exports;
 },{"../Stats.js":17,"../utility.js":23,"rainbowvis.js":12}],20:[function(require,module,exports){
 let rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');

@@ -1,7 +1,7 @@
 //Namespace for combining canvases and creating egg texture.
 let base = require('./patternLayers/base.js')();
 let pepper_plot = require('./patternLayers/pepper-plot.js')();
-let blotch = require('./patternLayers/blotch.js')();
+let blotch = require('./patternLayers/blotch.js');
 let streaks = require('./patternLayers/streaks.js');
 let test = require('./patternLayers/test.js')();
 
