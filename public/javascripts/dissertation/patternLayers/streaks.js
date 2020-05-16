@@ -120,8 +120,8 @@ scale_shorthand_thickness : function(scalar, interactive = false){
 },
 
 scale_shorthand_periods : function(scalar, interactive = false){
-    //1. scale octaves.
 
+    //create new octaves as we want to maintain the base octave's ratio + less sliders.
     let octave_1 = {
         period_x: streaks.shorthand_params.octave_1.period_x * scalar,
         period_y: streaks.shorthand_params.octave_1.period_y * scalar
@@ -180,9 +180,9 @@ drawStreaks : function(ctx, octave_1, octave_2, thickness=10, seed=Math.random()
                 ctx.arc(x,y,1,0, Math.PI * 2);
                 ctx.fill();
             }
-        }
-}
 
+        }
+    }
 },
 //used for splitting perlin noise into separate streaks.
 drawMask : function(ctx, width, height){
@@ -205,14 +205,14 @@ drawShorthand : function(newSeed = false, octave_1 = this.shorthand_params.octav
     this.ctx_shorthand.clearRect(0,0, this.width_shorthand, this.height_shorthand);
     if(newSeed) this.shorthand_params.seed = Math.random();
     this.drawStreaks(this.ctx_shorthand, octave_1, octave_2, this.shorthand_params.thickness);
-    this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
+    // this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
 
 },
 drawScrawl : function(newSeed = false, octave_1 = this.scrawl_params.octave_1, octave_2 = this.scrawl_params.octave_2){
     this.ctx_scrawl.clearRect(0,0, this.width_scrawl, this.height_scrawl);
     if(newSeed) this.scrawl_params.seed = Math.random();
     this.drawStreaks(this.ctx_scrawl, octave_1, octave_2, this.scrawl_params.thickness, this.scrawl_params.seed);
-    this.drawMask(this.ctx_scrawl, this.width_scrawl, this.height_scrawl);
+    // this.drawMask(this.ctx_scrawl, this.width_scrawl, this.height_scrawl);
 },
 
 draw : function(){

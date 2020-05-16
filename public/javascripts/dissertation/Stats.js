@@ -185,7 +185,7 @@ const octavePerlin = function(x, y, octaves, persistence) {
     }
 
     return total/maxValue;
-}
+};
 
 const init = function(w, h){
     width = w || width;

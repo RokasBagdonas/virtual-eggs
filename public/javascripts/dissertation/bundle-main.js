@@ -1,7 +1,317 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+/*
+RainbowVis-JS 
+Released under Eclipse Public License - v 1.0
+*/
+
+function Rainbow()
+{
+	"use strict";
+	var gradients = null;
+	var minNum = 0;
+	var maxNum = 100;
+	var colours = ['ff0000', 'ffff00', '00ff00', '0000ff']; 
+	setColours(colours);
+	
+	function setColours (spectrum) 
+	{
+		if (spectrum.length < 2) {
+			throw new Error('Rainbow must have two or more colours.');
+		} else {
+			var increment = (maxNum - minNum)/(spectrum.length - 1);
+			var firstGradient = new ColourGradient();
+			firstGradient.setGradient(spectrum[0], spectrum[1]);
+			firstGradient.setNumberRange(minNum, minNum + increment);
+			gradients = [ firstGradient ];
+			
+			for (var i = 1; i < spectrum.length - 1; i++) {
+				var colourGradient = new ColourGradient();
+				colourGradient.setGradient(spectrum[i], spectrum[i + 1]);
+				colourGradient.setNumberRange(minNum + increment * i, minNum + increment * (i + 1)); 
+				gradients[i] = colourGradient; 
+			}
+
+			colours = spectrum;
+		}
+	}
+
+	this.setSpectrum = function () 
+	{
+		setColours(arguments);
+		return this;
+	}
+
+	this.setSpectrumByArray = function (array)
+	{
+		setColours(array);
+		return this;
+	}
+
+	this.colourAt = function (number)
+	{
+		if (isNaN(number)) {
+			throw new TypeError(number + ' is not a number');
+		} else if (gradients.length === 1) {
+			return gradients[0].colourAt(number);
+		} else {
+			var segment = (maxNum - minNum)/(gradients.length);
+			var index = Math.min(Math.floor((Math.max(number, minNum) - minNum)/segment), gradients.length - 1);
+			return gradients[index].colourAt(number);
+		}
+	}
+
+	this.colorAt = this.colourAt;
+
+	this.setNumberRange = function (minNumber, maxNumber)
+	{
+		if (maxNumber > minNumber) {
+			minNum = minNumber;
+			maxNum = maxNumber;
+			setColours(colours);
+		} else {
+			throw new RangeError('maxNumber (' + maxNumber + ') is not greater than minNumber (' + minNumber + ')');
+		}
+		return this;
+	}
+}
+
+function ColourGradient() 
+{
+	"use strict";
+	var startColour = 'ff0000';
+	var endColour = '0000ff';
+	var minNum = 0;
+	var maxNum = 100;
+
+	this.setGradient = function (colourStart, colourEnd)
+	{
+		startColour = getHexColour(colourStart);
+		endColour = getHexColour(colourEnd);
+	}
+
+	this.setNumberRange = function (minNumber, maxNumber)
+	{
+		if (maxNumber > minNumber) {
+			minNum = minNumber;
+			maxNum = maxNumber;
+		} else {
+			throw new RangeError('maxNumber (' + maxNumber + ') is not greater than minNumber (' + minNumber + ')');
+		}
+	}
+
+	this.colourAt = function (number)
+	{
+		return calcHex(number, startColour.substring(0,2), endColour.substring(0,2)) 
+			+ calcHex(number, startColour.substring(2,4), endColour.substring(2,4)) 
+			+ calcHex(number, startColour.substring(4,6), endColour.substring(4,6));
+	}
+	
+	function calcHex(number, channelStart_Base16, channelEnd_Base16)
+	{
+		var num = number;
+		if (num < minNum) {
+			num = minNum;
+		}
+		if (num > maxNum) {
+			num = maxNum;
+		} 
+		var numRange = maxNum - minNum;
+		var cStart_Base10 = parseInt(channelStart_Base16, 16);
+		var cEnd_Base10 = parseInt(channelEnd_Base16, 16); 
+		var cPerUnit = (cEnd_Base10 - cStart_Base10)/numRange;
+		var c_Base10 = Math.round(cPerUnit * (num - minNum) + cStart_Base10);
+		return formatHex(c_Base10.toString(16));
+	}
+
+	function formatHex(hex) 
+	{
+		if (hex.length === 1) {
+			return '0' + hex;
+		} else {
+			return hex;
+		}
+	} 
+	
+	function isHexColour(string)
+	{
+		var regex = /^#?[0-9a-fA-F]{6}$/i;
+		return regex.test(string);
+	}
+
+	function getHexColour(string)
+	{
+		if (isHexColour(string)) {
+			return string.substring(string.length - 6, string.length);
+		} else {
+			var name = string.toLowerCase();
+			if (colourNames.hasOwnProperty(name)) {
+				return colourNames[name];
+			}
+			throw new Error(string + ' is not a valid colour.');
+		}
+	}
+	
+	// Extended list of CSS colornames s taken from
+	// http://www.w3.org/TR/css3-color/#svg-color
+	var colourNames = {
+		aliceblue: "F0F8FF",
+		antiquewhite: "FAEBD7",
+		aqua: "00FFFF",
+		aquamarine: "7FFFD4",
+		azure: "F0FFFF",
+		beige: "F5F5DC",
+		bisque: "FFE4C4",
+		black: "000000",
+		blanchedalmond: "FFEBCD",
+		blue: "0000FF",
+		blueviolet: "8A2BE2",
+		brown: "A52A2A",
+		burlywood: "DEB887",
+		cadetblue: "5F9EA0",
+		chartreuse: "7FFF00",
+		chocolate: "D2691E",
+		coral: "FF7F50",
+		cornflowerblue: "6495ED",
+		cornsilk: "FFF8DC",
+		crimson: "DC143C",
+		cyan: "00FFFF",
+		darkblue: "00008B",
+		darkcyan: "008B8B",
+		darkgoldenrod: "B8860B",
+		darkgray: "A9A9A9",
+		darkgreen: "006400",
+		darkgrey: "A9A9A9",
+		darkkhaki: "BDB76B",
+		darkmagenta: "8B008B",
+		darkolivegreen: "556B2F",
+		darkorange: "FF8C00",
+		darkorchid: "9932CC",
+		darkred: "8B0000",
+		darksalmon: "E9967A",
+		darkseagreen: "8FBC8F",
+		darkslateblue: "483D8B",
+		darkslategray: "2F4F4F",
+		darkslategrey: "2F4F4F",
+		darkturquoise: "00CED1",
+		darkviolet: "9400D3",
+		deeppink: "FF1493",
+		deepskyblue: "00BFFF",
+		dimgray: "696969",
+		dimgrey: "696969",
+		dodgerblue: "1E90FF",
+		firebrick: "B22222",
+		floralwhite: "FFFAF0",
+		forestgreen: "228B22",
+		fuchsia: "FF00FF",
+		gainsboro: "DCDCDC",
+		ghostwhite: "F8F8FF",
+		gold: "FFD700",
+		goldenrod: "DAA520",
+		gray: "808080",
+		green: "008000",
+		greenyellow: "ADFF2F",
+		grey: "808080",
+		honeydew: "F0FFF0",
+		hotpink: "FF69B4",
+		indianred: "CD5C5C",
+		indigo: "4B0082",
+		ivory: "FFFFF0",
+		khaki: "F0E68C",
+		lavender: "E6E6FA",
+		lavenderblush: "FFF0F5",
+		lawngreen: "7CFC00",
+		lemonchiffon: "FFFACD",
+		lightblue: "ADD8E6",
+		lightcoral: "F08080",
+		lightcyan: "E0FFFF",
+		lightgoldenrodyellow: "FAFAD2",
+		lightgray: "D3D3D3",
+		lightgreen: "90EE90",
+		lightgrey: "D3D3D3",
+		lightpink: "FFB6C1",
+		lightsalmon: "FFA07A",
+		lightseagreen: "20B2AA",
+		lightskyblue: "87CEFA",
+		lightslategray: "778899",
+		lightslategrey: "778899",
+		lightsteelblue: "B0C4DE",
+		lightyellow: "FFFFE0",
+		lime: "00FF00",
+		limegreen: "32CD32",
+		linen: "FAF0E6",
+		magenta: "FF00FF",
+		maroon: "800000",
+		mediumaquamarine: "66CDAA",
+		mediumblue: "0000CD",
+		mediumorchid: "BA55D3",
+		mediumpurple: "9370DB",
+		mediumseagreen: "3CB371",
+		mediumslateblue: "7B68EE",
+		mediumspringgreen: "00FA9A",
+		mediumturquoise: "48D1CC",
+		mediumvioletred: "C71585",
+		midnightblue: "191970",
+		mintcream: "F5FFFA",
+		mistyrose: "FFE4E1",
+		moccasin: "FFE4B5",
+		navajowhite: "FFDEAD",
+		navy: "000080",
+		oldlace: "FDF5E6",
+		olive: "808000",
+		olivedrab: "6B8E23",
+		orange: "FFA500",
+		orangered: "FF4500",
+		orchid: "DA70D6",
+		palegoldenrod: "EEE8AA",
+		palegreen: "98FB98",
+		paleturquoise: "AFEEEE",
+		palevioletred: "DB7093",
+		papayawhip: "FFEFD5",
+		peachpuff: "FFDAB9",
+		peru: "CD853F",
+		pink: "FFC0CB",
+		plum: "DDA0DD",
+		powderblue: "B0E0E6",
+		purple: "800080",
+		red: "FF0000",
+		rosybrown: "BC8F8F",
+		royalblue: "4169E1",
+		saddlebrown: "8B4513",
+		salmon: "FA8072",
+		sandybrown: "F4A460",
+		seagreen: "2E8B57",
+		seashell: "FFF5EE",
+		sienna: "A0522D",
+		silver: "C0C0C0",
+		skyblue: "87CEEB",
+		slateblue: "6A5ACD",
+		slategray: "708090",
+		slategrey: "708090",
+		snow: "FFFAFA",
+		springgreen: "00FF7F",
+		steelblue: "4682B4",
+		tan: "D2B48C",
+		teal: "008080",
+		thistle: "D8BFD8",
+		tomato: "FF6347",
+		turquoise: "40E0D0",
+		violet: "EE82EE",
+		wheat: "F5DEB3",
+		white: "FFFFFF",
+		whitesmoke: "F5F5F5",
+		yellow: "FFFF00",
+		yellowgreen: "9ACD32"
+	}
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = Rainbow;
+}
+
+},{}],2:[function(require,module,exports){
 module.exports = require('./lib/numbers.js');
 
-},{"./lib/numbers.js":2}],2:[function(require,module,exports){
+},{"./lib/numbers.js":3}],3:[function(require,module,exports){
 /**
  * numbers.js
  * http://github.com/sjkaliski/numbers.js
@@ -49,7 +359,7 @@ numbers.random = require('./numbers/random');
  */
 numbers.EPSILON = 0.001;
 
-},{"./numbers/basic":3,"./numbers/calculus":4,"./numbers/complex":5,"./numbers/dsp":6,"./numbers/generators":7,"./numbers/matrix":8,"./numbers/prime":9,"./numbers/random":10,"./numbers/statistic":11}],3:[function(require,module,exports){
+},{"./numbers/basic":4,"./numbers/calculus":5,"./numbers/complex":6,"./numbers/dsp":7,"./numbers/generators":8,"./numbers/matrix":9,"./numbers/prime":10,"./numbers/random":11,"./numbers/statistic":12}],4:[function(require,module,exports){
 /**
  * basic.js
  * http://github.com/sjkaliski/numbers.js
@@ -559,7 +869,7 @@ basic.permutation = function (n, k) {
   return permutation;
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 /**
  * calculus.js
  * http://github.com/sjkaliski/numbers.js
@@ -795,7 +1105,7 @@ calculus.MonteCarlo = function (func, N) {
   });
 };
 
-},{"../numbers":2}],5:[function(require,module,exports){
+},{"../numbers":3}],6:[function(require,module,exports){
 /**
  * complex.js
  * http://github.com/sjkaliski/numbers.js
@@ -997,7 +1307,7 @@ Complex.prototype.equals = function (complex, epsilon) {
 
 module.exports = Complex;
 
-},{"../numbers":2}],6:[function(require,module,exports){
+},{"../numbers":3}],7:[function(require,module,exports){
 /**
  * dsp.js
  * http://github.com/sjkaliski/numbers.js
@@ -1078,7 +1388,7 @@ dsp.fft = function (x) {
   return res;
 };
 
-},{"../numbers":2}],7:[function(require,module,exports){
+},{"../numbers":3}],8:[function(require,module,exports){
 /**
  * generators.js
  * http://github.com/sjkaliski/numbers.js
@@ -1176,7 +1486,7 @@ generate.collatz = function (n) {
   }
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /**
  * matrix.js
  * http://github.com/sjkaliski/numbers.js
@@ -2526,7 +2836,7 @@ matrix.mapMulti = function (M, f) {
   return res;
 };
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /**
  * prime.js
  * http://github.com/sjkaliski/numbers.js
@@ -2740,7 +3050,7 @@ prime.getPrimePower = function (n) {
   return false;
 };
 
-},{"./basic":3}],10:[function(require,module,exports){
+},{"./basic":4}],11:[function(require,module,exports){
 var random = exports;
 
 // random number generator.
@@ -2955,7 +3265,7 @@ random.distribution.bates = function (n, b, a) {
   return results;
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /**
  * statistic.js
  * http://github.com/sjkaliski/numbers.js
@@ -3230,317 +3540,9 @@ statistic.covariance = function (set1, set2) {
   }
 };
 
-},{"./basic":3}],12:[function(require,module,exports){
-/*
-RainbowVis-JS 
-Released under Eclipse Public License - v 1.0
-*/
-
-function Rainbow()
-{
-	"use strict";
-	var gradients = null;
-	var minNum = 0;
-	var maxNum = 100;
-	var colours = ['ff0000', 'ffff00', '00ff00', '0000ff']; 
-	setColours(colours);
-	
-	function setColours (spectrum) 
-	{
-		if (spectrum.length < 2) {
-			throw new Error('Rainbow must have two or more colours.');
-		} else {
-			var increment = (maxNum - minNum)/(spectrum.length - 1);
-			var firstGradient = new ColourGradient();
-			firstGradient.setGradient(spectrum[0], spectrum[1]);
-			firstGradient.setNumberRange(minNum, minNum + increment);
-			gradients = [ firstGradient ];
-			
-			for (var i = 1; i < spectrum.length - 1; i++) {
-				var colourGradient = new ColourGradient();
-				colourGradient.setGradient(spectrum[i], spectrum[i + 1]);
-				colourGradient.setNumberRange(minNum + increment * i, minNum + increment * (i + 1)); 
-				gradients[i] = colourGradient; 
-			}
-
-			colours = spectrum;
-		}
-	}
-
-	this.setSpectrum = function () 
-	{
-		setColours(arguments);
-		return this;
-	}
-
-	this.setSpectrumByArray = function (array)
-	{
-		setColours(array);
-		return this;
-	}
-
-	this.colourAt = function (number)
-	{
-		if (isNaN(number)) {
-			throw new TypeError(number + ' is not a number');
-		} else if (gradients.length === 1) {
-			return gradients[0].colourAt(number);
-		} else {
-			var segment = (maxNum - minNum)/(gradients.length);
-			var index = Math.min(Math.floor((Math.max(number, minNum) - minNum)/segment), gradients.length - 1);
-			return gradients[index].colourAt(number);
-		}
-	}
-
-	this.colorAt = this.colourAt;
-
-	this.setNumberRange = function (minNumber, maxNumber)
-	{
-		if (maxNumber > minNumber) {
-			minNum = minNumber;
-			maxNum = maxNumber;
-			setColours(colours);
-		} else {
-			throw new RangeError('maxNumber (' + maxNumber + ') is not greater than minNumber (' + minNumber + ')');
-		}
-		return this;
-	}
-}
-
-function ColourGradient() 
-{
-	"use strict";
-	var startColour = 'ff0000';
-	var endColour = '0000ff';
-	var minNum = 0;
-	var maxNum = 100;
-
-	this.setGradient = function (colourStart, colourEnd)
-	{
-		startColour = getHexColour(colourStart);
-		endColour = getHexColour(colourEnd);
-	}
-
-	this.setNumberRange = function (minNumber, maxNumber)
-	{
-		if (maxNumber > minNumber) {
-			minNum = minNumber;
-			maxNum = maxNumber;
-		} else {
-			throw new RangeError('maxNumber (' + maxNumber + ') is not greater than minNumber (' + minNumber + ')');
-		}
-	}
-
-	this.colourAt = function (number)
-	{
-		return calcHex(number, startColour.substring(0,2), endColour.substring(0,2)) 
-			+ calcHex(number, startColour.substring(2,4), endColour.substring(2,4)) 
-			+ calcHex(number, startColour.substring(4,6), endColour.substring(4,6));
-	}
-	
-	function calcHex(number, channelStart_Base16, channelEnd_Base16)
-	{
-		var num = number;
-		if (num < minNum) {
-			num = minNum;
-		}
-		if (num > maxNum) {
-			num = maxNum;
-		} 
-		var numRange = maxNum - minNum;
-		var cStart_Base10 = parseInt(channelStart_Base16, 16);
-		var cEnd_Base10 = parseInt(channelEnd_Base16, 16); 
-		var cPerUnit = (cEnd_Base10 - cStart_Base10)/numRange;
-		var c_Base10 = Math.round(cPerUnit * (num - minNum) + cStart_Base10);
-		return formatHex(c_Base10.toString(16));
-	}
-
-	function formatHex(hex) 
-	{
-		if (hex.length === 1) {
-			return '0' + hex;
-		} else {
-			return hex;
-		}
-	} 
-	
-	function isHexColour(string)
-	{
-		var regex = /^#?[0-9a-fA-F]{6}$/i;
-		return regex.test(string);
-	}
-
-	function getHexColour(string)
-	{
-		if (isHexColour(string)) {
-			return string.substring(string.length - 6, string.length);
-		} else {
-			var name = string.toLowerCase();
-			if (colourNames.hasOwnProperty(name)) {
-				return colourNames[name];
-			}
-			throw new Error(string + ' is not a valid colour.');
-		}
-	}
-	
-	// Extended list of CSS colornames s taken from
-	// http://www.w3.org/TR/css3-color/#svg-color
-	var colourNames = {
-		aliceblue: "F0F8FF",
-		antiquewhite: "FAEBD7",
-		aqua: "00FFFF",
-		aquamarine: "7FFFD4",
-		azure: "F0FFFF",
-		beige: "F5F5DC",
-		bisque: "FFE4C4",
-		black: "000000",
-		blanchedalmond: "FFEBCD",
-		blue: "0000FF",
-		blueviolet: "8A2BE2",
-		brown: "A52A2A",
-		burlywood: "DEB887",
-		cadetblue: "5F9EA0",
-		chartreuse: "7FFF00",
-		chocolate: "D2691E",
-		coral: "FF7F50",
-		cornflowerblue: "6495ED",
-		cornsilk: "FFF8DC",
-		crimson: "DC143C",
-		cyan: "00FFFF",
-		darkblue: "00008B",
-		darkcyan: "008B8B",
-		darkgoldenrod: "B8860B",
-		darkgray: "A9A9A9",
-		darkgreen: "006400",
-		darkgrey: "A9A9A9",
-		darkkhaki: "BDB76B",
-		darkmagenta: "8B008B",
-		darkolivegreen: "556B2F",
-		darkorange: "FF8C00",
-		darkorchid: "9932CC",
-		darkred: "8B0000",
-		darksalmon: "E9967A",
-		darkseagreen: "8FBC8F",
-		darkslateblue: "483D8B",
-		darkslategray: "2F4F4F",
-		darkslategrey: "2F4F4F",
-		darkturquoise: "00CED1",
-		darkviolet: "9400D3",
-		deeppink: "FF1493",
-		deepskyblue: "00BFFF",
-		dimgray: "696969",
-		dimgrey: "696969",
-		dodgerblue: "1E90FF",
-		firebrick: "B22222",
-		floralwhite: "FFFAF0",
-		forestgreen: "228B22",
-		fuchsia: "FF00FF",
-		gainsboro: "DCDCDC",
-		ghostwhite: "F8F8FF",
-		gold: "FFD700",
-		goldenrod: "DAA520",
-		gray: "808080",
-		green: "008000",
-		greenyellow: "ADFF2F",
-		grey: "808080",
-		honeydew: "F0FFF0",
-		hotpink: "FF69B4",
-		indianred: "CD5C5C",
-		indigo: "4B0082",
-		ivory: "FFFFF0",
-		khaki: "F0E68C",
-		lavender: "E6E6FA",
-		lavenderblush: "FFF0F5",
-		lawngreen: "7CFC00",
-		lemonchiffon: "FFFACD",
-		lightblue: "ADD8E6",
-		lightcoral: "F08080",
-		lightcyan: "E0FFFF",
-		lightgoldenrodyellow: "FAFAD2",
-		lightgray: "D3D3D3",
-		lightgreen: "90EE90",
-		lightgrey: "D3D3D3",
-		lightpink: "FFB6C1",
-		lightsalmon: "FFA07A",
-		lightseagreen: "20B2AA",
-		lightskyblue: "87CEFA",
-		lightslategray: "778899",
-		lightslategrey: "778899",
-		lightsteelblue: "B0C4DE",
-		lightyellow: "FFFFE0",
-		lime: "00FF00",
-		limegreen: "32CD32",
-		linen: "FAF0E6",
-		magenta: "FF00FF",
-		maroon: "800000",
-		mediumaquamarine: "66CDAA",
-		mediumblue: "0000CD",
-		mediumorchid: "BA55D3",
-		mediumpurple: "9370DB",
-		mediumseagreen: "3CB371",
-		mediumslateblue: "7B68EE",
-		mediumspringgreen: "00FA9A",
-		mediumturquoise: "48D1CC",
-		mediumvioletred: "C71585",
-		midnightblue: "191970",
-		mintcream: "F5FFFA",
-		mistyrose: "FFE4E1",
-		moccasin: "FFE4B5",
-		navajowhite: "FFDEAD",
-		navy: "000080",
-		oldlace: "FDF5E6",
-		olive: "808000",
-		olivedrab: "6B8E23",
-		orange: "FFA500",
-		orangered: "FF4500",
-		orchid: "DA70D6",
-		palegoldenrod: "EEE8AA",
-		palegreen: "98FB98",
-		paleturquoise: "AFEEEE",
-		palevioletred: "DB7093",
-		papayawhip: "FFEFD5",
-		peachpuff: "FFDAB9",
-		peru: "CD853F",
-		pink: "FFC0CB",
-		plum: "DDA0DD",
-		powderblue: "B0E0E6",
-		purple: "800080",
-		red: "FF0000",
-		rosybrown: "BC8F8F",
-		royalblue: "4169E1",
-		saddlebrown: "8B4513",
-		salmon: "FA8072",
-		sandybrown: "F4A460",
-		seagreen: "2E8B57",
-		seashell: "FFF5EE",
-		sienna: "A0522D",
-		silver: "C0C0C0",
-		skyblue: "87CEEB",
-		slateblue: "6A5ACD",
-		slategray: "708090",
-		slategrey: "708090",
-		snow: "FFFAFA",
-		springgreen: "00FF7F",
-		steelblue: "4682B4",
-		tan: "D2B48C",
-		teal: "008080",
-		thistle: "D8BFD8",
-		tomato: "FF6347",
-		turquoise: "40E0D0",
-		violet: "EE82EE",
-		wheat: "F5DEB3",
-		white: "FFFFFF",
-		whitesmoke: "F5F5F5",
-		yellow: "FFFF00",
-		yellowgreen: "9ACD32"
-	}
-}
-
-if (typeof module !== 'undefined') {
-  module.exports = Rainbow;
-}
-
-},{}],13:[function(require,module,exports){
+},{"./basic":4}],13:[function(require,module,exports){
+arguments[4][1][0].apply(exports,arguments)
+},{"dup":1}],14:[function(require,module,exports){
 //Namespace for combining canvases and creating egg texture.
 let base = require('./patternLayers/base.js')();
 let pepper_plot = require('./patternLayers/pepper-plot.js')();
@@ -3610,9 +3612,10 @@ window.EggTexture = module.exports;
 
 
 
-},{"./patternLayers/base.js":18,"./patternLayers/blotch.js":19,"./patternLayers/pepper-plot.js":20,"./patternLayers/streaks.js":21,"./patternLayers/test.js":22}],14:[function(require,module,exports){
+},{"./patternLayers/base.js":19,"./patternLayers/blotch.js":20,"./patternLayers/pepper-plot.js":21,"./patternLayers/streaks.js":22,"./patternLayers/test.js":23}],15:[function(require,module,exports){
 let Slider = require('./Slider.js');
 let streaks = require('./patternLayers/streaks.js');
+let blotch = require('./patternLayers/blotch.js');
 let EggTexture = require('./EggTexture.js');
 
 module.exports = {
@@ -3665,6 +3668,15 @@ module.exports = {
     },
 
     initBlotchesUI: function(){
+        //1. sliders
+        //1.1 small blotches
+        let small_blotch_range = new Slider("small blotch range",
+            blotch.ui_params.range_min, blotch.ui_params.range_max,
+            blotch.small_blotch_params.variogramParams.range, blotch.small_blotch_params.variogramParams.range_step,
+            blotch.change_small_blotch_range
+        );
+        this.blotches_container.appendChild(small_blotch_range.container);
+
 
     },
 
@@ -3674,6 +3686,7 @@ module.exports = {
 
     init: function(){
         this.initStreaksUI();
+        this.initBlotchesUI();
     },
 
 
@@ -3685,7 +3698,7 @@ module.exports = {
 
 
 
-},{"./EggTexture.js":13,"./Slider.js":16,"./patternLayers/streaks.js":21}],15:[function(require,module,exports){
+},{"./EggTexture.js":14,"./Slider.js":17,"./patternLayers/blotch.js":20,"./patternLayers/streaks.js":22}],16:[function(require,module,exports){
 const EggTexture = require('./EggTexture.js');
 const EggUI = require('./EggUI.js');
 let container;
@@ -3831,7 +3844,7 @@ function loadEgg() {
 init();
 
 window.main = {scene, camera, texture};
-},{"./EggTexture.js":13,"./EggUI.js":14}],16:[function(require,module,exports){
+},{"./EggTexture.js":14,"./EggUI.js":15}],17:[function(require,module,exports){
 class Slider {
 
     constructor(id, min, max, defaultValue, step, eventCallback, interactive = true) {
@@ -3898,7 +3911,7 @@ class Slider {
 }
 
 module.exports  = Slider;
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /**
 * Plan:
 * 1. Create an array of random points (Gaussian?)
@@ -4086,7 +4099,7 @@ const octavePerlin = function(x, y, octaves, persistence) {
     }
 
     return total/maxValue;
-}
+};
 
 const init = function(w, h){
     width = w || width;
@@ -4130,7 +4143,7 @@ let Stats = {
 
 module.exports = Stats;
 
-},{"./utility.js":23,"numbers":1}],18:[function(require,module,exports){
+},{"./utility.js":24,"numbers":2}],19:[function(require,module,exports){
 let utility = require('../utility.js');
 let Stats = require('../Stats.js');
 
@@ -4190,15 +4203,16 @@ return module;
 //
 // module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
 
-},{"../Stats.js":17,"../utility.js":23}],19:[function(require,module,exports){
+},{"../Stats.js":18,"../utility.js":24}],20:[function(require,module,exports){
 let utility = require('../utility.js');
-let rainbow = require('rainbowvis.js');
+let Rainbow = require('Rainbowvis.js');
 let Stats = require('../Stats.js');
 
 module.exports = {
 
 //init-----------------------------------------------------
-CANVAS_ID_1 : "small-blotch",
+CANVAS_ID_SMALL_BLOTCH : "small-blotch",
+CANVAS_ID_BIG_BLOTCH : "big-blotch",
 canvas : undefined,
 width : undefined,
 height : undefined,
@@ -4208,21 +4222,24 @@ ctx : undefined,
 COLOUR_SCHEME_1 : ["#1f302e", "#111414"],
 COLOUR_SCHEME_2 : ["#eaa28b", "#8e4312"],
 
-colourPicker : new rainbow(),
+colourPicker : new Rainbow(),
 
-dataRangeParams : undefined,
-variogramRangeParams : {
-    range: [50, 90],
-    sill: [250, 330],
-    nugget: [80, 90],
-    alpha: 1,
-    variogramModel: "gaussian",
-    newVariogram: true,
-    useAlpha: false,
-    drawRadius: 3,
-    threshold: 1
+
+ui_params: {
+    range_min: 1,
+    range_max: 50,
+    range_step: 0.5,
+    sill_min: 50,
+    sill_max: 200, //cannot be larger than ctx
+    sill_step: 1,
+    nugget_min: 1,
+    nugget_max: 50,
+    variogram_models: ['gaussian', 'exponential', 'spherical'],
+    draw_radius_min: 1,
+    draw_radius_max: 5,
+    threshold_min: 10,
+    threshold_max: 120
 },
-
 
 
 //v1 0 big blotches
@@ -4238,8 +4255,41 @@ variogramRangeParams : {
 //     threshold: 80
 // };
 
-variogramParams : {
-    range: 10,
+
+
+small_blotch_params: {
+
+    //depends on the canvas size -> defined in init()
+    dataRangeParams : undefined,
+    dataParams : undefined,
+    data: undefined, //3D data to train variogram model.
+    ctx: undefined,
+
+    variogramParams : {
+        range: 10,
+        sill: 250,
+        nugget: 10,
+        alpha: 1,
+        variogramModel: "gaussian",
+        newVariogram: true,
+        useAlpha: false,
+        drawRadius: 2,
+        threshold: 80
+    },
+    testData: undefined,
+
+
+},
+
+big_blotch_params: {
+    //depends on the canvas size -> defined in init()
+    dataRangeParams : undefined,
+    dataParams : undefined,
+    data: undefined, //3D data to train variogram
+    ctx: undefined,
+
+    variogramParams : {
+    range: 20,
     sill: 250,
     nugget: 10,
     alpha: 1,
@@ -4248,24 +4298,34 @@ variogramParams : {
     useAlpha: false,
     drawRadius: 2,
     threshold: 80
+    },
+
+    testData: undefined,
 },
 
-dataParams : undefined,
-// module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
+
+change_small_blotch_range : function(newRange, interactive = false, newVariogram = false){
+    blotch.small_blotch_params.variogramParams.range = newRange;
+    blotch.small_blotch_params.variogramParams.newVariogram = newVariogram;
+    if(interactive){
+        blotch.draw_small_blotch();
+    }
+},
+
 
 init: function(){
-    this.CANVAS_ID_1 = "small-blotch";
-    this.canvas = document.getElementById(this.CANVAS_ID_1);
+    this.CANVAS_ID_SMALL_BLOTCH = "small-blotch";
+    this.canvas = document.getElementById(this.CANVAS_ID_SMALL_BLOTCH);
     this.width = this.canvas.clientWidth;
     this.height = this.canvas.clientHeight;
-    this.ctx = this.canvas.getContext("2d");
+    this.small_blotch_params.ctx = this.canvas.getContext("2d");
 
     this.colourScheme = this.COLOUR_SCHEME_1;
     this.colourPicker.setNumberRange(-100, 100);
     this.colourPicker.setSpectrum(this.colourScheme[0], this.colourScheme[1]);
 
 
-    this.dataRangeParams = {
+    this.small_blotch_params.dataRangeParams = {
         muX: [this.width / 8, this.width / 1.42],
         muY: [this.height / 8, this.height / 1.42],
         varianceX: [this.width / 7.3, this.width / 7.8],
@@ -4273,35 +4333,51 @@ init: function(){
         numPoints: [140, 180]
     };
 
-    this.variogramRangeParams = {
-        range: [50, 90],
-        sill: [250, 330],
-        nugget: [80, 90],
-        alpha: 1,
-        variogramModel: "gaussian",
-        newVariogram: true,
-        useAlpha: false,
-        drawRadius: 3,
-        threshold: 1
+    this.CANVAS_ID_BIG_BLOTCH = "big-blotch";
+    this.big_blotch_params.ctx = document.getElementById(this.CANVAS_ID_BIG_BLOTCH).getContext("2d");
+
+    this.big_blotch_params.dataRangeParams = {
+        muX: [this.width * 0.4, this.width * 0.6],
+        muY: [this.height * 0.2, this.height * 0.4],
+        varianceX: [this.width * 0.4 * 0.2 , this.width * 0.5],
+        varianceY: [this.height * 0.2 , this.height * 0.35],
+        numPoints: [140, 180]
     };
 
-    this.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.dataRangeParams);
+
+    this.small_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.small_blotch_params.dataRangeParams);
+    this.small_blotch_params.data = Stats.generateData(this.small_blotch_params.dataParams);
+
+    // this.big_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.big_blotch_params.dataRangeParams);
+    // this.big_blotch_params.data = Stats.generateData(this.big_blotch_params.dataParams);
+
 
 },
-
 
 
 draw_small_blotch : function() {
-    blotch.ctx.clearRect(0,0,this.width, this.height);
-    let data = Stats.generateData(this.dataParams);
-    Stats.plotVariogram(this.ctx, this.width, this.height, data, this.variogramParams, this.colourPicker);
+    blotch.small_blotch_params.ctx.clearRect(0,0, blotch.width, blotch.height);
+
+    if(blotch.small_blotch_params.variogramParams.newVariogram){
+        blotch.small_blotch_params.data = Stats.generateData(blotch.small_blotch_params.dataParams);
+    }
+    Stats.plotVariogram(blotch.small_blotch_params.ctx, blotch.width, blotch.height, blotch.small_blotch_params.data, blotch.small_blotch_params.variogramParams, blotch.colourPicker);
 },
 
+draw_big_blotch: function(){
+    blotch.big_blotch_params.ctx.clearRect(0,0, blotch.width, blotch.height);
+
+    if(blotch.big_blotch_params.variogramParams.newVariogram){
+        blotch.big_blotch_params.data = Stats.generateData(blotch.big_blotch_params.dataParams);
+    }
+    Stats.plotVariogram(blotch.big_blotch_params.ctx, blotch.width, blotch.height, blotch.big_blotch_params.data, blotch.big_blotch_params.variogramParams, blotch.colourPicker);
+},
 
 };
+
 module.exports.init();
 window.blotch = module.exports;
-},{"../Stats.js":17,"../utility.js":23,"rainbowvis.js":12}],20:[function(require,module,exports){
+},{"../Stats.js":18,"../utility.js":24,"Rainbowvis.js":1}],21:[function(require,module,exports){
 let rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');
 module.exports = function(){
@@ -4342,7 +4418,7 @@ window.draw = module.draw;
 
 return module;
 };
-},{"../Stats.js":17,"rainbowvis.js":12}],21:[function(require,module,exports){
+},{"../Stats.js":18,"rainbowvis.js":13}],22:[function(require,module,exports){
 let Rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');
 let numbers = require('numbers');
@@ -4465,8 +4541,8 @@ scale_shorthand_thickness : function(scalar, interactive = false){
 },
 
 scale_shorthand_periods : function(scalar, interactive = false){
-    //1. scale octaves.
 
+    //create new octaves as we want to maintain the base octave's ratio + less sliders.
     let octave_1 = {
         period_x: streaks.shorthand_params.octave_1.period_x * scalar,
         period_y: streaks.shorthand_params.octave_1.period_y * scalar
@@ -4525,9 +4601,9 @@ drawStreaks : function(ctx, octave_1, octave_2, thickness=10, seed=Math.random()
                 ctx.arc(x,y,1,0, Math.PI * 2);
                 ctx.fill();
             }
-        }
-}
 
+        }
+    }
 },
 //used for splitting perlin noise into separate streaks.
 drawMask : function(ctx, width, height){
@@ -4550,14 +4626,14 @@ drawShorthand : function(newSeed = false, octave_1 = this.shorthand_params.octav
     this.ctx_shorthand.clearRect(0,0, this.width_shorthand, this.height_shorthand);
     if(newSeed) this.shorthand_params.seed = Math.random();
     this.drawStreaks(this.ctx_shorthand, octave_1, octave_2, this.shorthand_params.thickness);
-    this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
+    // this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
 
 },
 drawScrawl : function(newSeed = false, octave_1 = this.scrawl_params.octave_1, octave_2 = this.scrawl_params.octave_2){
     this.ctx_scrawl.clearRect(0,0, this.width_scrawl, this.height_scrawl);
     if(newSeed) this.scrawl_params.seed = Math.random();
     this.drawStreaks(this.ctx_scrawl, octave_1, octave_2, this.scrawl_params.thickness, this.scrawl_params.seed);
-    this.drawMask(this.ctx_scrawl, this.width_scrawl, this.height_scrawl);
+    // this.drawMask(this.ctx_scrawl, this.width_scrawl, this.height_scrawl);
 },
 
 draw : function(){
@@ -4571,7 +4647,7 @@ module.exports.init();
 
 window.streaks = module.exports;
 
-},{"../Stats.js":17,"numbers":1,"rainbowvis.js":12}],22:[function(require,module,exports){
+},{"../Stats.js":18,"numbers":2,"rainbowvis.js":13}],23:[function(require,module,exports){
 
 module.exports = function(){
 module = {};
@@ -4613,7 +4689,7 @@ module.draw = function() {
 
 return module;
 };
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 let numbers = require('numbers');
 
 const getNumberInRange = function(tuple) {
@@ -4644,4 +4720,4 @@ module.exports = {
     getNumberInRange: getNumberInRange,
     mapFuncToObjProps: mapFuncToObjProps
 };
-},{"numbers":1}]},{},[15]);
+},{"numbers":2}]},{},[16]);

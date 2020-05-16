@@ -1,5 +1,6 @@
 let Slider = require('./Slider.js');
 let streaks = require('./patternLayers/streaks.js');
+let blotch = require('./patternLayers/blotch.js');
 let EggTexture = require('./EggTexture.js');
 
 module.exports = {
@@ -52,6 +53,15 @@ module.exports = {
     },
 
     initBlotchesUI: function(){
+        //1. sliders
+        //1.1 small blotches
+        let small_blotch_range = new Slider("small blotch range",
+            blotch.ui_params.range_min, blotch.ui_params.range_max,
+            blotch.small_blotch_params.variogramParams.range, blotch.small_blotch_params.variogramParams.range_step,
+            blotch.change_small_blotch_range
+        );
+        this.blotches_container.appendChild(small_blotch_range.container);
+
 
     },
 
@@ -61,6 +71,7 @@ module.exports = {
 
     init: function(){
         this.initStreaksUI();
+        this.initBlotchesUI();
     },
 
 
