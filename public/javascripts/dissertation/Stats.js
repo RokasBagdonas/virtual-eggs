@@ -79,12 +79,14 @@ const setRange = function (newRange){
 /**
  * Generates random values (heights) at random locations in a 2D area.
  * //1.
- * @param customParams {muX, muY, varianceX, varianceY, numPoints}
+ * @param customParams {muX, muY, varianceX, varianceY, numPoints, height_mean, height_variance}
  */
 function generateData(customParams = {}) {
+    let height_mean = customParams.value_mean || MAX_HEIGHT / 2;
+    let height_variance = customParams.value_variance || MAX_HEIGHT / 4;
     const x = numbers.random.distribution.normal(customParams.numPoints, customParams.muX, customParams.varianceX);
     const y = numbers.random.distribution.normal(customParams.numPoints, customParams.muY, customParams.varianceY);
-    const t = numbers.random.distribution.normal(customParams.numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
+    const t = numbers.random.distribution.normal(customParams.numPoints, height_mean, height_variance);
     return {x,y,t};
 }
 

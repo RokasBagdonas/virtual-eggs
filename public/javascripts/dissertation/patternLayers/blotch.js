@@ -7,6 +7,8 @@ module.exports = {
 //init-----------------------------------------------------
 CANVAS_ID_SMALL_BLOTCH : "small-blotch",
 CANVAS_ID_BIG_BLOTCH : "big-blotch",
+CANVAS_ID_BLACK_CAP : "black-cap",
+
 canvas : undefined,
 width : undefined,
 height : undefined,
@@ -49,6 +51,27 @@ ui_params: {
 //     threshold: 80
 // };
 
+black_cap_params: {
+    dataRangeParams: undefined,
+    dataParams : undefined,
+    data : undefined,
+    ctx : undefined,
+
+    variogramParams: {
+        range: 20,
+        sill: 230,
+        nugget: 10,
+        alpha: 1,
+        variogramModel: "gaussian",
+        newVariogram: true,
+        useAlpha: false,
+        drawRadius: 3,
+        threshold: 80
+    },
+
+    testData: undefined
+},
+
 
 
 small_blotch_params: {
@@ -83,9 +106,9 @@ big_blotch_params: {
     ctx: undefined,
 
     variogramParams : {
-    range: 20,
+    range: 100,
     sill: 250,
-    nugget: 10,
+    nugget: 5,
     alpha: 1,
     variogramModel: "gaussian",
     newVariogram: true,
@@ -108,8 +131,9 @@ change_small_blotch_range : function(newRange, interactive = false, newVariogram
 
 
 init: function(){
-    this.CANVAS_ID_SMALL_BLOTCH = "small-blotch";
+    // this.CANVAS_ID_SMALL_BLOTCH = "small-blotch";
     this.canvas = document.getElementById(this.CANVAS_ID_SMALL_BLOTCH);
+
     this.width = this.canvas.clientWidth;
     this.height = this.canvas.clientHeight;
     this.small_blotch_params.ctx = this.canvas.getContext("2d");
@@ -119,6 +143,7 @@ init: function(){
     this.colourPicker.setSpectrum(this.colourScheme[0], this.colourScheme[1]);
 
 
+    // this.canvas = document.getElementById(this.CANVAS_ID_SMALL_BLOTCH);
     this.small_blotch_params.dataRangeParams = {
         muX: [this.width / 8, this.width / 1.42],
         muY: [this.height / 8, this.height / 1.42],
@@ -127,9 +152,8 @@ init: function(){
         numPoints: [140, 180]
     };
 
-    this.CANVAS_ID_BIG_BLOTCH = "big-blotch";
+    // this.CANVAS_ID_BIG_BLOTCH = "big-blotch";
     this.big_blotch_params.ctx = document.getElementById(this.CANVAS_ID_BIG_BLOTCH).getContext("2d");
-
     this.big_blotch_params.dataRangeParams = {
         muX: [this.width * 0.4, this.width * 0.6],
         muY: [this.height * 0.2, this.height * 0.4],
@@ -138,12 +162,32 @@ init: function(){
         numPoints: [140, 180]
     };
 
+    this.black_cap_params.ctx = document.getElementById(this.CANVAS_ID_BLACK_CAP).getContext("2d");
+    // this.black_cap_params.dataRangeParams = {
+    //     muX: [this.width * 0.45, this.width * 0.55],
+    //     muY: [this.height * 0.1, this.height * 0.31],
+    //     varianceX: [this.width * 0.45 * 0.45 , this.width * 0.45 * 0.65],
+    //     varianceY: [this.height * 0.1 * 0.6, this.height * 0.31 * 0.78],
+    //     numPoints: [140, 180]
+    // };
+
+    this.black_cap_params.dataParams = {
+            muX: this.width / 2,
+            muY: this.height * 0.3,
+            varianceX: this.width * 0.25,
+            varianceY: this.height * 0.01,
+            numPoints: 180
+        };
+
 
     this.small_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.small_blotch_params.dataRangeParams);
     this.small_blotch_params.data = Stats.generateData(this.small_blotch_params.dataParams);
 
-    // this.big_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.big_blotch_params.dataRangeParams);
-    // this.big_blotch_params.data = Stats.generateData(this.big_blotch_params.dataParams);
+    this.big_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.big_blotch_params.dataRangeParams);
+    this.big_blotch_params.data = Stats.generateData(this.big_blotch_params.dataParams);
+
+    // this.black_cap_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.black_cap_params.dataRangeParams);
+    this.black_cap_params.data = Stats.generateData(this.black_cap_params.dataParams);
 
 
 },
@@ -165,6 +209,15 @@ draw_big_blotch: function(){
         blotch.big_blotch_params.data = Stats.generateData(blotch.big_blotch_params.dataParams);
     }
     Stats.plotVariogram(blotch.big_blotch_params.ctx, blotch.width, blotch.height, blotch.big_blotch_params.data, blotch.big_blotch_params.variogramParams, blotch.colourPicker);
+},
+
+draw_cap: function(){
+    blotch.black_cap_params.ctx.clearRect(0,0, blotch.width, blotch.height);
+
+    if(blotch.black_cap_params.variogramParams.newVariogram){
+        blotch.black_cap_params.data = Stats.generateData(blotch.black_cap_params.dataParams);
+    }
+    Stats.plotVariogram(blotch.black_cap_params.ctx, blotch.width, blotch.height, blotch.black_cap_params.data, blotch.black_cap_params.variogramParams, blotch.colourPicker);
 },
 
 };

@@ -3545,7 +3545,7 @@ arguments[4][1][0].apply(exports,arguments)
 },{"dup":1}],14:[function(require,module,exports){
 //Namespace for combining canvases and creating egg texture.
 let base = require('./patternLayers/base.js')();
-let pepper_plot = require('./patternLayers/pepper-plot.js')();
+let pepper_plot = require('./patternLayers/pepper-plot.js');
 let blotch = require('./patternLayers/blotch.js');
 let streaks = require('./patternLayers/streaks.js');
 let test = require('./patternLayers/test.js')();
@@ -3560,9 +3560,13 @@ module.exports = {
 
     drawAllTextures : function(){
         base.draw();
-        pepper_plot.draw();
-        blotch.draw_small_blotch();
+        // pepper_plot.draw();
+        pepper_plot.draw_intial();
+        // blotch.draw_small_blotch();
+        // blotch.draw_big_blotch();
+        blotch.draw_cap();
         streaks.draw();
+
     },
 
     init: function(){
@@ -3585,7 +3589,7 @@ module.exports = {
         this.texture.updateTexture = true;
 
 
-        //2. retrieve all texture layers. TODO: in what sequence are they retrieved?
+        //2. retrieve all texture layers.
         let canvases = document.getElementsByClassName("texture");
         //3. draw each layer onto the final canvas
         for(const canvas of canvases){
@@ -3993,12 +3997,14 @@ const setRange = function (newRange){
 /**
  * Generates random values (heights) at random locations in a 2D area.
  * //1.
- * @param customParams {muX, muY, varianceX, varianceY, numPoints}
+ * @param customParams {muX, muY, varianceX, varianceY, numPoints, height_mean, height_variance}
  */
 function generateData(customParams = {}) {
+    let height_mean = customParams.value_mean || MAX_HEIGHT / 2;
+    let height_variance = customParams.value_variance || MAX_HEIGHT / 4;
     const x = numbers.random.distribution.normal(customParams.numPoints, customParams.muX, customParams.varianceX);
     const y = numbers.random.distribution.normal(customParams.numPoints, customParams.muY, customParams.varianceY);
-    const t = numbers.random.distribution.normal(customParams.numPoints, MAX_HEIGHT / 2, MAX_HEIGHT / 4);
+    const t = numbers.random.distribution.normal(customParams.numPoints, height_mean, height_variance);
     return {x,y,t};
 }
 
@@ -4213,6 +4219,8 @@ module.exports = {
 //init-----------------------------------------------------
 CANVAS_ID_SMALL_BLOTCH : "small-blotch",
 CANVAS_ID_BIG_BLOTCH : "big-blotch",
+CANVAS_ID_BLACK_CAP : "black-cap",
+
 canvas : undefined,
 width : undefined,
 height : undefined,
@@ -4255,6 +4263,27 @@ ui_params: {
 //     threshold: 80
 // };
 
+black_cap_params: {
+    dataRangeParams: undefined,
+    dataParams : undefined,
+    data : undefined,
+    ctx : undefined,
+
+    variogramParams: {
+        range: 20,
+        sill: 230,
+        nugget: 10,
+        alpha: 1,
+        variogramModel: "gaussian",
+        newVariogram: true,
+        useAlpha: false,
+        drawRadius: 3,
+        threshold: 80
+    },
+
+    testData: undefined
+},
+
 
 
 small_blotch_params: {
@@ -4289,9 +4318,9 @@ big_blotch_params: {
     ctx: undefined,
 
     variogramParams : {
-    range: 20,
+    range: 100,
     sill: 250,
-    nugget: 10,
+    nugget: 5,
     alpha: 1,
     variogramModel: "gaussian",
     newVariogram: true,
@@ -4314,8 +4343,9 @@ change_small_blotch_range : function(newRange, interactive = false, newVariogram
 
 
 init: function(){
-    this.CANVAS_ID_SMALL_BLOTCH = "small-blotch";
+    // this.CANVAS_ID_SMALL_BLOTCH = "small-blotch";
     this.canvas = document.getElementById(this.CANVAS_ID_SMALL_BLOTCH);
+
     this.width = this.canvas.clientWidth;
     this.height = this.canvas.clientHeight;
     this.small_blotch_params.ctx = this.canvas.getContext("2d");
@@ -4325,6 +4355,7 @@ init: function(){
     this.colourPicker.setSpectrum(this.colourScheme[0], this.colourScheme[1]);
 
 
+    // this.canvas = document.getElementById(this.CANVAS_ID_SMALL_BLOTCH);
     this.small_blotch_params.dataRangeParams = {
         muX: [this.width / 8, this.width / 1.42],
         muY: [this.height / 8, this.height / 1.42],
@@ -4333,9 +4364,8 @@ init: function(){
         numPoints: [140, 180]
     };
 
-    this.CANVAS_ID_BIG_BLOTCH = "big-blotch";
+    // this.CANVAS_ID_BIG_BLOTCH = "big-blotch";
     this.big_blotch_params.ctx = document.getElementById(this.CANVAS_ID_BIG_BLOTCH).getContext("2d");
-
     this.big_blotch_params.dataRangeParams = {
         muX: [this.width * 0.4, this.width * 0.6],
         muY: [this.height * 0.2, this.height * 0.4],
@@ -4344,12 +4374,32 @@ init: function(){
         numPoints: [140, 180]
     };
 
+    this.black_cap_params.ctx = document.getElementById(this.CANVAS_ID_BLACK_CAP).getContext("2d");
+    // this.black_cap_params.dataRangeParams = {
+    //     muX: [this.width * 0.45, this.width * 0.55],
+    //     muY: [this.height * 0.1, this.height * 0.31],
+    //     varianceX: [this.width * 0.45 * 0.45 , this.width * 0.45 * 0.65],
+    //     varianceY: [this.height * 0.1 * 0.6, this.height * 0.31 * 0.78],
+    //     numPoints: [140, 180]
+    // };
+
+    this.black_cap_params.dataParams = {
+            muX: this.width / 2,
+            muY: this.height * 0.3,
+            varianceX: this.width * 0.25,
+            varianceY: this.height * 0.01,
+            numPoints: 180
+        };
+
 
     this.small_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.small_blotch_params.dataRangeParams);
     this.small_blotch_params.data = Stats.generateData(this.small_blotch_params.dataParams);
 
-    // this.big_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.big_blotch_params.dataRangeParams);
-    // this.big_blotch_params.data = Stats.generateData(this.big_blotch_params.dataParams);
+    this.big_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.big_blotch_params.dataRangeParams);
+    this.big_blotch_params.data = Stats.generateData(this.big_blotch_params.dataParams);
+
+    // this.black_cap_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.black_cap_params.dataRangeParams);
+    this.black_cap_params.data = Stats.generateData(this.black_cap_params.dataParams);
 
 
 },
@@ -4373,52 +4423,99 @@ draw_big_blotch: function(){
     Stats.plotVariogram(blotch.big_blotch_params.ctx, blotch.width, blotch.height, blotch.big_blotch_params.data, blotch.big_blotch_params.variogramParams, blotch.colourPicker);
 },
 
+draw_cap: function(){
+    blotch.black_cap_params.ctx.clearRect(0,0, blotch.width, blotch.height);
+
+    if(blotch.black_cap_params.variogramParams.newVariogram){
+        blotch.black_cap_params.data = Stats.generateData(blotch.black_cap_params.dataParams);
+    }
+    Stats.plotVariogram(blotch.black_cap_params.ctx, blotch.width, blotch.height, blotch.black_cap_params.data, blotch.black_cap_params.variogramParams, blotch.colourPicker);
+},
+
 };
 
 module.exports.init();
 window.blotch = module.exports;
 },{"../Stats.js":18,"../utility.js":24,"Rainbowvis.js":1}],21:[function(require,module,exports){
-let rainbow = require('rainbowvis.js');
+let Rainbow = require('Rainbowvis.js');
 let Stats = require('../Stats.js');
-module.exports = function(){
-let module = {};
-console.log("pepper plot init");
+let numbers = require('numbers');
+module.exports = {
 //init -----------------------------------------------------
-const CANVAS_ID = "pepper-plot";
-let canvas = document.getElementById(CANVAS_ID);
-let width = canvas.clientWidth;
-let height = canvas.clientHeight;
-let ctx = canvas.getContext("2d");
+CANVAS_ID : "pepper-plot",
+canvas : undefined,
+width : undefined,
+height : undefined,
+ctx : undefined,
 
 
-module.parameters = {
-    numPoints: 160,
-    muX: width / 2,
-    muY: height / 2,
-    varianceX: width / 5,
-    varianceY: height / 4
+parameters : undefined,
+
+colourScheme : ['#4b555e', '#222426'],
+valueRange_layer1: {min: 20, max: 80, alpha_min: 0.1, alpha_max: 0.8},
+valueRange_layer2: {min: 70, max: 100, alpha_min: 0.5, alpha_max: 1},
+colourPicker : new Rainbow(),
+
+init: function(){
+    this.canvas = document.getElementById(this.CANVAS_ID);
+    this.width = this.canvas.clientWidth;
+    this.height = this.canvas.clientHeight;
+    this.ctx = this.canvas.getContext("2d");
+
+
+    this.parameters = {
+        numPoints: undefined, //to be defined when generating points.
+        numPoints_min: 160,
+        numPoints_max: 250,
+        muX: this.width / 2,
+        muY: this.height / 2,
+        varianceX: this.width / 2,
+        varianceY: this.height / 2,
+        value_mean: 75, //radius
+        value_variance: 15,
+        alpha_min: 0.2,
+        alpha_max: 0.8,
+        radius_min: 1.2,
+        radius_max: 3.5
+    };
+
+
+
+    this.colourScheme = ['#4b555e', '#222426'];
+    this.colourPicker.setNumberRange(0, 100);
+    this.colourPicker.setSpectrum(this.colourScheme[0], this.colourScheme[1]);
+},
+
+draw : function(){
+    Stats.plotPoints(this.ctx, Stats.generateData(this.parameters), this.colourPicker );
+},
+
+
+draw_intial: function(){
+    //1. generate 3D data
+    //1.1
+    let numPoints = Math.round(numbers.random.sample(pepper_plot.parameters.numPoints_min, pepper_plot.parameters.numPoints_max, 1)[0]);
+    pepper_plot.parameters.numPoints = numPoints;
+    let data = Stats.generateData(pepper_plot.parameters);
+    //2. generate alpha values for each data point.
+    let alpha_values = numbers.random.sample(pepper_plot.parameters.alpha_min, pepper_plot.parameters.alpha_max, numPoints);
+
+    let colour_intensities = numbers.random.sample(pepper_plot.parameters.radius_min, pepper_plot.parameters.radius_max, numPoints);
+
+    for(let i = 0; i < numPoints; i++){
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "#" + pepper_plot.colourPicker.colourAt(data.t[i]);
+        this.ctx.globalAlpha = alpha_values[i];
+        this.ctx.arc(data.x[i], data.y[i], colour_intensities[i], 0, Math.PI * 2);
+        this.ctx.fill();
+    }
+}
+    
 };
 
-
-
-module.colourScheme = ['#4b555e', '#222426'];
-
-let colourPicker = new rainbow();
-colourPicker.setNumberRange(0, 100);
-colourPicker.setSpectrum(module.colourScheme[0], module.colourScheme[1]);
-
-
-module.draw = function(){
-    Stats.plotPoints(ctx, Stats.generateData(module.parameters), colourPicker );
-};
-window.draw = module.draw;
-
-
-
-
-return module;
-};
-},{"../Stats.js":18,"rainbowvis.js":13}],22:[function(require,module,exports){
+module.exports.init();
+window.pepper_plot = module.exports;
+},{"../Stats.js":18,"Rainbowvis.js":1,"numbers":2}],22:[function(require,module,exports){
 let Rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');
 let numbers = require('numbers');
