@@ -58,9 +58,9 @@ black_cap_params: {
     ctx : undefined,
 
     variogramParams: {
-        range: 20,
+        range: 9,
         sill: 230,
-        nugget: 10,
+        nugget: 2,
         alpha: 1,
         variogramModel: "gaussian",
         newVariogram: true,
@@ -68,6 +68,8 @@ black_cap_params: {
         drawRadius: 3,
         threshold: 80
     },
+
+    ui_params: undefined,
 
     testData: undefined
 },
@@ -78,14 +80,14 @@ small_blotch_params: {
 
     //depends on the canvas size -> defined in init()
     dataRangeParams : undefined,
-    dataParams : undefined,
+    // dataParams : undefined,
     data: undefined, //3D data to train variogram model.
     ctx: undefined,
 
     variogramParams : {
         range: 10,
         sill: 250,
-        nugget: 10,
+        nugget: 1,
         alpha: 1,
         variogramModel: "gaussian",
         newVariogram: true,
@@ -95,6 +97,22 @@ small_blotch_params: {
     },
     testData: undefined,
 
+    dataParamsInternal: undefined,
+
+    set dataParams(newData) {
+        this.dataParamsInternal = newData;
+        this.listener1(newData);
+    },
+
+    get dataParams() {
+        return this.dataParamsInternal;
+    },
+
+    listener1: function(val) {},
+
+    registerListener: function(listener){
+        this.listener1 = listener;
+    }
 
 },
 
@@ -121,11 +139,29 @@ big_blotch_params: {
 },
 
 
-change_small_blotch_range : function(newRange, interactive = false, newVariogram = false){
+change_small_blotch_range : function(newRange, interactive = false, newVariogram = true){
     blotch.small_blotch_params.variogramParams.range = newRange;
     blotch.small_blotch_params.variogramParams.newVariogram = newVariogram;
     if(interactive){
         blotch.draw_small_blotch();
+    }
+},
+
+
+change_black_cap_range : function(newRange, interactive = false, newVariogram = false){
+    blotch.black_cap_params.variogramParams.range = newRange;
+    blotch.black_cap_params.variogramParams.newVariogram = newVariogram;
+    if(interactive){
+        blotch.draw_black_cap();
+    }
+},
+
+change_black_cap_location : function(newMuY, interactive = false, newVariogram = true){
+    blotch.black_cap_params.dataParams.muY = newMuY;
+    console.log(blotch.black_cap_params.variogramParams.muY);
+    blotch.black_cap_params.variogramParams.newVariogram = newVariogram;
+    if(interactive){
+        blotch.draw_black_cap();
     }
 },
 
@@ -143,14 +179,20 @@ init: function(){
     this.colourPicker.setSpectrum(this.colourScheme[0], this.colourScheme[1]);
 
 
-    // this.canvas = document.getElementById(this.CANVAS_ID_SMALL_BLOTCH);
     this.small_blotch_params.dataRangeParams = {
-        muX: [this.width / 8, this.width / 1.42],
+        muX: [this.width * 0.4, this.width * 0.6],
         muY: [this.height / 8, this.height / 1.42],
-        varianceX: [this.width / 7.3, this.width / 7.8],
+        varianceX: [this.width * 0.4 * 0.5, this.width * 0.6 * 0.5],
         varianceY: [this.height / 7.3, this.height / 8],
         numPoints: [140, 180]
     };
+
+    this.small_blotch_params.registerListener(function(val) {
+        console.log("--- DataParams Changed ---");
+        console.log(val);
+    });
+
+
 
     // this.CANVAS_ID_BIG_BLOTCH = "big-blotch";
     this.big_blotch_params.ctx = document.getElementById(this.CANVAS_ID_BIG_BLOTCH).getContext("2d");
@@ -163,13 +205,6 @@ init: function(){
     };
 
     this.black_cap_params.ctx = document.getElementById(this.CANVAS_ID_BLACK_CAP).getContext("2d");
-    // this.black_cap_params.dataRangeParams = {
-    //     muX: [this.width * 0.45, this.width * 0.55],
-    //     muY: [this.height * 0.1, this.height * 0.31],
-    //     varianceX: [this.width * 0.45 * 0.45 , this.width * 0.45 * 0.65],
-    //     varianceY: [this.height * 0.1 * 0.6, this.height * 0.31 * 0.78],
-    //     numPoints: [140, 180]
-    // };
 
     this.black_cap_params.dataParams = {
             muX: this.width / 2,
@@ -178,6 +213,12 @@ init: function(){
             varianceY: this.height * 0.01,
             numPoints: 180
         };
+
+    this.black_cap_params.ui_params = {
+        muY_min:   this.height * 0.2,
+        muY_max: this.height * 0.6,
+        muY_step: Math.abs(this.height * 0.05),
+    };
 
 
     this.small_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.small_blotch_params.dataRangeParams);
@@ -211,7 +252,7 @@ draw_big_blotch: function(){
     Stats.plotVariogram(blotch.big_blotch_params.ctx, blotch.width, blotch.height, blotch.big_blotch_params.data, blotch.big_blotch_params.variogramParams, blotch.colourPicker);
 },
 
-draw_cap: function(){
+draw_black_cap: function(){
     blotch.black_cap_params.ctx.clearRect(0,0, blotch.width, blotch.height);
 
     if(blotch.black_cap_params.variogramParams.newVariogram){

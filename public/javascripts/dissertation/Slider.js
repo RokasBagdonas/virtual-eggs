@@ -32,6 +32,7 @@ class Slider {
         this.checkbox = document.createElement("input");
         this.checkbox.setAttribute("type","checkbox");
         this.checkbox.setAttribute("id", `${id}-chbox`);
+        this.checkbox.setAttribute("checked", "true");
         let checkboxLabel = document.createElement("label");
         checkboxLabel.setAttribute("for", `${id}-chbox`);
         checkboxLabel.innerHTML = "interactive?";

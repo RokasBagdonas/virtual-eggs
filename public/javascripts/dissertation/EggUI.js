@@ -54,13 +54,28 @@ module.exports = {
 
     initBlotchesUI: function(){
         //1. sliders
-        //1.1 small blotches
+        //small blotches ------------------------
         let small_blotch_range = new Slider("small blotch range",
             blotch.ui_params.range_min, blotch.ui_params.range_max,
             blotch.small_blotch_params.variogramParams.range, blotch.small_blotch_params.variogramParams.range_step,
             blotch.change_small_blotch_range
         );
         this.blotches_container.appendChild(small_blotch_range.container);
+
+        //black cap -----------------------------
+        let black_cap_range = new Slider("black cap range",
+            blotch.ui_params.range_min, blotch.ui_params.range_max,
+            blotch.black_cap_params.variogramParams.range, blotch.black_cap_params.variogramParams.range_step,
+            blotch.change_black_cap_range
+        );
+        this.blotches_container.appendChild(black_cap_range.container);
+
+        let black_cap_muY = new Slider("black cap location",
+            blotch.black_cap_params.ui_params.muY_min, blotch.black_cap_params.ui_params.muY_max,
+            blotch.black_cap_params.dataParams.muY, blotch.black_cap_params.ui_params.muY_step,
+            blotch.change_black_cap_location
+        );
+        this.blotches_container.appendChild(black_cap_muY.container);
 
 
     },

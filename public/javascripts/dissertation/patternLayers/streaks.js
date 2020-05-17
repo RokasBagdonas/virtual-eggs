@@ -205,14 +205,14 @@ drawShorthand : function(newSeed = false, octave_1 = this.shorthand_params.octav
     this.ctx_shorthand.clearRect(0,0, this.width_shorthand, this.height_shorthand);
     if(newSeed) this.shorthand_params.seed = Math.random();
     this.drawStreaks(this.ctx_shorthand, octave_1, octave_2, this.shorthand_params.thickness);
-    // this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
+    this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
 
 },
 drawScrawl : function(newSeed = false, octave_1 = this.scrawl_params.octave_1, octave_2 = this.scrawl_params.octave_2){
     this.ctx_scrawl.clearRect(0,0, this.width_scrawl, this.height_scrawl);
     if(newSeed) this.scrawl_params.seed = Math.random();
     this.drawStreaks(this.ctx_scrawl, octave_1, octave_2, this.scrawl_params.thickness, this.scrawl_params.seed);
-    // this.drawMask(this.ctx_scrawl, this.width_scrawl, this.height_scrawl);
+    this.drawMask(this.ctx_scrawl, this.width_scrawl, this.height_scrawl);
 },
 
 draw : function(){

@@ -17,9 +17,9 @@ module.exports = {
         base.draw();
         // pepper_plot.draw();
         pepper_plot.draw_intial();
-        // blotch.draw_small_blotch();
+        blotch.draw_small_blotch();
         // blotch.draw_big_blotch();
-        blotch.draw_cap();
+        blotch.draw_black_cap();
         streaks.draw();
 
     },
