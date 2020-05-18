@@ -3966,6 +3966,17 @@ let defaultParams = {
 
 let variogram;
 
+let variograms = {
+    "small_blotch": undefined,
+    "big_blotch": undefined,
+    "black_cap": undefined
+};
+//
+// let variogram_small_blotch;
+// let variogram_big_blotch;
+// let variogram_black_cap;
+
+
 let variogramModel = "gaussian";
 
 const MIN_MU = width / 10;
@@ -4061,28 +4072,32 @@ const plotPoints = function(ctx, data, colourPicker = colourPicker){
  * @param {Rainbow} colourScheme
  * @param {Object} data 3D data: X, Y, Height
  */
-const plotVariogram = function(ctx, width, height, data, params, colourScheme){
+const plotVariogram = function(variogramName, ctx, width, height, data, params, colourScheme){
+
+    let _variogram = variograms[variogramName] || variogram;
     if(ctx === undefined){
         console.error("plotVariogram: canvas is not provided");
         return;
     }
     variogramModel = params.variogramModel || variogramModel;
     if (params.newVariogram)
-        variogram = kriging.train(data.t, data.x, data.y, variogramModel,
+        variograms[variogramName] = kriging.train(data.t, data.x, data.y, variogramModel,
             (params.sigma2 || defaultParams.sigma2),(params.alpha || defaultParams.alpha));
+        _variogram = variograms[variogramName];
+
 
     if(!params.useAlpha){
-        variogram.range = params.range || defaultParams.range;
-        variogram.sill = params.sill || defaultParams.sill;
-        variogram.nugget = params.nugget || defaultParams.nugget;
+        _variogram.range = params.range || defaultParams.range;
+        _variogram.sill = params.sill || defaultParams.sill;
+        _variogram.nugget = params.nugget || defaultParams.nugget;
     }
 
     const step = params.coordinateStep || defaultParams.coordinateStep;
     const threshold = params.threshold || defaultParams.threshold;
     const alpha = params.alpha || 1;
     let radius = params.drawRadius || defaultParams.drawRadius;
-    console.log(`nugget: ${variogram.nugget.toFixed(3)}; range: ${variogram.range.toFixed(3)};
-     sill: ${variogram.sill.toFixed(3)}; A: ${variogram.A.toFixed(3)}; model: ${variogramModel}`);
+    console.log(`nugget: ${_variogram.nugget.toFixed(3)}; range: ${_variogram.range.toFixed(3)};
+     sill: ${_variogram.sill.toFixed(3)}; A: ${_variogram.A.toFixed(3)}; model: ${variogramModel}`);
 
     let value = 0; //initialise kriging prediciton value
 
@@ -4090,7 +4105,7 @@ const plotVariogram = function(ctx, width, height, data, params, colourScheme){
     // const colourScheme = params.colourScheme || colourPicker;
     for(let x = 0; x < width; x += step){
         for(let y = 0; y < height; y += step){
-            value = kriging.predict(x, y, variogram);
+            value = kriging.predict(x, y, _variogram);
             if (value >= threshold){
                 // if((x > 100 && x < 140) && (y > 100 && y < 140)){
                 //     radius = 0.1;
@@ -4367,7 +4382,7 @@ big_blotch_params: {
 },
 
 
-change_small_blotch_range : function(newRange, interactive = false, newVariogram = true){
+change_small_blotch_range : function(newRange, interactive = false, newVariogram = false){
     blotch.small_blotch_params.variogramParams.range = newRange;
     blotch.small_blotch_params.variogramParams.newVariogram = newVariogram;
     if(interactive){
@@ -4462,13 +4477,13 @@ init: function(){
 },
 
 
-draw_small_blotch : function() {
+draw_small_blotch : function(newVariogram = false) {
     blotch.small_blotch_params.ctx.clearRect(0,0, blotch.width, blotch.height);
 
-    if(blotch.small_blotch_params.variogramParams.newVariogram){
+    if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.small_blotch_params.data = Stats.generateData(blotch.small_blotch_params.dataParams);
     }
-    Stats.plotVariogram(blotch.small_blotch_params.ctx, blotch.width, blotch.height, blotch.small_blotch_params.data, blotch.small_blotch_params.variogramParams, blotch.colourPicker);
+    Stats.plotVariogram("small_blotch",blotch.small_blotch_params.ctx, blotch.width, blotch.height, blotch.small_blotch_params.data, blotch.small_blotch_params.variogramParams, blotch.colourPicker);
 },
 
 draw_big_blotch: function(){
@@ -4477,16 +4492,16 @@ draw_big_blotch: function(){
     if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.big_blotch_params.data = Stats.generateData(blotch.big_blotch_params.dataParams);
     }
-    Stats.plotVariogram(blotch.big_blotch_params.ctx, blotch.width, blotch.height, blotch.big_blotch_params.data, blotch.big_blotch_params.variogramParams, blotch.colourPicker);
+    Stats.plotVariogram("big blotch", blotch.big_blotch_params.ctx, blotch.width, blotch.height, blotch.big_blotch_params.data, blotch.big_blotch_params.variogramParams, blotch.colourPicker);
 },
 
-draw_black_cap: function(){
+draw_black_cap: function(newVariogram = false){
     blotch.black_cap_params.ctx.clearRect(0,0, blotch.width, blotch.height);
 
-    if(blotch.black_cap_params.variogramParams.newVariogram){
+    if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.black_cap_params.data = Stats.generateData(blotch.black_cap_params.dataParams);
     }
-    Stats.plotVariogram(blotch.black_cap_params.ctx, blotch.width, blotch.height, blotch.black_cap_params.data, blotch.black_cap_params.variogramParams, blotch.colourPicker);
+    Stats.plotVariogram("black-cap", blotch.black_cap_params.ctx, blotch.width, blotch.height, blotch.black_cap_params.data, blotch.black_cap_params.variogramParams, blotch.colourPicker);
 },
 
 };

@@ -139,7 +139,7 @@ big_blotch_params: {
 },
 
 
-change_small_blotch_range : function(newRange, interactive = false, newVariogram = true){
+change_small_blotch_range : function(newRange, interactive = false, newVariogram = false){
     blotch.small_blotch_params.variogramParams.range = newRange;
     blotch.small_blotch_params.variogramParams.newVariogram = newVariogram;
     if(interactive){
@@ -234,13 +234,13 @@ init: function(){
 },
 
 
-draw_small_blotch : function() {
+draw_small_blotch : function(newVariogram = false) {
     blotch.small_blotch_params.ctx.clearRect(0,0, blotch.width, blotch.height);
 
-    if(blotch.small_blotch_params.variogramParams.newVariogram){
+    if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.small_blotch_params.data = Stats.generateData(blotch.small_blotch_params.dataParams);
     }
-    Stats.plotVariogram(blotch.small_blotch_params.ctx, blotch.width, blotch.height, blotch.small_blotch_params.data, blotch.small_blotch_params.variogramParams, blotch.colourPicker);
+    Stats.plotVariogram("small_blotch",blotch.small_blotch_params.ctx, blotch.width, blotch.height, blotch.small_blotch_params.data, blotch.small_blotch_params.variogramParams, blotch.colourPicker);
 },
 
 draw_big_blotch: function(){
@@ -249,16 +249,16 @@ draw_big_blotch: function(){
     if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.big_blotch_params.data = Stats.generateData(blotch.big_blotch_params.dataParams);
     }
-    Stats.plotVariogram(blotch.big_blotch_params.ctx, blotch.width, blotch.height, blotch.big_blotch_params.data, blotch.big_blotch_params.variogramParams, blotch.colourPicker);
+    Stats.plotVariogram("big blotch", blotch.big_blotch_params.ctx, blotch.width, blotch.height, blotch.big_blotch_params.data, blotch.big_blotch_params.variogramParams, blotch.colourPicker);
 },
 
-draw_black_cap: function(){
+draw_black_cap: function(newVariogram = false){
     blotch.black_cap_params.ctx.clearRect(0,0, blotch.width, blotch.height);
 
-    if(blotch.black_cap_params.variogramParams.newVariogram){
+    if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.black_cap_params.data = Stats.generateData(blotch.black_cap_params.dataParams);
     }
-    Stats.plotVariogram(blotch.black_cap_params.ctx, blotch.width, blotch.height, blotch.black_cap_params.data, blotch.black_cap_params.variogramParams, blotch.colourPicker);
+    Stats.plotVariogram("black-cap", blotch.black_cap_params.ctx, blotch.width, blotch.height, blotch.black_cap_params.data, blotch.black_cap_params.variogramParams, blotch.colourPicker);
 },
 
 };
