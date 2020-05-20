@@ -28,13 +28,12 @@ module.exports = {
 
     drawAllTextures : function(){
         base.draw();
-        // pepper_plot.draw();
         pepper_plot.draw_intial();
         blotch.draw_small_blotch();
         // blotch.draw_big_blotch();
-        blotch.draw_black_cap();
-        streaks.drawScrawl();
-        streaks.drawShorthand();
+        // blotch.draw_black_cap();
+        // streaks.drawScrawl();
+        // streaks.drawShorthand();
 
     },
 
@@ -73,7 +72,7 @@ module.exports = {
         this.texture.canvas = this.canvasTexture;
         this.texture.needsUpdate = true;
         // texture = new THREE.CanvasTexture(textureCtx.canvas);
-        console.log(this.texture.uuid);
+        // console.log(this.texture.uuid);
 
     },
 

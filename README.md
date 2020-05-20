@@ -5,5 +5,10 @@ Using THREE.js for a 3D view and spatial statistics, kriging for texture generat
 ## To run
 While in the project's root directory
 ```bash
-npm install && node app.js
+npm install && node app.js.
 ```
+
+Access the application via localhost:3000/dissertation.
+
+To toggle certain patterns, go to /public/javascripts/dissertation/EggTexture.js drawAllTextures() and comment/comment 
+out the desired ones. 

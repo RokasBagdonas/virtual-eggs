@@ -247,6 +247,10 @@ draw_small_blotch : function(newVariogram = false) {
     if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.small_blotch_params.data = Stats.generateData(blotch.small_blotch_params.dataParams);
     }
+    console.log("---VARIOGRAM small blotch---");
+    console.log(blotch.small_blotch_params.variogramParams);
+    console.log("---3D DATA---");
+    console.log(blotch.small_blotch_params.dataParams);
     Stats.plotVariogram("small_blotch",blotch.small_blotch_params.ctx, blotch.width, blotch.height, blotch.small_blotch_params.data, blotch.small_blotch_params.variogramParams, blotch.colourPicker);
 },
 
@@ -256,6 +260,10 @@ draw_big_blotch: function(){
     if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.big_blotch_params.data = Stats.generateData(blotch.big_blotch_params.dataParams);
     }
+    console.log("---VARIOGRAM---");
+    console.log(blotch.big_blotch_params.variogramParams);
+    console.log("---3D DATA---");
+    console.log(blotch.big_blotch_params.dataParams);
     Stats.plotVariogram("big blotch", blotch.big_blotch_params.ctx, blotch.width, blotch.height, blotch.big_blotch_params.data, blotch.big_blotch_params.variogramParams, blotch.colourPicker);
 },
 
@@ -265,6 +273,10 @@ draw_black_cap: function(newVariogram = false){
     if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.black_cap_params.data = Stats.generateData(blotch.black_cap_params.dataParams);
     }
+    console.log("---VARIOGRAM black cap---");
+    console.log(blotch.black_cap_params.variogramParams);
+    console.log("---3D DATA---");
+    console.log(blotch.black_cap_params.dataParams);
     Stats.plotVariogram("black-cap", blotch.black_cap_params.ctx, blotch.width, blotch.height, blotch.black_cap_params.data, blotch.black_cap_params.variogramParams, blotch.colourPicker);
 },
 

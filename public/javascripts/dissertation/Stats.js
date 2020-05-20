@@ -162,8 +162,8 @@ const plotVariogram = function(variogramName, ctx, width, height, data, params, 
     const threshold = params.threshold || defaultParams.threshold;
     const alpha = params.alpha || 1;
     let radius = params.drawRadius || defaultParams.drawRadius;
-    console.log(`nugget: ${_variogram.nugget.toFixed(3)}; range: ${_variogram.range.toFixed(3)};
-     sill: ${_variogram.sill.toFixed(3)}; A: ${_variogram.A.toFixed(3)}; model: ${variogramModel}`);
+    // console.log(`nugget: ${_variogram.nugget.toFixed(3)}; range: ${_variogram.range.toFixed(3)};
+    //  sill: ${_variogram.sill.toFixed(3)}; A: ${_variogram.A.toFixed(3)}; model: ${variogramModel}`);
 
     let value = 0; //initialise kriging prediciton value
 
@@ -212,7 +212,7 @@ const init = function(w, h){
 
 //======================================================================================================================
 //init phase
-console.log("Stats: " + numbers.random.distribution.normal(4, 10, 3));
+// console.log("Stats: " + numbers.random.distribution.normal(4, 10, 3));
 
 let Stats = {
     setVariogramModel: setVariogramModel,

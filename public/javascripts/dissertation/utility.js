@@ -26,5 +26,6 @@ const mapFuncToObjProps = function(func, object){
 
 module.exports = {
     getNumberInRange: getNumberInRange,
-    mapFuncToObjProps: mapFuncToObjProps
+    mapFuncToObjProps: mapFuncToObjProps,
+    print: print
 };

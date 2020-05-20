@@ -3573,13 +3573,12 @@ module.exports = {
 
     drawAllTextures : function(){
         base.draw();
-        // pepper_plot.draw();
         pepper_plot.draw_intial();
         blotch.draw_small_blotch();
         // blotch.draw_big_blotch();
-        blotch.draw_black_cap();
-        streaks.drawScrawl();
-        streaks.drawShorthand();
+        // blotch.draw_black_cap();
+        // streaks.drawScrawl();
+        // streaks.drawShorthand();
 
     },
 
@@ -3618,7 +3617,7 @@ module.exports = {
         this.texture.canvas = this.canvasTexture;
         this.texture.needsUpdate = true;
         // texture = new THREE.CanvasTexture(textureCtx.canvas);
-        console.log(this.texture.uuid);
+        // console.log(this.texture.uuid);
 
     },
 
@@ -3779,7 +3778,7 @@ function init() {
     texture = EggTexture.getTexture();
     EggUI.init();
 
-    console.log("MAIN: " + texture.uuid);
+    // console.log("MAIN: " + texture.uuid);
     loadEgg();
 
 
@@ -4143,8 +4142,8 @@ const plotVariogram = function(variogramName, ctx, width, height, data, params, 
     const threshold = params.threshold || defaultParams.threshold;
     const alpha = params.alpha || 1;
     let radius = params.drawRadius || defaultParams.drawRadius;
-    console.log(`nugget: ${_variogram.nugget.toFixed(3)}; range: ${_variogram.range.toFixed(3)};
-     sill: ${_variogram.sill.toFixed(3)}; A: ${_variogram.A.toFixed(3)}; model: ${variogramModel}`);
+    // console.log(`nugget: ${_variogram.nugget.toFixed(3)}; range: ${_variogram.range.toFixed(3)};
+    //  sill: ${_variogram.sill.toFixed(3)}; A: ${_variogram.A.toFixed(3)}; model: ${variogramModel}`);
 
     let value = 0; //initialise kriging prediciton value
 
@@ -4193,7 +4192,7 @@ const init = function(w, h){
 
 //======================================================================================================================
 //init phase
-console.log("Stats: " + numbers.random.distribution.normal(4, 10, 3));
+// console.log("Stats: " + numbers.random.distribution.normal(4, 10, 3));
 
 let Stats = {
     setVariogramModel: setVariogramModel,
@@ -4552,6 +4551,10 @@ draw_small_blotch : function(newVariogram = false) {
     if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.small_blotch_params.data = Stats.generateData(blotch.small_blotch_params.dataParams);
     }
+    console.log("---VARIOGRAM small blotch---");
+    console.log(blotch.small_blotch_params.variogramParams);
+    console.log("---3D DATA---");
+    console.log(blotch.small_blotch_params.dataParams);
     Stats.plotVariogram("small_blotch",blotch.small_blotch_params.ctx, blotch.width, blotch.height, blotch.small_blotch_params.data, blotch.small_blotch_params.variogramParams, blotch.colourPicker);
 },
 
@@ -4561,6 +4564,10 @@ draw_big_blotch: function(){
     if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.big_blotch_params.data = Stats.generateData(blotch.big_blotch_params.dataParams);
     }
+    console.log("---VARIOGRAM---");
+    console.log(blotch.big_blotch_params.variogramParams);
+    console.log("---3D DATA---");
+    console.log(blotch.big_blotch_params.dataParams);
     Stats.plotVariogram("big blotch", blotch.big_blotch_params.ctx, blotch.width, blotch.height, blotch.big_blotch_params.data, blotch.big_blotch_params.variogramParams, blotch.colourPicker);
 },
 
@@ -4570,6 +4577,10 @@ draw_black_cap: function(newVariogram = false){
     if(blotch.big_blotch_params.variogramParams.newVariogram){
         blotch.black_cap_params.data = Stats.generateData(blotch.black_cap_params.dataParams);
     }
+    console.log("---VARIOGRAM black cap---");
+    console.log(blotch.black_cap_params.variogramParams);
+    console.log("---3D DATA---");
+    console.log(blotch.black_cap_params.dataParams);
     Stats.plotVariogram("black-cap", blotch.black_cap_params.ctx, blotch.width, blotch.height, blotch.black_cap_params.data, blotch.black_cap_params.variogramParams, blotch.colourPicker);
 },
 
@@ -4660,6 +4671,7 @@ window.pepper_plot = module.exports;
 let Rainbow = require('rainbowvis.js');
 let Stats = require('../Stats.js');
 let numbers = require('numbers');
+let utility = require('../utility.js');
 module.exports = {
 
 //scrawl-----
@@ -4863,6 +4875,10 @@ drawMask : function(ctx, width, height){
 drawShorthand : function(newSeed = false, octave_1 = this.shorthand_params.octave_1, octave_2 = this.shorthand_params.octave_2){
     this.ctx_shorthand.clearRect(0,0, this.width_shorthand, this.height_shorthand);
     if(newSeed) this.shorthand_params.seed = Math.random();
+    console.log("---PERLIN shorthand---");
+    console.log(`octave1.periodX: ${octave_1.period_x}, y:${octave_1.period_y}`);
+    console.log(`octave2.periodX: ${octave_2.period_x}, y:${octave_2.period_y}`);
+    console.log(` seed: ${this.shorthand_params.seed};`);
     this.drawStreaks(this.ctx_shorthand, octave_1, octave_2, this.shorthand_params.thickness, this.shorthand_params.seed);
     this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
 
@@ -4870,6 +4886,10 @@ drawShorthand : function(newSeed = false, octave_1 = this.shorthand_params.octav
 drawScrawl : function(newSeed = false, octave_1 = this.scrawl_params.octave_1, octave_2 = this.scrawl_params.octave_2){
     this.ctx_scrawl.clearRect(0,0, this.width_scrawl, this.height_scrawl);
     if(newSeed) this.scrawl_params.seed = Math.random();
+    console.log("---PERLIN scrawl---");
+    console.log(`octave1.periodX: ${octave_1.period_x}, y:${octave_1.period_y}`);
+    console.log(`octave2.periodX: ${octave_2.period_x}, y:${octave_2.period_y}`);
+    console.log(` seed: ${this.shorthand_params.seed};`);
     this.drawStreaks(this.ctx_scrawl, octave_1, octave_2, this.scrawl_params.thickness, this.scrawl_params.seed);
     this.drawMask(this.ctx_scrawl, this.width_scrawl, this.height_scrawl);
 },
@@ -4885,7 +4905,7 @@ module.exports.init();
 
 window.streaks = module.exports;
 
-},{"../Stats.js":18,"numbers":2,"rainbowvis.js":13}],23:[function(require,module,exports){
+},{"../Stats.js":18,"../utility.js":23,"numbers":2,"rainbowvis.js":13}],23:[function(require,module,exports){
 let numbers = require('numbers');
 
 const getNumberInRange = function(tuple) {
@@ -4914,6 +4934,7 @@ const mapFuncToObjProps = function(func, object){
 
 module.exports = {
     getNumberInRange: getNumberInRange,
-    mapFuncToObjProps: mapFuncToObjProps
+    mapFuncToObjProps: mapFuncToObjProps,
+    print: print
 };
 },{"numbers":2}]},{},[16]);

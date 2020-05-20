@@ -22,7 +22,7 @@ function init() {
     texture = EggTexture.getTexture();
     EggUI.init();
 
-    console.log("MAIN: " + texture.uuid);
+    // console.log("MAIN: " + texture.uuid);
     loadEgg();
 
 

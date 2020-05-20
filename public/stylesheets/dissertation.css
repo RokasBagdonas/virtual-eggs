@@ -39,7 +39,7 @@ body {
     border: 1px solid black;
 }
 
-h5, h6{
+h4, h5, h6{
     padding: 0;
     margin: 0;
 }
