@@ -204,7 +204,7 @@ drawMask : function(ctx, width, height){
 drawShorthand : function(newSeed = false, octave_1 = this.shorthand_params.octave_1, octave_2 = this.shorthand_params.octave_2){
     this.ctx_shorthand.clearRect(0,0, this.width_shorthand, this.height_shorthand);
     if(newSeed) this.shorthand_params.seed = Math.random();
-    this.drawStreaks(this.ctx_shorthand, octave_1, octave_2, this.shorthand_params.thickness);
+    this.drawStreaks(this.ctx_shorthand, octave_1, octave_2, this.shorthand_params.thickness, this.shorthand_params.seed);
     this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
 
 },

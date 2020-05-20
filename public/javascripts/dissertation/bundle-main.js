@@ -3660,12 +3660,14 @@ module.exports = {
         let scrawl_thickness = new Slider('scrawl thickness',
             streaks.ui_params.thickness_min, streaks.ui_params.thickness_max,
             streaks.ui_params.thickness_default, streaks.ui_params.thickness_step,
-            streaks.scale_scrawl_thickness
+            streaks.scale_scrawl_thickness, true,
+            "makes the lines thicker / thinner"
         );
         let scrawl_octaves = new Slider('scrawl octaves',
             streaks.ui_params.period_min, streaks.ui_params.period_max,
             streaks.ui_params.scrawl_period_scalar, streaks.ui_params.period_step,
-            streaks.scale_scrawl_periods
+            streaks.scale_scrawl_periods, true,
+            "scaling of the pattern"
         );
 
         this.scrawl_container.appendChild(scrawl_thickness.container);
@@ -3676,7 +3678,8 @@ module.exports = {
         let shorthand_thickness = new Slider('shorthand thickness',
             streaks.ui_params.thickness_min, streaks.ui_params.thickness_max,
             streaks.ui_params.thickness_default, streaks.ui_params.thickness_step,
-            streaks.scale_shorthand_thickness
+            streaks.scale_shorthand_thickness, true,
+            "makes the lines thicker /thinner"
         );
 
         let shorthand_octaves = new Slider('shorthand octaves',
@@ -3900,7 +3903,7 @@ window.main = {scene, camera, texture};
 },{"./EggTexture.js":14,"./EggUI.js":15}],17:[function(require,module,exports){
 class Slider {
 
-    constructor(id, min, max, defaultValue, step, eventCallback, interactive = true) {
+    constructor(id, min, max, defaultValue, step, eventCallback, interactive = true, description = "") {
         this.scrawl_params = {thickness: 44444};
 
         //will these element props be used anywhere?
@@ -3925,7 +3928,7 @@ class Slider {
         this.slider.setAttribute("class", "slider-param");
 
         this.label = document.createElement("label");
-        this.label.innerHTML = id;
+        this.label.innerHTML = id + ".";
         this.label.setAttribute("for", id);
 
 
@@ -3936,9 +3939,10 @@ class Slider {
         this.checkbox.setAttribute("checked", "true");
         let checkboxLabel = document.createElement("label");
         checkboxLabel.setAttribute("for", `${id}-chbox`);
-        checkboxLabel.innerHTML = "interactive?";
+        checkboxLabel.innerHTML = " Interactive?";
 
         //includeTexture checkbox.
+
 
 
         this.container = document.createElement("div");
@@ -3949,6 +3953,11 @@ class Slider {
         this.container.appendChild(this.checkbox);
         this.container.appendChild(document.createElement('br'));
         this.container.appendChild(this.slider);
+
+        //description
+        this.p = document.createElement("p");
+        this.p.innerHTML = description;
+        this.container.appendChild(this.p);
 
         this.slider.oninput = (event) => {
             this.label.innerHTML = id + " = " + event.target.value;
@@ -4854,7 +4863,7 @@ drawMask : function(ctx, width, height){
 drawShorthand : function(newSeed = false, octave_1 = this.shorthand_params.octave_1, octave_2 = this.shorthand_params.octave_2){
     this.ctx_shorthand.clearRect(0,0, this.width_shorthand, this.height_shorthand);
     if(newSeed) this.shorthand_params.seed = Math.random();
-    this.drawStreaks(this.ctx_shorthand, octave_1, octave_2, this.shorthand_params.thickness);
+    this.drawStreaks(this.ctx_shorthand, octave_1, octave_2, this.shorthand_params.thickness, this.shorthand_params.seed);
     this.drawMask(this.ctx_shorthand, this.width_shorthand, this.height_shorthand);
 
 },

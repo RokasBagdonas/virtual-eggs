@@ -21,12 +21,14 @@ module.exports = {
         let scrawl_thickness = new Slider('scrawl thickness',
             streaks.ui_params.thickness_min, streaks.ui_params.thickness_max,
             streaks.ui_params.thickness_default, streaks.ui_params.thickness_step,
-            streaks.scale_scrawl_thickness
+            streaks.scale_scrawl_thickness, true,
+            "makes the lines thicker / thinner"
         );
         let scrawl_octaves = new Slider('scrawl octaves',
             streaks.ui_params.period_min, streaks.ui_params.period_max,
             streaks.ui_params.scrawl_period_scalar, streaks.ui_params.period_step,
-            streaks.scale_scrawl_periods
+            streaks.scale_scrawl_periods, true,
+            "scaling of the pattern"
         );
 
         this.scrawl_container.appendChild(scrawl_thickness.container);
@@ -37,7 +39,8 @@ module.exports = {
         let shorthand_thickness = new Slider('shorthand thickness',
             streaks.ui_params.thickness_min, streaks.ui_params.thickness_max,
             streaks.ui_params.thickness_default, streaks.ui_params.thickness_step,
-            streaks.scale_shorthand_thickness
+            streaks.scale_shorthand_thickness, true,
+            "makes the lines thicker /thinner"
         );
 
         let shorthand_octaves = new Slider('shorthand octaves',

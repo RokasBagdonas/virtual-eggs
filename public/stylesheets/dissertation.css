@@ -29,7 +29,14 @@ body {
     grid-column: 1 / 2;
     grid-row: 2 / 3;
     border: 1px solid black;
+}
 
+#params-container p {
+    margin: 0 0 10px 0;
+}
+
+.container-slider {
+    border: 1px solid black;
 }
 
 h5, h6{

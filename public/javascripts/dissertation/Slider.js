@@ -1,6 +1,6 @@
 class Slider {
 
-    constructor(id, min, max, defaultValue, step, eventCallback, interactive = true) {
+    constructor(id, min, max, defaultValue, step, eventCallback, interactive = true, description = "") {
         this.scrawl_params = {thickness: 44444};
 
         //will these element props be used anywhere?
@@ -25,7 +25,7 @@ class Slider {
         this.slider.setAttribute("class", "slider-param");
 
         this.label = document.createElement("label");
-        this.label.innerHTML = id;
+        this.label.innerHTML = id + ".";
         this.label.setAttribute("for", id);
 
 
@@ -36,9 +36,10 @@ class Slider {
         this.checkbox.setAttribute("checked", "true");
         let checkboxLabel = document.createElement("label");
         checkboxLabel.setAttribute("for", `${id}-chbox`);
-        checkboxLabel.innerHTML = "interactive?";
+        checkboxLabel.innerHTML = " Interactive?";
 
         //includeTexture checkbox.
+
 
 
         this.container = document.createElement("div");
@@ -49,6 +50,11 @@ class Slider {
         this.container.appendChild(this.checkbox);
         this.container.appendChild(document.createElement('br'));
         this.container.appendChild(this.slider);
+
+        //description
+        this.p = document.createElement("p");
+        this.p.innerHTML = description;
+        this.container.appendChild(this.p);
 
         this.slider.oninput = (event) => {
             this.label.innerHTML = id + " = " + event.target.value;
