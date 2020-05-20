@@ -12,7 +12,7 @@ ctx : undefined,
 
 parameters : undefined,
 
-colourScheme : ['#4b555e', '#222426'],
+colourScheme : ['#242931', '#121214'],
 valueRange_layer1: {min: 20, max: 80, alpha_min: 0.1, alpha_max: 0.8},
 valueRange_layer2: {min: 70, max: 100, alpha_min: 0.5, alpha_max: 1},
 colourPicker : new Rainbow(),
@@ -34,8 +34,8 @@ init: function(){
         varianceY: this.height / 2,
         value_mean: 75, //radius
         value_variance: 15,
-        alpha_min: 0.2,
-        alpha_max: 0.8,
+        alpha_min: 0.7,
+        alpha_max: 1,
         radius_min: 1.2,
         radius_max: 3.5
     };

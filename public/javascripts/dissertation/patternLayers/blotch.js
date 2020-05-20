@@ -15,7 +15,7 @@ height : undefined,
 ctx : undefined,
 
 
-COLOUR_SCHEME_1 : ["#1f302e", "#111414"],
+COLOUR_SCHEME_1 : ["#36363b", "#111414"],
 COLOUR_SCHEME_2 : ["#eaa28b", "#8e4312"],
 
 colourPicker : new Rainbow(),
@@ -179,12 +179,20 @@ init: function(){
     this.colourPicker.setSpectrum(this.colourScheme[0], this.colourScheme[1]);
 
 
-    this.small_blotch_params.dataRangeParams = {
-        muX: [this.width * 0.4, this.width * 0.6],
-        muY: [this.height / 8, this.height / 1.42],
-        varianceX: [this.width * 0.4 * 0.5, this.width * 0.6 * 0.5],
-        varianceY: [this.height / 7.3, this.height / 8],
-        numPoints: [140, 180]
+    // this.small_blotch_params.dataRangeParams = {
+    //     muX: [this.width * 0.4, this.width * 0.6],
+    //     muY: [this.height / 8, this.height / 1.42],
+    //     varianceX: [this.width * 0.4 * 0.5, this.width * 0.6 * 0.5],
+    //     varianceY: [this.height / 7.3, this.height / 8],
+    //     numPoints: [140, 180]
+    // };
+
+    this.small_blotch_params.dataParams = {
+        muX: this.width * 0.5,
+        muY: this.height * 0.5,
+        varianceX: this.width * 0.5 * 0.6,
+        varianceY: this.height * 0.4 * 0.5,
+        numPoints: 150
     };
 
     this.small_blotch_params.registerListener(function(val) {
@@ -195,14 +203,16 @@ init: function(){
 
 
     // this.CANVAS_ID_BIG_BLOTCH = "big-blotch";
-    this.big_blotch_params.ctx = document.getElementById(this.CANVAS_ID_BIG_BLOTCH).getContext("2d");
-    this.big_blotch_params.dataRangeParams = {
-        muX: [this.width * 0.4, this.width * 0.6],
-        muY: [this.height * 0.2, this.height * 0.4],
-        varianceX: [this.width * 0.4 * 0.2 , this.width * 0.5],
-        varianceY: [this.height * 0.2 , this.height * 0.35],
-        numPoints: [140, 180]
-    };
+    // this.big_blotch_params.ctx = document.getElementById(this.CANVAS_ID_BIG_BLOTCH).getContext("2d");
+    // this.big_blotch_params.dataRangeParams = {
+    //     muX: [this.width * 0.4, this.width * 0.6],
+    //     muY: [this.height * 0.2, this.height * 0.4],
+    //     varianceX: [this.width * 0.4 * 0.2 , this.width * 0.5],
+    //     varianceY: [this.height * 0.2 , this.height * 0.35],
+    //     numPoints: [140, 180]
+    // };
+    // this.big_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.big_blotch_params.dataRangeParams);
+    // this.big_blotch_params.data = Stats.generateData(this.big_blotch_params.dataParams);
 
     this.black_cap_params.ctx = document.getElementById(this.CANVAS_ID_BLACK_CAP).getContext("2d");
 
@@ -221,11 +231,8 @@ init: function(){
     };
 
 
-    this.small_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.small_blotch_params.dataRangeParams);
+    // this.small_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.small_blotch_params.dataRangeParams);
     this.small_blotch_params.data = Stats.generateData(this.small_blotch_params.dataParams);
-
-    this.big_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.big_blotch_params.dataRangeParams);
-    this.big_blotch_params.data = Stats.generateData(this.big_blotch_params.dataParams);
 
     // this.black_cap_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.black_cap_params.dataRangeParams);
     this.black_cap_params.data = Stats.generateData(this.black_cap_params.dataParams);

@@ -1,5 +1,7 @@
 let utility = require('../utility.js');
 let Stats = require('../Stats.js');
+let numbers = require('numbers');
+let Rainbow = require('rainbowvis.js');
 
 module.exports = function(){
 let module = {};
@@ -10,10 +12,23 @@ let width = canvas.clientWidth;
 let height = canvas.clientHeight;
 let ctx = canvas.getContext("2d");
 
-module.colourScheme = ["#6bbbbf"];
+module.colourScheme1 = ["#6bbbbf", "#2a545a" ];
+module.colourScheme2 = ["#c5d8d2", "#696970" ];
 
+let rainbow = new Rainbow();
+rainbow.setNumberRange(0, 100);
 module.draw = function() {
-  ctx.fillStyle = module.colourScheme[0];
+  let colourSchemeIndex = Math.random();
+  let colourScheme;
+  if(colourSchemeIndex < 0.65){
+    colourScheme = module.colourScheme1;
+  }
+  else colourScheme = module.colourScheme2;
+  rainbow.setSpectrum(...colourScheme);
+  let colourRandomizer = Math.round(Math.random() * 100);
+  let colour = "#" + rainbow.colourAt(colourRandomizer);
+
+  ctx.fillStyle = colour;
   ctx.fillRect(0,0,width, height);
 };
 

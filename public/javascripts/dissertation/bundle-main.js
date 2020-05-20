@@ -3548,7 +3548,6 @@ let base = require('./patternLayers/base.js')();
 let pepper_plot = require('./patternLayers/pepper-plot.js');
 let blotch = require('./patternLayers/blotch.js');
 let streaks = require('./patternLayers/streaks.js');
-let test = require('./patternLayers/test.js')();
 
 module.exports = {
 
@@ -3557,6 +3556,20 @@ module.exports = {
     width: undefined,
     height: undefined,
     getTexture : function() {return this.texture},
+    excludeList: [],
+    toggleTexture: function(texture_id){
+        this.textures[texture_id] = !this.textures[texture_id];
+        this.combineTextures();
+    },
+    //for toggling which are applied onto the egg.
+    textures: {
+        "small-blotch": true,
+        "big-blotch": false,
+        "black-cap": true,
+        "scrawl": true,
+        "shorthand": true,
+        "pepper-plot": true
+    },
 
     drawAllTextures : function(){
         base.draw();
@@ -3565,7 +3578,8 @@ module.exports = {
         blotch.draw_small_blotch();
         // blotch.draw_big_blotch();
         blotch.draw_black_cap();
-        streaks.draw();
+        streaks.drawScrawl();
+        streaks.drawShorthand();
 
     },
 
@@ -3592,9 +3606,13 @@ module.exports = {
         //2. retrieve all texture layers.
         let canvases = document.getElementsByClassName("texture");
         //3. draw each layer onto the final canvas
+
         for(const canvas of canvases){
-            textureCtx.drawImage(canvas, 0,0);
+            if(!this.excludeList.find(t => t === canvas.id))
+                textureCtx.drawImage(canvas, 0,0);
         }
+
+
 
         //4. return THREE CanvasTexture.
         this.texture.canvas = this.canvasTexture;
@@ -3603,6 +3621,8 @@ module.exports = {
         console.log(this.texture.uuid);
 
     },
+
+
 
     redrawTexture: function(drawCallback){
         drawCallback();
@@ -3616,7 +3636,7 @@ window.EggTexture = module.exports;
 
 
 
-},{"./patternLayers/base.js":19,"./patternLayers/blotch.js":20,"./patternLayers/pepper-plot.js":21,"./patternLayers/streaks.js":22,"./patternLayers/test.js":23}],15:[function(require,module,exports){
+},{"./patternLayers/base.js":19,"./patternLayers/blotch.js":20,"./patternLayers/pepper-plot.js":21,"./patternLayers/streaks.js":22}],15:[function(require,module,exports){
 let Slider = require('./Slider.js');
 let streaks = require('./patternLayers/streaks.js');
 let blotch = require('./patternLayers/blotch.js');
@@ -3625,8 +3645,13 @@ let EggTexture = require('./EggTexture.js');
 module.exports = {
 
     streaks_container : document.getElementById("streaks-container"),
+    scrawl_container: document.getElementById("scrawl-container"),
+    shorthand_container: document.getElementById("shorthand-container"),
     blotches_container: document.getElementById('blotches-container'),
+    black_cap_container: document.getElementById('black-cap-container'),
     other_container: document.getElementById('other-container'),
+    general_container: document.getElementById('general-container'),
+
 
     initStreaksUI: function(){
 
@@ -3643,8 +3668,9 @@ module.exports = {
             streaks.scale_scrawl_periods
         );
 
-        this.streaks_container.appendChild(scrawl_thickness.container);
-        this.streaks_container.appendChild(scrawl_octaves.container);
+        this.scrawl_container.appendChild(scrawl_thickness.container);
+        this.scrawl_container.appendChild(scrawl_octaves.container);
+
 
         //1.2 shorthand
         let shorthand_thickness = new Slider('shorthand thickness',
@@ -3659,15 +3685,8 @@ module.exports = {
             streaks.scale_shorthand_periods
         );
 
-        this.streaks_container.appendChild(shorthand_thickness.container);
-        this.streaks_container.appendChild(shorthand_octaves.container);
-
-        //2. reapply textures
-        let reapply_button = document.createElement("input");
-        reapply_button.setAttribute("type", "button");
-        reapply_button.setAttribute("value", "reapply streaks");
-        reapply_button.onclick = (e) => {EggTexture.combineTextures()};
-        this.streaks_container.appendChild(reapply_button);
+        this.shorthand_container.appendChild(shorthand_thickness.container);
+        this.shorthand_container.appendChild(shorthand_octaves.container);
 
     },
 
@@ -3687,25 +3706,40 @@ module.exports = {
             blotch.black_cap_params.variogramParams.range, blotch.black_cap_params.variogramParams.range_step,
             blotch.change_black_cap_range
         );
-        this.blotches_container.appendChild(black_cap_range.container);
+        this.black_cap_container.appendChild(black_cap_range.container);
 
         let black_cap_muY = new Slider("black cap location",
             blotch.black_cap_params.ui_params.muY_min, blotch.black_cap_params.ui_params.muY_max,
             blotch.black_cap_params.dataParams.muY, blotch.black_cap_params.ui_params.muY_step,
             blotch.change_black_cap_location
         );
-        this.blotches_container.appendChild(black_cap_muY.container);
+        this.black_cap_container.appendChild(black_cap_muY.container);
 
 
     },
 
     initOtherUI: function(){
-
+        let reapply_button = document.createElement("input");
+        reapply_button.setAttribute("type", "button");
+        reapply_button.setAttribute("value", "reapply textures");
+        reapply_button.onclick = (e) => {EggTexture.combineTextures()};
+        this.general_container.appendChild(reapply_button);
     },
 
     init: function(){
         this.initStreaksUI();
         this.initBlotchesUI();
+        this.initOtherUI();
+    },
+
+
+    create_event_button: function(name, eventCallback) {
+        let button = document.createElement("input");
+        button.setAttribute("type", "button");
+        button.setAttribute("id", name + "-button");
+        button.setAttribute("value", name);
+        button.onclick = eventCallback;
+        return button;
     },
 
 
@@ -3895,6 +3929,7 @@ class Slider {
         this.label.setAttribute("for", id);
 
 
+        //isInteractive checkbox.
         this.checkbox = document.createElement("input");
         this.checkbox.setAttribute("type","checkbox");
         this.checkbox.setAttribute("id", `${id}-chbox`);
@@ -3902,6 +3937,9 @@ class Slider {
         let checkboxLabel = document.createElement("label");
         checkboxLabel.setAttribute("for", `${id}-chbox`);
         checkboxLabel.innerHTML = "interactive?";
+
+        //includeTexture checkbox.
+
 
         this.container = document.createElement("div");
         this.container.setAttribute("class", "container-slider");
@@ -4180,9 +4218,11 @@ let Stats = {
 
 module.exports = Stats;
 
-},{"./utility.js":24,"numbers":2}],19:[function(require,module,exports){
+},{"./utility.js":23,"numbers":2}],19:[function(require,module,exports){
 let utility = require('../utility.js');
 let Stats = require('../Stats.js');
+let numbers = require('numbers');
+let Rainbow = require('rainbowvis.js');
 
 module.exports = function(){
 let module = {};
@@ -4193,10 +4233,23 @@ let width = canvas.clientWidth;
 let height = canvas.clientHeight;
 let ctx = canvas.getContext("2d");
 
-module.colourScheme = ["#6bbbbf"];
+module.colourScheme1 = ["#6bbbbf", "#2a545a" ];
+module.colourScheme2 = ["#c5d8d2", "#696970" ];
 
+let rainbow = new Rainbow();
+rainbow.setNumberRange(0, 100);
 module.draw = function() {
-  ctx.fillStyle = module.colourScheme[0];
+  let colourSchemeIndex = Math.random();
+  let colourScheme;
+  if(colourSchemeIndex < 0.65){
+    colourScheme = module.colourScheme1;
+  }
+  else colourScheme = module.colourScheme2;
+  rainbow.setSpectrum(...colourScheme);
+  let colourRandomizer = Math.round(Math.random() * 100);
+  let colour = "#" + rainbow.colourAt(colourRandomizer);
+
+  ctx.fillStyle = colour;
   ctx.fillRect(0,0,width, height);
 };
 
@@ -4240,7 +4293,7 @@ return module;
 //
 // module.variogramParams = utility.mapFuncToObjProps(utility.getNumberInRange, module.variogramRangeParams);
 
-},{"../Stats.js":18,"../utility.js":24}],20:[function(require,module,exports){
+},{"../Stats.js":18,"../utility.js":23,"numbers":2,"rainbowvis.js":13}],20:[function(require,module,exports){
 let utility = require('../utility.js');
 let Rainbow = require('Rainbowvis.js');
 let Stats = require('../Stats.js');
@@ -4258,7 +4311,7 @@ height : undefined,
 ctx : undefined,
 
 
-COLOUR_SCHEME_1 : ["#1f302e", "#111414"],
+COLOUR_SCHEME_1 : ["#36363b", "#111414"],
 COLOUR_SCHEME_2 : ["#eaa28b", "#8e4312"],
 
 colourPicker : new Rainbow(),
@@ -4422,12 +4475,20 @@ init: function(){
     this.colourPicker.setSpectrum(this.colourScheme[0], this.colourScheme[1]);
 
 
-    this.small_blotch_params.dataRangeParams = {
-        muX: [this.width * 0.4, this.width * 0.6],
-        muY: [this.height / 8, this.height / 1.42],
-        varianceX: [this.width * 0.4 * 0.5, this.width * 0.6 * 0.5],
-        varianceY: [this.height / 7.3, this.height / 8],
-        numPoints: [140, 180]
+    // this.small_blotch_params.dataRangeParams = {
+    //     muX: [this.width * 0.4, this.width * 0.6],
+    //     muY: [this.height / 8, this.height / 1.42],
+    //     varianceX: [this.width * 0.4 * 0.5, this.width * 0.6 * 0.5],
+    //     varianceY: [this.height / 7.3, this.height / 8],
+    //     numPoints: [140, 180]
+    // };
+
+    this.small_blotch_params.dataParams = {
+        muX: this.width * 0.5,
+        muY: this.height * 0.5,
+        varianceX: this.width * 0.5 * 0.6,
+        varianceY: this.height * 0.4 * 0.5,
+        numPoints: 150
     };
 
     this.small_blotch_params.registerListener(function(val) {
@@ -4438,14 +4499,16 @@ init: function(){
 
 
     // this.CANVAS_ID_BIG_BLOTCH = "big-blotch";
-    this.big_blotch_params.ctx = document.getElementById(this.CANVAS_ID_BIG_BLOTCH).getContext("2d");
-    this.big_blotch_params.dataRangeParams = {
-        muX: [this.width * 0.4, this.width * 0.6],
-        muY: [this.height * 0.2, this.height * 0.4],
-        varianceX: [this.width * 0.4 * 0.2 , this.width * 0.5],
-        varianceY: [this.height * 0.2 , this.height * 0.35],
-        numPoints: [140, 180]
-    };
+    // this.big_blotch_params.ctx = document.getElementById(this.CANVAS_ID_BIG_BLOTCH).getContext("2d");
+    // this.big_blotch_params.dataRangeParams = {
+    //     muX: [this.width * 0.4, this.width * 0.6],
+    //     muY: [this.height * 0.2, this.height * 0.4],
+    //     varianceX: [this.width * 0.4 * 0.2 , this.width * 0.5],
+    //     varianceY: [this.height * 0.2 , this.height * 0.35],
+    //     numPoints: [140, 180]
+    // };
+    // this.big_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.big_blotch_params.dataRangeParams);
+    // this.big_blotch_params.data = Stats.generateData(this.big_blotch_params.dataParams);
 
     this.black_cap_params.ctx = document.getElementById(this.CANVAS_ID_BLACK_CAP).getContext("2d");
 
@@ -4464,11 +4527,8 @@ init: function(){
     };
 
 
-    this.small_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.small_blotch_params.dataRangeParams);
+    // this.small_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.small_blotch_params.dataRangeParams);
     this.small_blotch_params.data = Stats.generateData(this.small_blotch_params.dataParams);
-
-    this.big_blotch_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.big_blotch_params.dataRangeParams);
-    this.big_blotch_params.data = Stats.generateData(this.big_blotch_params.dataParams);
 
     // this.black_cap_params.dataParams = utility.mapFuncToObjProps(utility.getNumberInRange, this.black_cap_params.dataRangeParams);
     this.black_cap_params.data = Stats.generateData(this.black_cap_params.dataParams);
@@ -4508,7 +4568,7 @@ draw_black_cap: function(newVariogram = false){
 
 module.exports.init();
 window.blotch = module.exports;
-},{"../Stats.js":18,"../utility.js":24,"Rainbowvis.js":1}],21:[function(require,module,exports){
+},{"../Stats.js":18,"../utility.js":23,"Rainbowvis.js":1}],21:[function(require,module,exports){
 let Rainbow = require('Rainbowvis.js');
 let Stats = require('../Stats.js');
 let numbers = require('numbers');
@@ -4523,7 +4583,7 @@ ctx : undefined,
 
 parameters : undefined,
 
-colourScheme : ['#4b555e', '#222426'],
+colourScheme : ['#242931', '#121214'],
 valueRange_layer1: {min: 20, max: 80, alpha_min: 0.1, alpha_max: 0.8},
 valueRange_layer2: {min: 70, max: 100, alpha_min: 0.5, alpha_max: 1},
 colourPicker : new Rainbow(),
@@ -4545,8 +4605,8 @@ init: function(){
         varianceY: this.height / 2,
         value_mean: 75, //radius
         value_variance: 15,
-        alpha_min: 0.2,
-        alpha_max: 0.8,
+        alpha_min: 0.7,
+        alpha_max: 1,
         radius_min: 1.2,
         radius_max: 3.5
     };
@@ -4817,48 +4877,6 @@ module.exports.init();
 window.streaks = module.exports;
 
 },{"../Stats.js":18,"numbers":2,"rainbowvis.js":13}],23:[function(require,module,exports){
-
-module.exports = function(){
-module = {};
-
-let canvas = document.getElementById("test");
-let width = canvas.width;
-let height = canvas.height;
-let ctx =  canvas.getContext("2d");
-
-let corners = {
-    top_left: {x: 0, y: 0},
-    top_right: {x: width-10, y: 0},
-    bottom_left: {x: 0, y: height-10},
-    bottom_right: {x: width-10, y: height-10},
-    center: {x: width / 2 - 10, y: height / 2 - 10},
-    bottom_mid: {x: width / 2 - 10, y: height - 10},
-    top_mid: {x: width / 2 - 10 , y: 0},
-    cl: {x: width / 2 - 40, y: height / 2 - 10},
-    cr: {x: width / 2 + 20, y: height / 2 - 10},
-    ct: {x: width / 2 - 10, y: height / 2 - 50},
-    cb: {x: width / 2 - 10, y: height / 2 + 30},
-    mid_left: {x: 0, y: height / 2 - 10},
-    mid_right: {x: width - 10, y: height / 2 - 10}
-
-};
-
-
-ctx.fillStyle = '#fc0388';
-
-module.draw = function() {
-    for(let c in corners){
-        if(c === "cr")
-            ctx.fillStyle = '#f5f542';
-        else
-            ctx.fillStyle = '#fc0388';
-        ctx.fillRect(corners[c].x, corners[c].y, 10, 10);
-    }
-};
-
-return module;
-};
-},{}],24:[function(require,module,exports){
 let numbers = require('numbers');
 
 const getNumberInRange = function(tuple) {

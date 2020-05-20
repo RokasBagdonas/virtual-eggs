@@ -29,6 +29,7 @@ class Slider {
         this.label.setAttribute("for", id);
 
 
+        //isInteractive checkbox.
         this.checkbox = document.createElement("input");
         this.checkbox.setAttribute("type","checkbox");
         this.checkbox.setAttribute("id", `${id}-chbox`);
@@ -36,6 +37,9 @@ class Slider {
         let checkboxLabel = document.createElement("label");
         checkboxLabel.setAttribute("for", `${id}-chbox`);
         checkboxLabel.innerHTML = "interactive?";
+
+        //includeTexture checkbox.
+
 
         this.container = document.createElement("div");
         this.container.setAttribute("class", "container-slider");
